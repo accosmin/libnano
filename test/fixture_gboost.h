@@ -492,7 +492,7 @@ inline void check_scale(const fixture_dataset_t& dataset, fold_t fold, wlearner_
         UTEST_CHECK_THROW(wlearner.scale(scale), std::runtime_error);
     }
     {
-        vector_t scale = vector_t::Constant(cluster.groups() + 1, +1.0);
+        vector_t scale = vector_t::Constant(cluster.groups() + 10, +1.0);
         UTEST_CHECK_THROW(wlearner.scale(scale), std::runtime_error);
     }
 }

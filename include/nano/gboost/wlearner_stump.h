@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/gboost/wlearner.h>
+#include <nano/gboost/wlearner_feature1.h>
 
 namespace nano
 {
@@ -27,14 +27,14 @@ namespace nano
     ///
     /// NB: the discrete features and the missing feature values are skipped during fiting.
     ///
-    class NANO_PUBLIC wlearner_stump_t : public wlearner_t
+    class NANO_PUBLIC wlearner_stump_t final : public wlearner_feature1_t
     {
     public:
 
         ///
         /// \brief default constructor
         ///
-        wlearner_stump_t() = default;
+        wlearner_stump_t();
 
         ///
         /// \brief @see wlearner_t
@@ -49,22 +49,7 @@ namespace nano
         ///
         /// \brief @see wlearner_t
         ///
-        [[nodiscard]] std::ostream& print(std::ostream&) const override;
-
-        ///
-        /// \brief @see wlearner_t
-        ///
         [[nodiscard]] rwlearner_t clone() const override;
-
-        ///
-        /// \brief @see wlearner_t
-        ///
-        [[nodiscard]] tensor3d_dim_t odim() const override;
-
-        ///
-        /// \brief @see wlearner_t
-        ///
-        void scale(const vector_t&) override;
 
         ///
         /// \brief @see wlearner_t
@@ -82,24 +67,13 @@ namespace nano
         [[nodiscard]] cluster_t split(const dataset_t&, fold_t, const indices_t&) const override;
 
         ///
-        /// \brief @see wlearner_t
-        ///
-        [[nodiscard]] indices_t features() const override;
-
-        ///
         /// \brief access functions
         ///
-        [[nodiscard]] auto feature() const { return m_feature; }
         [[nodiscard]] auto threshold() const { return m_threshold; }
-        [[nodiscard]] const auto& tables() const { return m_tables; }
 
     private:
 
-        void compatible(const dataset_t&) const;
-
         // attributes
-        tensor_size_t   m_feature{-1};          ///< index of the selected feature
         scalar_t        m_threshold{0};         ///< threshold
-        tensor4d_t      m_tables;               ///< (2, #outputs) - predictions below and above the threshold
     };
 }

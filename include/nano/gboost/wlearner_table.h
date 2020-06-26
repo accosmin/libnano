@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/gboost/wlearner.h>
+#include <nano/gboost/wlearner_feature1.h>
 
 namespace nano
 {
@@ -26,44 +26,19 @@ namespace nano
     ///
     /// NB: the continuous features and the missing feature values are skipped during fiting.
     ///
-    class NANO_PUBLIC wlearner_table_t : public wlearner_t
+    class NANO_PUBLIC wlearner_table_t final : public wlearner_feature1_t
     {
     public:
 
         ///
         /// \brief default constructor
         ///
-        wlearner_table_t() = default;
-
-        ///
-        /// \brief @see wlearner_t
-        ///
-        void read(std::istream&) override;
-
-        ///
-        /// \brief @see wlearner_t
-        ///
-        void write(std::ostream&) const override;
-
-        ///
-        /// \brief @see wlearner_t
-        ///
-        [[nodiscard]] std::ostream& print(std::ostream&) const override;
+        wlearner_table_t();
 
         ///
         /// \brief @see wlearner_t
         ///
         [[nodiscard]] rwlearner_t clone() const override;
-
-        ///
-        /// \brief @see wlearner_t
-        ///
-        [[nodiscard]] tensor3d_dim_t odim() const override;
-
-        ///
-        /// \brief @see wlearner_t
-        ///
-        void scale(const vector_t&) override;
 
         ///
         /// \brief @see wlearner_t
@@ -80,24 +55,8 @@ namespace nano
         ///
         [[nodiscard]] cluster_t split(const dataset_t&, fold_t, const indices_t&) const override;
 
-        ///
-        /// \brief @see wlearner_t
-        ///
-        [[nodiscard]] indices_t features() const override;
-
-        ///
-        /// \brief access functions
-        ///
-        [[nodiscard]] auto feature() const { return m_feature; }
-        [[nodiscard]] const auto& tables() const { return m_tables; }
-
     private:
 
-        void compatible(const dataset_t&) const;
         [[nodiscard]] auto n_fvalues() const { return m_tables.size<0>(); }
-
-        // attributes
-        tensor_size_t   m_feature{-1};          ///< index of the selected feature
-        tensor4d_t      m_tables;               ///< (#feature values, #outputs) - predictions
     };
 }

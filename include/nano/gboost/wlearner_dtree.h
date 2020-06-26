@@ -77,7 +77,7 @@ namespace nano
     ///     depending on how well the associated weak learner matches the residuals
     ///     (tables for discrete feature and stumps for continuous features).
     ///
-    class NANO_PUBLIC wlearner_dtree_t : public wlearner_t
+    class NANO_PUBLIC wlearner_dtree_t final : public wlearner_t
     {
     public:
 

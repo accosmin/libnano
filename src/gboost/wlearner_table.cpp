@@ -72,44 +72,11 @@ namespace
     };
 }
 
-void wlearner_table_t::read(std::istream& stream)
-{
-    wlearner_t::read(stream);
-
-    critical(
-        !::nano::detail::read(stream, m_feature) ||
-        !::nano::read(stream, m_tables),
-        "table weak learner: failed to read from stream!");
-}
-
-void wlearner_table_t::write(std::ostream& stream) const
-{
-    wlearner_t::write(stream);
-
-    critical(
-        !::nano::detail::write(stream, m_feature) ||
-        !::nano::write(stream, m_tables),
-        "table weak learner: failed to write to stream!");
-}
-
-std::ostream& wlearner_table_t::print(std::ostream& stream) const
-{
-    return stream << "table: feature=" << m_feature << ",classes=" << m_tables.size<0>();
-}
+wlearner_table_t::wlearner_table_t() = default;
 
 rwlearner_t wlearner_table_t::clone() const
 {
     return std::make_unique<wlearner_table_t>(*this);
-}
-
-tensor3d_dim_t wlearner_table_t::odim() const
-{
-    return make_dims(m_tables.size<1>(), m_tables.size<2>(), m_tables.size<3>());
-}
-
-void wlearner_table_t::scale(const vector_t& scale)
-{
-    wlearner_t::scale(m_tables, scale);
 }
 
 scalar_t wlearner_table_t::fit(const dataset_t& dataset, fold_t fold, const tensor4d_t& gradients, const indices_t& indices)
@@ -194,74 +161,33 @@ scalar_t wlearner_table_t::fit(const dataset_t& dataset, fold_t fold, const tens
     const auto& best = ::nano::gboost::min_reduce(caches);
     m_tables = best.m_tables;
     m_feature = best.m_feature;
+    m_labels = static_cast<size_t>(m_tables.size<0>());
     return best.m_score;
-}
-
-void wlearner_table_t::compatible(const dataset_t& dataset) const
-{
-    critical(
-        m_tables.size<0>() == 0,
-        "table weak learner: empty weak learner!");
-
-    critical(
-        odim() != dataset.tdim() ||
-        m_feature < 0 || m_feature >= dataset.features() ||
-        !dataset.ifeature(m_feature).discrete() ||
-        dataset.ifeature(m_feature).labels().size() != static_cast<size_t>(m_tables.size<0>()),
-        "table weak learner: mis-matching dataset!");
 }
 
 void wlearner_table_t::predict(const dataset_t& dataset, fold_t fold, tensor_range_t range, tensor4d_map_t&& outputs) const
 {
-    compatible(dataset);
-    check(range, outputs);
-
-    const auto fvalues = dataset.inputs(fold, range, m_feature);
-    for (tensor_size_t i = 0; i < range.size(); ++ i)
+    wlearner_feature1_t::predict(dataset, fold, range, outputs, [&] (scalar_t x, tensor_size_t i)
     {
-        const auto x = fvalues(i);
-        if (feature_t::missing(x))
-        {
-            outputs.vector(i).setZero();
-        }
-        else
-        {
-            const auto index = static_cast<tensor_size_t>(x);
-            critical(
-                index < 0 || index >= n_fvalues(),
-                scat("table weak learner: invalid feature value ", x, ", expecting [0, ", n_fvalues(), ")"));
-            outputs.vector(i) = m_tables.vector(index);
-        }
-    }
+        const auto index = static_cast<tensor_size_t>(x);
+        critical(
+            index < 0 || index >= n_fvalues(),
+            scat("table weak learner: invalid feature value ", x, ", expecting [0, ", n_fvalues(), ")"));
+        outputs.vector(i) = m_tables.vector(index);
+    });
 }
 
 cluster_t wlearner_table_t::split(const dataset_t& dataset, fold_t fold, const indices_t& indices) const
 {
-    compatible(dataset);
-    wlearner_t::check(indices);
-
     cluster_t cluster(dataset.samples(fold), m_tables.size<0>());
-    dataset.loop(execution::par, fold, batch(), [&] (tensor_range_t range, size_t)
+    wlearner_feature1_t::split(dataset, fold, indices, [&] (scalar_t x, tensor_size_t i)
     {
-        const auto fvalues = dataset.inputs(fold, range, m_feature);
-        wlearner_t::for_each(range, indices, [&] (const tensor_size_t i)
-        {
-            const auto x = fvalues(i - range.begin());
-            if (!feature_t::missing(x))
-            {
-                const auto index = static_cast<tensor_size_t>(x);
-                critical(
-                    index < 0 || index >= n_fvalues(),
-                    scat("table weak learner: invalid feature value ", x, ", expecting [0, ", n_fvalues(), ")"));
-                cluster.assign(i, index);
-            }
-        });
+        const auto index = static_cast<tensor_size_t>(x);
+        critical(
+            index < 0 || index >= n_fvalues(),
+            scat("table weak learner: invalid feature value ", x, ", expecting [0, ", n_fvalues(), ")"));
+        cluster.assign(i, index);
     });
 
     return cluster;
-}
-
-indices_t wlearner_table_t::features() const
-{
-    return std::array<tensor_size_t, 1>{{m_feature}};
 }

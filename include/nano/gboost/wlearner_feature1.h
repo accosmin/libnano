@@ -32,11 +32,6 @@ namespace nano
         ///
         /// \brief @see wlearner_t
         ///
-        [[nodiscard]] std::ostream& print(std::ostream&) const override;
-
-        ///
-        /// \brief @see wlearner_t
-        ///
         [[nodiscard]] tensor3d_dim_t odim() const override;
 
         ///

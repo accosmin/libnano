@@ -231,11 +231,6 @@ void wlearner_dtree_t::write(std::ostream& stream) const
         "dtree weak learner: failed to write to stream!");
 }
 
-std::ostream& wlearner_dtree_t::print(std::ostream& stream) const
-{
-    return stream << "dtree: features=[" << m_features.array() << "]";
-}
-
 rwlearner_t wlearner_dtree_t::clone() const
 {
     return std::make_unique<wlearner_dtree_t>(*this);

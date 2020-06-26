@@ -179,7 +179,8 @@ train_result_t gboost_model_t::train(const loss_t& loss, const dataset_t& datase
 }
 
 train_status gboost_model_t::done(const tensor_size_t round, const scalar_t vAreg,
-    const tensor1d_t& tr_errors, const tensor1d_t& vd_errors, const solver_state_t& state, train_curve_t& curve) const
+    const tensor1d_t& tr_errors, const tensor1d_t& vd_errors, const solver_state_t& state,
+    const indices_t& indices, train_curve_t& curve) const
 {
     const auto cwidth = static_cast<int>(std::log10(rounds())) + 1;
 
@@ -196,7 +197,8 @@ train_status gboost_model_t::done(const tensor_size_t round, const scalar_t vAre
         << std::setw(cwidth) << std::setfill('0') << rounds()
         << ":tr=" << tr_value << "|" << tr_error << ",vd=" << vd_error << "(" << status << ")"
         << std::setprecision(8) << std::fixed
-        << ",vAreg=" << vAreg << "," << state << ".";
+        << ",vAreg=" << vAreg << "," << state
+        << ",feat=[" << indices.array() << "].";
 
     return status;
 }
@@ -253,7 +255,7 @@ std::tuple<scalar_t, gboost_model_t::model_t, tensor4d_t> gboost_model_t::train(
     ::evaluate(dataset, tr_fold, batch(), loss, tr_outputs, tr_errors.tensor());
     ::evaluate(dataset, vd_fold, batch(), loss, vd_outputs, vd_errors.tensor());
 
-    const auto status = done(0, vAreg, tr_errors, vd_errors, state, curve);
+    const auto status = done(0, vAreg, tr_errors, vd_errors, state, indices_t{}, curve);
     critical(status == train_status::diverged, "gboost model: failed to fit bias (check inputs and parameters)!");
 
     model_t model;
@@ -298,8 +300,7 @@ std::tuple<scalar_t, gboost_model_t::model_t, tensor4d_t> gboost_model_t::train(
             log_warning() << "cannot fit any new weak learner, stopping.";
             break;
         }
-
-        log_info() << " >" << (*best_wlearner) << ".";
+        const auto features = best_wlearner->features();
 
         // scale the chosen weak learner
         switch (scale())
@@ -340,7 +341,7 @@ std::tuple<scalar_t, gboost_model_t::model_t, tensor4d_t> gboost_model_t::train(
         ::evaluate(dataset, tr_fold, batch(), loss, tr_outputs, tr_errors.tensor());
         ::evaluate(dataset, vd_fold, batch(), loss, vd_outputs, vd_errors.tensor());
 
-        const auto status = done(round + 1, vAreg, tr_errors, vd_errors, state, curve);
+        const auto status = done(round + 1, vAreg, tr_errors, vd_errors, state, features, curve);
         if (status == train_status::better)
         {
             te_opt_outputs = te_outputs;

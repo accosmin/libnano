@@ -157,7 +157,7 @@ namespace nano
 
         [[nodiscard]] train_status done(
             tensor_size_t round, scalar_t vAreg, const tensor1d_t&, const tensor1d_t&,
-            const solver_state_t&, train_curve_t&) const;
+            const solver_state_t&, const indices_t& features, train_curve_t&) const;
 
         [[nodiscard]] std::tuple<scalar_t, model_t, tensor4d_t> train(
             const loss_t&, const dataset_t&, size_t fold, const solver_t&, scalar_t vAreg, train_curve_t&) const;

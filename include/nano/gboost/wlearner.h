@@ -44,11 +44,6 @@ namespace nano
         void write(std::ostream&) const override;
 
         ///
-        /// \brief print a short description of the weak learner.
-        ///
-        [[nodiscard]] virtual std::ostream& print(std::ostream&) const = 0;
-
-        ///
         /// \brief clone the object.
         ///
         [[nodiscard]] virtual rwlearner_t clone() const = 0;
@@ -134,9 +129,4 @@ namespace nano
         wlearner        m_type{wlearner::real}; ///<
         iparam1_t       m_batch{"wlearner::batch", 1, LE, 32, LE, 1024};///< batch size
     };
-
-    inline std::ostream& operator<<(std::ostream& os, const wlearner_t& wlearner)
-    {
-        return wlearner.print(os);
-    }
 }

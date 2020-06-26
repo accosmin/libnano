@@ -33,11 +33,6 @@ void wlearner_feature1_t::write(std::ostream& stream) const
         "feature1 weak learner: failed to write to stream!");
 }
 
-std::ostream& wlearner_feature1_t::print(std::ostream& stream) const
-{
-    return stream << "feature1: feature=" << m_feature;
-}
-
 tensor3d_dim_t wlearner_feature1_t::odim() const
 {
     return make_dims(m_tables.size<1>(), m_tables.size<2>(), m_tables.size<3>());

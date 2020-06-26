@@ -99,11 +99,6 @@ namespace nano
         ///
         /// \brief @see wlearner_t
         ///
-        [[nodiscard]] std::ostream& print(std::ostream&) const override;
-
-        ///
-        /// \brief @see wlearner_t
-        ///
         [[nodiscard]] rwlearner_t clone() const override;
 
         ///

@@ -212,8 +212,7 @@ scalar_t wlearner_stump_t::fit(const dataset_t& dataset, fold_t fold, const tens
 
     // OK, return and store the optimum feature across threads
     const auto& best = ::nano::gboost::min_reduce(caches);
-    m_tables = best.m_tables;
-    m_feature = best.m_feature;
+    set(best.m_feature, best.m_tables);
     m_threshold = best.m_threshold;
     return best.m_score;
 }
@@ -222,7 +221,7 @@ void wlearner_stump_t::predict(const dataset_t& dataset, fold_t fold, tensor_ran
 {
     wlearner_feature1_t::predict(dataset, fold, range, outputs, [&] (scalar_t x, tensor_size_t i)
     {
-        outputs.vector(i) = m_tables.vector(x < m_threshold ? 0 : 1);
+        outputs.vector(i) = vector(x < m_threshold ? 0 : 1);
     });
 }
 

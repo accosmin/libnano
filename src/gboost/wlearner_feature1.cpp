@@ -6,6 +6,13 @@ using namespace nano;
 
 wlearner_feature1_t::wlearner_feature1_t() = default;
 
+void wlearner_feature1_t::set(tensor_size_t feature, const tensor4d_t& tables, size_t labels)
+{
+    m_tables = tables;
+    m_labels = labels;
+    m_feature = feature;
+}
+
 void wlearner_feature1_t::read(std::istream& stream)
 {
     wlearner_t::read(stream);

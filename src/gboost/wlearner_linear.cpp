@@ -132,8 +132,7 @@ scalar_t wlearner_linear_t::fit(const dataset_t& dataset, fold_t fold, const ten
 
     // OK, return and store the optimum feature across threads
     const auto& best = ::nano::gboost::min_reduce(caches);
-    m_feature = best.m_feature;
-    m_tables = best.m_tables;
+    set(best.m_feature, best.m_tables);
     return best.m_score;
 }
 
@@ -141,7 +140,7 @@ void wlearner_linear_t::predict(const dataset_t& dataset, fold_t fold, tensor_ra
 {
     wlearner_feature1_t::predict(dataset, fold, range, outputs, [&] (scalar_t x, tensor_size_t i)
     {
-        outputs.vector(i) = m_tables.vector(0) * x + m_tables.vector(1);
+        outputs.vector(i) = vector(0) * x + vector(1);
     });
 }
 

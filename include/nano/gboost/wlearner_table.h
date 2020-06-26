@@ -57,6 +57,6 @@ namespace nano
 
     private:
 
-        [[nodiscard]] auto n_fvalues() const { return m_tables.size<0>(); }
+        [[nodiscard]] auto n_fvalues() const { return tables().size<0>(); }
     };
 }

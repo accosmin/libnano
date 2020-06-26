@@ -159,9 +159,7 @@ scalar_t wlearner_table_t::fit(const dataset_t& dataset, fold_t fold, const tens
 
     // OK, return and store the optimum feature across threads
     const auto& best = ::nano::gboost::min_reduce(caches);
-    m_tables = best.m_tables;
-    m_feature = best.m_feature;
-    m_labels = static_cast<size_t>(m_tables.size<0>());
+    set(best.m_feature, best.m_tables, static_cast<size_t>(best.m_tables.size<0>()));
     return best.m_score;
 }
 
@@ -173,13 +171,13 @@ void wlearner_table_t::predict(const dataset_t& dataset, fold_t fold, tensor_ran
         critical(
             index < 0 || index >= n_fvalues(),
             scat("table weak learner: invalid feature value ", x, ", expecting [0, ", n_fvalues(), ")"));
-        outputs.vector(i) = m_tables.vector(index);
+        outputs.vector(i) = vector(index);
     });
 }
 
 cluster_t wlearner_table_t::split(const dataset_t& dataset, fold_t fold, const indices_t& indices) const
 {
-    cluster_t cluster(dataset.samples(fold), m_tables.size<0>());
+    cluster_t cluster(dataset.samples(fold), n_fvalues());
     wlearner_feature1_t::split(dataset, fold, indices, [&] (scalar_t x, tensor_size_t i)
     {
         const auto index = static_cast<tensor_size_t>(x);

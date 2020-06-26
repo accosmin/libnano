@@ -54,6 +54,7 @@ namespace nano
         ///
         [[nodiscard]] auto feature() const { return m_feature; }
         [[nodiscard]] const auto& tables() const { return m_tables; }
+        [[nodiscard]] auto vector(tensor_size_t i) const { return m_tables.vector(i); }
 
     protected:
 
@@ -101,7 +102,9 @@ namespace nano
             });
         }
 
-    protected:
+        void set(tensor_size_t feature, const tensor4d_t& tables, size_t labels = 0);
+
+    private:
 
         // attributes
         size_t          m_labels{0};        ///< expected number of labels if discrete

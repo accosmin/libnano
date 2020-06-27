@@ -1,6 +1,6 @@
 #include <utest/utest.h>
 #include <nano/numeric.h>
-#include "fixture_gboost.h"
+#include "fixture/gboost.h"
 #include <nano/gboost/wlearner_stump.h>
 
 using namespace nano;

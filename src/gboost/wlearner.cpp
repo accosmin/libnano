@@ -4,7 +4,7 @@
 #include <nano/gboost/wlearner_dtree.h>
 #include <nano/gboost/wlearner_stump.h>
 #include <nano/gboost/wlearner_table.h>
-#include <nano/gboost/wlearner_linear.h>
+#include <nano/gboost/wlearner_affine.h>
 
 using namespace nano;
 
@@ -81,7 +81,10 @@ wlearner_factory_t& wlearner_t::all()
     static std::once_flag flag;
     std::call_once(flag, [] ()
     {
-        manager.add_by_type<wlearner_linear_t>();
+        manager.add_by_type<wlearner_lin1_t>();
+        manager.add_by_type<wlearner_log1_t>();
+        manager.add_by_type<wlearner_cos1_t>();
+        manager.add_by_type<wlearner_sin1_t>();
         manager.add_by_type<wlearner_stump_t>();
         manager.add_by_type<wlearner_table_t>();
         manager.add_by_type<wlearner_dtree_t>();

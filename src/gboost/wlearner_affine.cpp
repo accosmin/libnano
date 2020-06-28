@@ -1,6 +1,6 @@
 #include <nano/logger.h>
 #include <nano/gboost/util.h>
-#include <nano/gboost/wlearner_linear.h>
+#include <nano/gboost/wlearner_affine.h>
 
 using namespace nano;
 
@@ -12,20 +12,34 @@ namespace
 
         cache_t() = default;
 
-        void clear(const tensor3d_dim_t& tdim)
+        cache_t(const tensor3d_dim_t& tdim) :
+            m_r1(tdim),
+            m_r2(tdim),
+            m_rx(tdim),
+            m_tables(cat_dims(2, tdim))
+        {
+        }
+
+        void clear()
         {
             m_x1 = 0;
             m_x2 = 0;
             m_cnt = 0;
 
-            m_r1.resize(tdim);
-            m_r2.resize(tdim);
-            m_rx.resize(tdim);
-            m_tables.resize(cat_dims(2, tdim));
-
             m_r1.zero();
             m_r2.zero();
             m_rx.zero();
+        }
+
+        template <typename tgradient>
+        void update(scalar_t value, tgradient&& gradient)
+        {
+            ++ m_cnt;
+            m_x1 += value;
+            m_x2 += value * value;
+            m_r1.array() -= gradient;
+            m_rx.array() -= value * gradient;
+            m_r2.array() += gradient * gradient;
         }
 
         [[nodiscard]] auto a() const
@@ -52,22 +66,25 @@ namespace
         }
 
         // attributes
-        tensor_size_t   m_feature{0};                                   ///<
-        tensor4d_t      m_tables;                                       ///<
         scalar_t        m_x1{0}, m_x2{0}, m_cnt{0};                     ///<
         tensor3d_t      m_r1, m_r2, m_rx;                               ///<
+        tensor_size_t   m_feature{0};                                   ///<
+        tensor4d_t      m_tables;                                       ///<
         scalar_t        m_score{std::numeric_limits<scalar_t>::max()};  ///<
     };
 }
 
-wlearner_linear_t::wlearner_linear_t() = default;
+template <typename tfun1>
+wlearner_affine_t<tfun1>::wlearner_affine_t() = default;
 
-rwlearner_t wlearner_linear_t::clone() const
+template <typename tfun1>
+rwlearner_t wlearner_affine_t<tfun1>::clone() const
 {
-    return std::make_unique<wlearner_linear_t>(*this);
+    return std::make_unique<wlearner_affine_t>(*this);
 }
 
-scalar_t wlearner_linear_t::fit(const dataset_t& dataset, fold_t fold, const tensor4d_t& gradients,
+template <typename tfun1>
+scalar_t wlearner_affine_t<tfun1>::fit(const dataset_t& dataset, fold_t fold, const tensor4d_t& gradients,
     const indices_t& indices)
 {
     assert(indices.min() >= 0);
@@ -84,7 +101,7 @@ scalar_t wlearner_linear_t::fit(const dataset_t& dataset, fold_t fold, const ten
         break;
     }
 
-    std::vector<cache_t> caches(tpool_t::size());
+    std::vector<cache_t> caches(tpool_t::size(), cache_t{dataset.tdim()});
     loopi(dataset.features(), [&] (tensor_size_t feature, size_t tnum)
     {
         const auto& ifeature = dataset.ifeature(feature);
@@ -98,21 +115,14 @@ scalar_t wlearner_linear_t::fit(const dataset_t& dataset, fold_t fold, const ten
 
         // update accumulators
         auto& cache = caches[tnum];
-        cache.clear(dataset.tdim());
+        cache.clear();
         for (const auto i : indices)
         {
             const auto value = fvalues(i);
-            if (feature_t::missing(value))
+            if (!feature_t::missing(value))
             {
-                continue;
+                cache.update(value, gradients.array(i));
             }
-
-            ++ cache.m_cnt;
-            cache.m_x1 += value;
-            cache.m_x2 += value * value;
-            cache.m_r1.array() -= gradients.array(i);
-            cache.m_rx.array() -= value * gradients.array(i);
-            cache.m_r2.array() += gradients.array(i) * gradients.array(i);
         }
 
         // update the parameters if a better feature
@@ -136,15 +146,19 @@ scalar_t wlearner_linear_t::fit(const dataset_t& dataset, fold_t fold, const ten
     return best.m_score;
 }
 
-void wlearner_linear_t::predict(const dataset_t& dataset, fold_t fold, tensor_range_t range, tensor4d_map_t&& outputs) const
+template <typename tfun1>
+void wlearner_affine_t<tfun1>::predict(
+    const dataset_t& dataset, fold_t fold, tensor_range_t range, tensor4d_map_t&& outputs) const
 {
     wlearner_feature1_t::predict(dataset, fold, range, outputs, [&] (scalar_t x, tensor_size_t i)
     {
-        outputs.vector(i) = vector(0) * x + vector(1);
+        outputs.vector(i) = vector(0) * tfun1::get(x) + vector(1);
     });
 }
 
-cluster_t wlearner_linear_t::split(const dataset_t& dataset, fold_t fold, const indices_t& indices) const
+template <typename tfun1>
+cluster_t wlearner_affine_t<tfun1>::split(
+    const dataset_t& dataset, fold_t fold, const indices_t& indices) const
 {
     cluster_t cluster(dataset.samples(fold), 1);
     wlearner_feature1_t::split(dataset, fold, indices, [&] (scalar_t, tensor_size_t i)
@@ -154,3 +168,8 @@ cluster_t wlearner_linear_t::split(const dataset_t& dataset, fold_t fold, const 
 
     return cluster;
 }
+
+template class ::nano::wlearner_affine_t<::nano::wlearner_fun1_cos_t>;
+template class ::nano::wlearner_affine_t<::nano::wlearner_fun1_lin_t>;
+template class ::nano::wlearner_affine_t<::nano::wlearner_fun1_log_t>;
+template class ::nano::wlearner_affine_t<::nano::wlearner_fun1_sin_t>;

@@ -180,7 +180,7 @@ train_result_t gboost_model_t::train(const loss_t& loss, const dataset_t& datase
 
 train_status gboost_model_t::done(const tensor_size_t round, const scalar_t vAreg,
     const tensor1d_t& tr_errors, const tensor1d_t& vd_errors, const solver_state_t& state,
-    const indices_t& indices, train_curve_t& curve) const
+    const indices_t& features, train_curve_t& curve) const
 {
     const auto cwidth = static_cast<int>(std::log10(rounds())) + 1;
 
@@ -198,7 +198,7 @@ train_status gboost_model_t::done(const tensor_size_t round, const scalar_t vAre
         << ":tr=" << tr_value << "|" << tr_error << ",vd=" << vd_error << "(" << status << ")"
         << std::setprecision(8) << std::fixed
         << ",vAreg=" << vAreg << "," << state
-        << ",feat=[" << indices.array() << "].";
+        << ",feat=[" << features.array() << "].";
 
     return status;
 }

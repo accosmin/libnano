@@ -33,7 +33,7 @@ make_test(test_gboost_model NANO::nano)
 make_test(test_gboost_wdtree NANO::nano)
 make_test(test_gboost_wtable NANO::nano)
 make_test(test_gboost_wstump NANO::nano)
-make_test(test_gboost_wlinear NANO::nano)
+make_test(test_gboost_waffine NANO::nano)
 
 make_test(test_dataset_iris NANO::nano)
 make_test(test_dataset_wine NANO::nano)

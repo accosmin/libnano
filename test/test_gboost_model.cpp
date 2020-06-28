@@ -4,7 +4,7 @@
 #include "fixture/gboost.h"
 #include <nano/gboost/model.h>
 #include <nano/gboost/wlearner_stump.h>
-#include <nano/gboost/wlearner_linear.h>
+#include <nano/gboost/wlearner_affine.h>
 
 using namespace nano;
 
@@ -179,7 +179,10 @@ UTEST_CASE(add_protos)
     UTEST_CHECK(wlearner_t::all().get("dtree") != nullptr);
     UTEST_CHECK(wlearner_t::all().get("stump") != nullptr);
     UTEST_CHECK(wlearner_t::all().get("table") != nullptr);
-    UTEST_CHECK(wlearner_t::all().get("linear") != nullptr);
+    UTEST_CHECK(wlearner_t::all().get("lin1") != nullptr);
+    UTEST_CHECK(wlearner_t::all().get("log1") != nullptr);
+    UTEST_CHECK(wlearner_t::all().get("cos1") != nullptr);
+    UTEST_CHECK(wlearner_t::all().get("sin1") != nullptr);
 
     auto model = gboost_model_t{};
     UTEST_CHECK_THROW(model.add("invalid_wlearner_id"), std::runtime_error);
@@ -187,7 +190,7 @@ UTEST_CASE(add_protos)
     UTEST_CHECK_NOTHROW(model.add("stump"));
     UTEST_CHECK_NOTHROW(model.add("stump"));
     UTEST_CHECK_NOTHROW(model.add("dtree"));
-    UTEST_CHECK_NOTHROW(model.add(wlearner_linear_t{}));
+    UTEST_CHECK_NOTHROW(model.add(wlearner_lin1_t{}));
 }
 
 UTEST_CASE(default_predict)
@@ -215,7 +218,7 @@ UTEST_CASE(train_linear)
     auto solver = make_solver();
     auto dataset = make_dataset<gboost_linear_dataset_t>(10, 1, 120);
 
-    auto wlinear = wlearner_linear_t{};
+    auto wlinear = wlearner_lin1_t{};
 
     auto model = gboost_model_t{};
     UTEST_REQUIRE_NOTHROW(model.rounds(10));
@@ -242,7 +245,7 @@ UTEST_CASE(train_mixed)
     auto dataset = make_dataset<gboost_mixed_dataset_t>(10, 1, 130);
 
     auto wstump = wlearner_stump_t{};
-    auto wlinear = wlearner_linear_t{};
+    auto wlinear = wlearner_lin1_t{};
 
     auto model = gboost_model_t{};
     UTEST_REQUIRE_NOTHROW(model.rounds(10));

@@ -1,7 +1,7 @@
 #include <utest/utest.h>
 #include <nano/numeric.h>
 #include "fixture/gboost.h"
-#include <nano/gboost/wlearner_linear.h>
+#include <nano/gboost/wlearner_affine.h>
 
 using namespace nano;
 
@@ -26,7 +26,7 @@ public:
     [[nodiscard]] tensor_size_t gt_feature(bool discrete = false) const { return get_feature(discrete); }
 };
 
-UTEST_BEGIN_MODULE(test_gboost_wlinear)
+UTEST_BEGIN_MODULE(test_gboost_waffine)
 
 UTEST_CASE(fitting)
 {
@@ -36,7 +36,7 @@ UTEST_CASE(fitting)
     for (const auto type : {::nano::wlearner::real})
     {
         // check fitting
-        auto wlearner = make_wlearner<wlearner_linear_t>(type);
+        auto wlearner = make_wlearner<wlearner_lin1_t>(type);
         check_fit(dataset, fold, wlearner);
 
         UTEST_CHECK_EQUAL(wlearner.odim(), dataset.tdim());
@@ -64,13 +64,13 @@ UTEST_CASE(no_fitting)
 
     for (const auto type : {::nano::wlearner::discrete, static_cast<::nano::wlearner>(-1)})
     {
-        auto wlearner = make_wlearner<wlearner_linear_t>(type);
+        auto wlearner = make_wlearner<wlearner_lin1_t>(type);
         check_fit_throws(dataset, fold, wlearner);
     }
 
     for (const auto type : {::nano::wlearner::real})
     {
-        auto wlearner = make_wlearner<wlearner_linear_t>(type);
+        auto wlearner = make_wlearner<wlearner_lin1_t>(type);
         check_no_fit(datasetx, fold, wlearner);
     }
 }
@@ -83,7 +83,7 @@ UTEST_CASE(predict)
     const auto datasetx2 = make_dataset<wlinear_dataset_t>(dataset.gt_feature(), dataset.tsize());
     const auto datasetx3 = make_dataset<no_continuous_features_dataset_t<wlinear_dataset_t>>();
 
-    auto wlearner = make_wlearner<wlearner_linear_t>(::nano::wlearner::real);
+    auto wlearner = make_wlearner<wlearner_lin1_t>(::nano::wlearner::real);
     check_predict_throws(dataset, fold, wlearner);
     check_predict_throws(datasetx1, fold, wlearner);
     check_predict_throws(datasetx2, fold, wlearner);
@@ -102,7 +102,7 @@ UTEST_CASE(split)
     const auto fold = make_fold();
     const auto dataset = make_dataset<wlinear_dataset_t>();
 
-    auto wlearner = make_wlearner<wlearner_linear_t>(::nano::wlearner::real);
+    auto wlearner = make_wlearner<wlearner_lin1_t>(::nano::wlearner::real);
     check_split_throws(dataset, fold, make_indices(dataset, fold), wlearner);
     check_split_throws(dataset, fold, make_invalid_indices(dataset, fold), wlearner);
 

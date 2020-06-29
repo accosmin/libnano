@@ -53,7 +53,7 @@ namespace nano
     /// NB: the discrete features and the missing feature values are skipped during fiting.
     ///
     template <typename tfun1>
-    class NANO_PUBLIC wlearner_affine_t final : public wlearner_feature1_t
+    class wlearner_affine_t final : public wlearner_feature1_t
     {
     public:
 

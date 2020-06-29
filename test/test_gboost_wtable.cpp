@@ -1,7 +1,6 @@
 #include <utest/utest.h>
 #include <nano/numeric.h>
 #include "fixture/gboost.h"
-#include <nano/gboost/wlearner_table.h>
 
 using namespace nano;
 

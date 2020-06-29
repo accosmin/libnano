@@ -12,7 +12,7 @@ namespace
 
         cache_t() = default;
 
-        cache_t(const tensor3d_dim_t& tdim) :
+        explicit cache_t(const tensor3d_dim_t& tdim) :
             m_r1(tdim),
             m_r2(tdim),
             m_rx(tdim),
@@ -121,7 +121,7 @@ scalar_t wlearner_affine_t<tfun1>::fit(const dataset_t& dataset, fold_t fold, co
             const auto value = fvalues(i);
             if (!feature_t::missing(value))
             {
-                cache.update(value, gradients.array(i));
+                cache.update(tfun1::get(value), gradients.array(i));
             }
         }
 

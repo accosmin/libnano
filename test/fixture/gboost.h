@@ -1,7 +1,10 @@
 #include <nano/loss.h>
 #include <utest/utest.h>
-#include <nano/gboost/wlearner.h>
 #include <nano/dataset/memfixed.h>
+#include <nano/gboost/wlearner_dtree.h>
+#include <nano/gboost/wlearner_table.h>
+#include <nano/gboost/wlearner_stump.h>
+#include <nano/gboost/wlearner_affine.h>
 
 using namespace nano;
 
@@ -55,14 +58,15 @@ public:
         });
     }
 
-    scalar_t make_linear_target(
+    template <typename tfun1>
+    scalar_t make_affine_target(
         tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo,
         scalar_t weight, scalar_t bias, tensor_size_t cluster = 0)
     {
         return make_target(sample, feature, modulo, [&] (const scalar_t x)
         {
             assign(sample, cluster);
-            return weight * x + bias;
+            return weight * tfun1::get(x) + bias;
         });
     }
 

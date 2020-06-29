@@ -7,7 +7,7 @@ namespace nano
     ///
     /// \brief functions to map a scalar feature value.
     ///
-    struct wlearner_fun1_lin_t
+    struct fun1_lin_t
     {
         static auto get(scalar_t x)
         {
@@ -15,7 +15,7 @@ namespace nano
         }
     };
 
-    struct wlearner_fun1_sin_t
+    struct fun1_sin_t
     {
         static auto get(scalar_t x)
         {
@@ -23,7 +23,7 @@ namespace nano
         }
     };
 
-    struct wlearner_fun1_cos_t
+    struct fun1_cos_t
     {
         static auto get(scalar_t x)
         {
@@ -31,7 +31,7 @@ namespace nano
         }
     };
 
-    struct wlearner_fun1_log_t
+    struct fun1_log_t
     {
         static auto get(scalar_t x)
         {
@@ -83,10 +83,10 @@ namespace nano
         [[nodiscard]] cluster_t split(const dataset_t&, fold_t, const indices_t&) const override;
     };
 
-    using wlearner_cos1_t = wlearner_affine_t<wlearner_fun1_cos_t>;
-    using wlearner_lin1_t = wlearner_affine_t<wlearner_fun1_lin_t>;
-    using wlearner_log1_t = wlearner_affine_t<wlearner_fun1_log_t>;
-    using wlearner_sin1_t = wlearner_affine_t<wlearner_fun1_sin_t>;
+    using wlearner_cos1_t = wlearner_affine_t<fun1_cos_t>;
+    using wlearner_lin1_t = wlearner_affine_t<fun1_lin_t>;
+    using wlearner_log1_t = wlearner_affine_t<fun1_log_t>;
+    using wlearner_sin1_t = wlearner_affine_t<fun1_sin_t>;
 
     template <> struct factory_traits_t<wlearner_cos1_t>
     {

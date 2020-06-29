@@ -82,29 +82,29 @@ UTEST_BEGIN_MODULE(test_gboost_waffine)
 
 UTEST_CASE(fitting_lin)
 {
-    check_fitting<wlearner_fun1_lin_t>();
+    check_fitting<fun1_lin_t>();
 }
 
 UTEST_CASE(fitting_log)
 {
-    check_fitting<wlearner_fun1_log_t>();
+    check_fitting<fun1_log_t>();
 }
 
 UTEST_CASE(fitting_cos)
 {
-    check_fitting<wlearner_fun1_cos_t>();
+    check_fitting<fun1_cos_t>();
 }
 
 UTEST_CASE(fitting_sin)
 {
-    check_fitting<wlearner_fun1_sin_t>();
+    check_fitting<fun1_sin_t>();
 }
 
 UTEST_CASE(no_fitting)
 {
     const auto fold = make_fold();
-    const auto dataset = make_dataset<waffine_dataset_t<wlearner_fun1_lin_t>>();
-    const auto datasetx = make_dataset<no_continuous_features_dataset_t<waffine_dataset_t<wlearner_fun1_lin_t>>>();
+    const auto dataset = make_dataset<waffine_dataset_t<fun1_lin_t>>();
+    const auto datasetx = make_dataset<no_continuous_features_dataset_t<waffine_dataset_t<fun1_lin_t>>>();
 
     for (const auto type : {::nano::wlearner::discrete, static_cast<::nano::wlearner>(-1)})
     {
@@ -121,28 +121,28 @@ UTEST_CASE(no_fitting)
 
 UTEST_CASE(predict_lin)
 {
-    check_predict<wlearner_fun1_lin_t>();
+    check_predict<fun1_lin_t>();
 }
 
 UTEST_CASE(predict_log)
 {
-    check_predict<wlearner_fun1_log_t>();
+    check_predict<fun1_log_t>();
 }
 
 UTEST_CASE(predict_cos)
 {
-    check_predict<wlearner_fun1_cos_t>();
+    check_predict<fun1_cos_t>();
 }
 
 UTEST_CASE(predict_sin)
 {
-    check_predict<wlearner_fun1_sin_t>();
+    check_predict<fun1_sin_t>();
 }
 
 UTEST_CASE(split)
 {
     const auto fold = make_fold();
-    const auto dataset = make_dataset<waffine_dataset_t<wlearner_fun1_lin_t>>();
+    const auto dataset = make_dataset<waffine_dataset_t<fun1_lin_t>>();
 
     auto wlearner = make_wlearner<wlearner_lin1_t>(::nano::wlearner::real);
     check_split_throws(dataset, fold, make_indices(dataset, fold), wlearner);

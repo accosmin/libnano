@@ -169,7 +169,7 @@ cluster_t wlearner_affine_t<tfun1>::split(
     return cluster;
 }
 
-template class NANO_PUBLIC ::nano::wlearner_affine_t<::nano::wlearner_fun1_cos_t>;
-template class NANO_PUBLIC ::nano::wlearner_affine_t<::nano::wlearner_fun1_lin_t>;
-template class NANO_PUBLIC ::nano::wlearner_affine_t<::nano::wlearner_fun1_log_t>;
-template class NANO_PUBLIC ::nano::wlearner_affine_t<::nano::wlearner_fun1_sin_t>;
+template class NANO_PUBLIC ::nano::wlearner_affine_t<::nano::fun1_cos_t>;
+template class NANO_PUBLIC ::nano::wlearner_affine_t<::nano::fun1_lin_t>;
+template class NANO_PUBLIC ::nano::wlearner_affine_t<::nano::fun1_log_t>;
+template class NANO_PUBLIC ::nano::wlearner_affine_t<::nano::fun1_sin_t>;

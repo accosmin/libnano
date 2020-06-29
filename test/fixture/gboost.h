@@ -19,55 +19,51 @@ public:
 
     virtual void make_target(tensor_size_t) = 0;
 
-    scalar_t make_stump_target(
-        tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo,
-        scalar_t threshold, scalar_t pred0, scalar_t pred1, tensor_size_t cluster)
+    template <typename toperator>
+    scalar_t make_target(tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo, const toperator& op)
     {
         auto input = this->input(sample);
         if (!feature_t::missing(input(feature)))
         {
-            input(feature) = static_cast<scalar_t>(sample % modulo);
-            assign(sample, cluster + (input(feature) < threshold ? 0 : 1));
-            return (input(feature) < threshold) ? pred0 : pred1;
+            return op(input(feature) = static_cast<scalar_t>(sample % modulo));
         }
         else
         {
             return 0.0;
         }
+    }
+
+    scalar_t make_stump_target(
+        tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo,
+        scalar_t threshold, scalar_t pred0, scalar_t pred1, tensor_size_t cluster)
+    {
+        return make_target(sample, feature, modulo, [&] (const scalar_t x)
+        {
+            assign(sample, cluster + (x < threshold ? 0 : 1));
+            return (x < threshold) ? pred0 : pred1;
+        });
     }
 
     scalar_t make_table_target(
         tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo,
         scalar_t scale, tensor_size_t cluster)
     {
-        auto input = this->input(sample);
-        if (!feature_t::missing(input(feature)))
+        return make_target(sample, feature, modulo, [&] (const scalar_t x)
         {
-            input(feature) = static_cast<scalar_t>(sample % modulo);
             assign(sample, cluster + (sample % modulo));
-            return scale * (input(feature) - 1.0);
-        }
-        else
-        {
-            return 0.0;
-        }
+            return scale * (x - 1.0);
+        });
     }
 
     scalar_t make_linear_target(
         tensor_size_t sample, tensor_size_t feature, tensor_size_t modulo,
         scalar_t weight, scalar_t bias, tensor_size_t cluster = 0)
     {
-        auto input = this->input(sample);
-        if (!feature_t::missing(input(feature)))
+        return make_target(sample, feature, modulo, [&] (const scalar_t x)
         {
-            input(feature) = static_cast<scalar_t>(sample % modulo);
             assign(sample, cluster);
-            return weight * input(feature) + bias;
-        }
-        else
-        {
-            return 0.0;
-        }
+            return weight * x + bias;
+        });
     }
 
     bool load() override

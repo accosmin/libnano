@@ -247,10 +247,11 @@ void wlearner_dtree_t::scale(const vector_t& scale)
 }
 
 scalar_t wlearner_dtree_t::fit(const dataset_t& dataset, fold_t fold, const tensor4d_t& gradients,
-    const indices_t& indices)
+    const indices_t& indices, const tensor4d_t& scales)
 {
     assert(indices.min() >= 0);
     assert(indices.max() < dataset.samples(fold));
+    assert(scales.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
     assert(gradients.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
 
     scalar_t score = 0;
@@ -272,8 +273,8 @@ scalar_t wlearner_dtree_t::fit(const dataset_t& dataset, fold_t fold, const tens
         const auto& cache = caches.front();
 
         // split the node using both discrete and continuous features...
-        const auto score_stump = stump.fit(dataset, fold, gradients, cache.m_indices);
-        const auto score_table = table.fit(dataset, fold, gradients, cache.m_indices);
+        const auto score_stump = stump.fit(dataset, fold, gradients, cache.m_indices, scales);
+        const auto score_table = table.fit(dataset, fold, gradients, cache.m_indices, scales);
 
         cluster_t cluster;
         tensor4d_t tables;

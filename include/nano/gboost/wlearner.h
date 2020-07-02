@@ -66,9 +66,14 @@ namespace nano
         ///
         /// \brief select the feature or the features and estimate their associated parameters
         ///     that matches the best the given residuals/gradients in terms of the L2-norm
-        ///     using the given sample indices.
+        ///     using the given sample indices:
         ///
-        [[nodiscard]] virtual scalar_t fit(const dataset_t&, fold_t, const tensor4d_t& gradients, const indices_t&) = 0;
+        ///     argmin_h mean(L2-norm(-gradients(i), scales(i) * h(i)), i in indices)
+        ///
+        ///     where h is the weak learner.
+        ///
+        [[nodiscard]] virtual scalar_t fit(const dataset_t&, fold_t,
+            const tensor4d_t& gradients, const indices_t&, const tensor4d_t& scales) = 0;
 
         ///
         /// \brief adjust the weak learner's parameters to obtain linearly scaled predictions.

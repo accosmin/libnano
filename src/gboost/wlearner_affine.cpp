@@ -12,7 +12,7 @@ namespace
 
         cache_t() = default;
 
-        cache_t(const tensor3d_dim_t& tdim) :
+        explicit cache_t(const tensor3d_dim_t& tdim) :
             m_tables(cat_dims(2, tdim)),
             m_accumulators(cat_dims(6, tdim))
         {
@@ -25,12 +25,12 @@ namespace
         auto r2() { return m_accumulators.array(4); }
         auto rx() { return m_accumulators.array(5); }
 
-        auto x0() const { return m_accumulators.array(0); }
-        auto x1() const { return m_accumulators.array(1); }
-        auto x2() const { return m_accumulators.array(2); }
-        auto r1() const { return m_accumulators.array(3); }
-        auto r2() const { return m_accumulators.array(4); }
-        auto rx() const { return m_accumulators.array(5); }
+        [[nodiscard]] auto x0() const { return m_accumulators.array(0); }
+        [[nodiscard]] auto x1() const { return m_accumulators.array(1); }
+        [[nodiscard]] auto x2() const { return m_accumulators.array(2); }
+        [[nodiscard]] auto r1() const { return m_accumulators.array(3); }
+        [[nodiscard]] auto r2() const { return m_accumulators.array(4); }
+        [[nodiscard]] auto rx() const { return m_accumulators.array(5); }
 
         void clear()
         {
@@ -86,10 +86,11 @@ rwlearner_t wlearner_affine_t<tfun1>::clone() const
 
 template <typename tfun1>
 scalar_t wlearner_affine_t<tfun1>::fit(const dataset_t& dataset, fold_t fold, const tensor4d_t& gradients,
-    const indices_t& indices)
+    const indices_t& indices, const tensor4d_t& scales)
 {
     assert(indices.min() >= 0);
     assert(indices.max() < dataset.samples(fold));
+    assert(scales.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
     assert(gradients.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
 
     switch (type())
@@ -101,9 +102,6 @@ scalar_t wlearner_affine_t<tfun1>::fit(const dataset_t& dataset, fold_t fold, co
         critical(true, "linear weak learner: unhandled wlearner");
         break;
     }
-
-    tensor4d_t scales(gradients.dims());
-    scales.constant(1.0);
 
     std::vector<cache_t> caches(tpool_t::size(), cache_t{dataset.tdim()});
     loopi(dataset.features(), [&] (tensor_size_t feature, size_t tnum)

@@ -75,6 +75,9 @@ public:
         resize(make_dims(m_samples, m_isize, 1, 1),
                make_dims(m_samples, m_tsize, 1, 1));
 
+        m_scales.resize(make_dims(m_samples, m_tsize, 1, 1));
+        m_scales.constant(1.0);
+
         const auto tr_samples = m_samples * train_percentage() / 100;
         const auto vd_samples = (m_samples - tr_samples) / 2;
         const auto te_samples = m_samples - tr_samples - vd_samples;
@@ -231,6 +234,11 @@ public:
         }
     }
 
+    [[nodiscard]] auto scales(const fold_t fold) const
+    {
+        return m_scales.indexed<scalar_t>(indices(fold));
+    }
+
 private:
 
     // attributes
@@ -240,6 +248,7 @@ private:
     cluster_t           m_tr_cluster;       ///< split of the training samples using the ground truth feature
     cluster_t           m_vd_cluster;       ///< split of the validation samples using the ground truth feature
     cluster_t           m_te_cluster;       ///< split of the testing samples using the ground truth feature
+    tensor4d_t          m_scales;           ///<
 };
 
 template <typename tdataset>
@@ -343,7 +352,7 @@ inline auto make_residuals(const dataset_t& dataset, fold_t fold, const loss_t& 
     return residuals;
 }
 
-inline void check_fit(const dataset_t& dataset, fold_t fold, wlearner_t& wlearner)
+inline void check_fit(const fixture_dataset_t& dataset, fold_t fold, wlearner_t& wlearner)
 {
     const auto loss = make_loss();
     const auto indices = make_indices(dataset, fold);
@@ -351,12 +360,12 @@ inline void check_fit(const dataset_t& dataset, fold_t fold, wlearner_t& wlearne
 
     auto fit_score = feature_t::placeholder_value();
     UTEST_REQUIRE(!std::isfinite(fit_score));
-    UTEST_REQUIRE_NOTHROW(fit_score = wlearner.fit(dataset, fold, residuals, indices));
+    UTEST_REQUIRE_NOTHROW(fit_score = wlearner.fit(dataset, fold, residuals, indices, dataset.scales(fold)));
     UTEST_REQUIRE(std::isfinite(fit_score));
     UTEST_CHECK_EQUAL(wlearner.odim(), dataset.tdim());
 }
 
-inline void check_no_fit(const dataset_t& dataset, fold_t fold, wlearner_t& wlearner)
+inline void check_no_fit(const fixture_dataset_t& dataset, fold_t fold, wlearner_t& wlearner)
 {
     const auto loss = make_loss();
     const auto indices = make_indices(dataset, fold);
@@ -364,12 +373,12 @@ inline void check_no_fit(const dataset_t& dataset, fold_t fold, wlearner_t& wlea
 
     auto fit_score = feature_t::placeholder_value();
     UTEST_REQUIRE(!std::isfinite(fit_score));
-    UTEST_REQUIRE_NOTHROW(fit_score = wlearner.fit(dataset, fold, residuals, indices));
+    UTEST_REQUIRE_NOTHROW(fit_score = wlearner.fit(dataset, fold, residuals, indices, dataset.scales(fold)));
     UTEST_REQUIRE(std::isfinite(fit_score));
     UTEST_CHECK_EQUAL(fit_score, std::numeric_limits<scalar_t>::max());
 }
 
-inline void check_fit_throws(const dataset_t& dataset, fold_t fold, wlearner_t& wlearner)
+inline void check_fit_throws(const fixture_dataset_t& dataset, fold_t fold, wlearner_t& wlearner)
 {
     const auto loss = make_loss();
     const auto indices = make_indices(dataset, fold);
@@ -377,7 +386,7 @@ inline void check_fit_throws(const dataset_t& dataset, fold_t fold, wlearner_t& 
 
     auto fit_score = feature_t::placeholder_value();
     UTEST_REQUIRE(!std::isfinite(fit_score));
-    UTEST_REQUIRE_THROW(fit_score = wlearner.fit(dataset, fold, residuals, indices), std::runtime_error);
+    UTEST_REQUIRE_THROW(fit_score = wlearner.fit(dataset, fold, residuals, indices, dataset.scales(fold)), std::runtime_error);
 }
 
 inline void check_split(const dataset_t& dataset, fold_t fold, const cluster_t& gcluster, const wlearner_t& wlearner)

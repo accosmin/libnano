@@ -139,10 +139,12 @@ rwlearner_t wlearner_stump_t::clone() const
     return std::make_unique<wlearner_stump_t>(*this);
 }
 
-scalar_t wlearner_stump_t::fit(const dataset_t& dataset, fold_t fold, const tensor4d_t& gradients, const indices_t& indices)
+scalar_t wlearner_stump_t::fit(const dataset_t& dataset, fold_t fold, const tensor4d_t& gradients,
+    const indices_t& indices, const tensor4d_t& scales)
 {
     assert(indices.min() >= 0);
     assert(indices.max() < dataset.samples(fold));
+    assert(scales.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
     assert(gradients.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
 
     switch (type())

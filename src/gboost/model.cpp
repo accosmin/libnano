@@ -269,11 +269,14 @@ std::tuple<scalar_t, gboost_model_t::model_t, tensor4d_t> gboost_model_t::train(
         cluster.assign(i, 0);
     }
 
+    const auto indices = make_indices(tr_samples);
+
+    tensor4d_t scales(cat_dims(tr_samples, tdim));
+    scales.constant(1.0);
+
     // construct the model one boosting round at a time
     for (tensor_size_t round = 0; round < rounds(); ++ round)
     {
-        const auto indices = make_indices(tr_samples);
-
         ::residual(dataset, tr_fold, batch(), loss, tr_outputs, vAreg,
             tr_errors.tensor(), tr_vgrads.tensor(), tr_woutputs.tensor());
 
@@ -286,7 +289,7 @@ std::tuple<scalar_t, gboost_model_t::model_t, tensor4d_t> gboost_model_t::train(
             auto wlearner = prototype.m_wlearner->clone();
             assert(wlearner);
 
-            const auto score = wlearner->fit(dataset, tr_fold, tr_vgrads, indices);
+            const auto score = wlearner->fit(dataset, tr_fold, tr_vgrads, indices, scales);
             if (score < best_score)
             {
                 best_id = prototype.m_id;

@@ -119,7 +119,8 @@ namespace nano
         ///
         /// \brief @see wlearner_t
         ///
-        [[nodiscard]] scalar_t fit(const dataset_t&, fold_t, const tensor4d_t& gradients, const indices_t&) override;
+        [[nodiscard]] scalar_t fit(const dataset_t&, fold_t,
+            const tensor4d_t&, const indices_t&, const tensor4d_t&) override;
 
         ///
         /// \brief @see wlearner_t

@@ -12,64 +12,65 @@ namespace
 
         cache_t() = default;
 
-        explicit cache_t(const tensor3d_dim_t& tdim) :
-            m_r1(tdim),
-            m_r2(tdim),
-            m_rx(tdim),
-            m_tables(cat_dims(2, tdim))
+        cache_t(const tensor3d_dim_t& tdim) :
+            m_tables(cat_dims(2, tdim)),
+            m_accumulators(cat_dims(6, tdim))
         {
         }
+
+        auto x0() { return m_accumulators.array(0); }
+        auto x1() { return m_accumulators.array(1); }
+        auto x2() { return m_accumulators.array(2); }
+        auto r1() { return m_accumulators.array(3); }
+        auto r2() { return m_accumulators.array(4); }
+        auto rx() { return m_accumulators.array(5); }
+
+        auto x0() const { return m_accumulators.array(0); }
+        auto x1() const { return m_accumulators.array(1); }
+        auto x2() const { return m_accumulators.array(2); }
+        auto r1() const { return m_accumulators.array(3); }
+        auto r2() const { return m_accumulators.array(4); }
+        auto rx() const { return m_accumulators.array(5); }
 
         void clear()
         {
-            m_x1 = 0;
-            m_x2 = 0;
             m_cnt = 0;
-
-            m_r1.zero();
-            m_r2.zero();
-            m_rx.zero();
+            m_accumulators.zero();
         }
 
-        template <typename tgradient>
-        void update(scalar_t value, tgradient&& gradient)
+        template <typename tgarray, typename tsarray>
+        void update(scalar_t value, tgarray&& vgrad, tsarray&& scale)
         {
             ++ m_cnt;
-            m_x1 += value;
-            m_x2 += value * value;
-            m_r1.array() -= gradient;
-            m_rx.array() -= value * gradient;
-            m_r2.array() += gradient * gradient;
+            x0() += scale.square();
+            x1() += scale.square() * value;
+            x2() += scale.square() * value * value;
+            r1() -= scale * vgrad;
+            r2() += vgrad * vgrad;
+            rx() -= vgrad * scale * value;
         }
 
         [[nodiscard]] auto a() const
         {
-            return (m_rx.array() * m_cnt - m_x1 * m_r1.array()) / (m_x2 * m_cnt - m_x1 * m_x1);
+            return (rx() * x0() - r1() * x1()) / (x2() * x0() - x1() * x1());
         }
 
         [[nodiscard]] auto b() const
         {
-            return (m_r1.array() * m_x2 - m_x1 * m_rx.array()) / (m_x2 * m_cnt - m_x1 * m_x1);
+            return (r1() * x2() - rx() * x1()) / (x2() * x0() - x1() * x1());
         }
 
         [[nodiscard]] auto score() const
         {
-            scalar_t score = 0;
-            if (m_cnt > 0)
-            {
-                score += (a().square() * m_x2 + b().square() * m_cnt + m_r2.array()
-                    + 2 * a().array() * b().array() * m_x1
-                    - 2 * b().array() * m_r1.array()
-                    - 2 * a().array() * m_rx.array()).sum();
-            }
-            return score;
+            return (r2() + a().square() * x2() + b().square() * x0() -
+                    2 * a() * rx() - 2 * b() * r1() + 2 * a() * b() * x1()).sum();
         }
 
         // attributes
-        scalar_t        m_x1{0}, m_x2{0}, m_cnt{0};                     ///<
-        tensor3d_t      m_r1, m_r2, m_rx;                               ///<
-        tensor_size_t   m_feature{0};                                   ///<
+        tensor_size_t   m_cnt{0};                                       ///<
         tensor4d_t      m_tables;                                       ///<
+        tensor_size_t   m_feature{0};                                   ///<
+        tensor4d_t      m_accumulators;                                 ///< (6, tdim)
         scalar_t        m_score{std::numeric_limits<scalar_t>::max()};  ///<
     };
 }
@@ -101,6 +102,9 @@ scalar_t wlearner_affine_t<tfun1>::fit(const dataset_t& dataset, fold_t fold, co
         break;
     }
 
+    tensor4d_t scales(gradients.dims());
+    scales.constant(1.0);
+
     std::vector<cache_t> caches(tpool_t::size(), cache_t{dataset.tdim()});
     loopi(dataset.features(), [&] (tensor_size_t feature, size_t tnum)
     {
@@ -121,19 +125,18 @@ scalar_t wlearner_affine_t<tfun1>::fit(const dataset_t& dataset, fold_t fold, co
             const auto value = fvalues(i);
             if (!feature_t::missing(value))
             {
-                cache.update(tfun1::get(value), gradients.array(i));
+                cache.update(tfun1::get(value), gradients.array(i), scales.array(i));
             }
         }
 
         // update the parameters if a better feature
-        const auto score = cache.score();
-        if (score < cache.m_score)
+        if (cache.m_cnt > 0)
         {
-            cache.m_tables.zero();
-            cache.m_score = score;
-            cache.m_feature = feature;
-            if (cache.m_cnt > 0)
+            const auto score = cache.score();
+            if (score < cache.m_score)
             {
+                cache.m_score = score;
+                cache.m_feature = feature;
                 cache.m_tables.array(0) = cache.a();
                 cache.m_tables.array(1) = cache.b();
             }

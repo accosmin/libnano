@@ -16,44 +16,25 @@ public:
         return 1;
     }
 
+    void make_scale(const tensor_size_t sample) override
+    {
+        scale(sample).constant(
+            static_cast<scalar_t>(sample) /
+            static_cast<scalar_t>(samples()));
+    }
+
     void make_target(const tensor_size_t sample) override
     {
         target(sample).constant(
             make_affine_target<tfun1>(sample, gt_feature(), 6, gt_weight(), gt_bias(), 0));
+
+        target(sample).array() *= scale(sample).array();
     }
 
     [[nodiscard]] scalar_t gt_bias() const { return -7.1; }
     [[nodiscard]] scalar_t gt_weight() const { return +3.5; }
     [[nodiscard]] tensor_size_t gt_feature(bool discrete = false) const { return get_feature(discrete); }
 };
-
-template <typename tdataset>
-class product_dataset_t : public tdataset
-{
-public:
-
-    product_dataset_t() = default;
-
-    bool load() override
-    {
-        m_base.resize(cat_dims(tdataset::samples(), tdataset::tdim()));
-        m_base.random(-1.0, +1.0);
-
-        return tdataset::load();
-    }
-
-    void make_target(const tensor_size_t sample) override
-    {
-        tdataset::make_target(sample);
-        tdataset::target(sample).array() *= m_base.array(sample);
-    }
-
-private:
-
-    // attributes
-    tensor4d_t      m_base;     ///<
-};
-
 
 template <typename tfun1>
 static void check_fitting()

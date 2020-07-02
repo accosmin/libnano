@@ -20,6 +20,7 @@ public:
 
     [[nodiscard]] virtual tensor_size_t groups() const = 0;
 
+    virtual void make_scale(tensor_size_t) {};
     virtual void make_target(tensor_size_t) = 0;
 
     template <typename toperator>
@@ -234,6 +235,14 @@ public:
         }
     }
 
+    [[nodiscard]] auto scale(tensor_size_t sample)
+    {
+        return m_scales.tensor(sample);
+    }
+    [[nodiscard]] auto scale(tensor_size_t sample) const
+    {
+        return m_scales.tensor(sample);
+    }
     [[nodiscard]] auto scales(const fold_t fold) const
     {
         return m_scales.indexed<scalar_t>(indices(fold));
@@ -432,6 +441,7 @@ inline void predict(const dataset_t& dataset, fold_t fold, const wlearner_t& wle
 inline void check_predict(const fixture_dataset_t& dataset, fold_t fold, const wlearner_t& wlearner)
 {
     const auto inputs = dataset.inputs(fold);
+    const auto scales = dataset.scales(fold);
     const auto targets = dataset.targets(fold);
     const auto imatrix = inputs.reshape(dataset.samples(fold), -1);
 
@@ -450,7 +460,7 @@ inline void check_predict(const fixture_dataset_t& dataset, fold_t fold, const w
         }
         else if (wlearner.type() == ::nano::wlearner::real)
         {
-            UTEST_CHECK_EIGEN_CLOSE(outputs.vector(s), targets.vector(s), 1e-8);
+            UTEST_CHECK_EIGEN_CLOSE(outputs.array(s) * scales.array(s), targets.array(s), 1e-8);
         }
         else
         {

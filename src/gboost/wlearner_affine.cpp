@@ -34,14 +34,12 @@ namespace
 
         void clear()
         {
-            m_cnt = 0;
             m_accumulators.zero();
         }
 
         template <typename tgarray, typename tsarray>
         void update(scalar_t value, tgarray&& vgrad, tsarray&& scale)
         {
-            ++ m_cnt;
             x0() += scale.square();
             x1() += scale.square() * value;
             x2() += scale.square() * value * value;
@@ -67,7 +65,6 @@ namespace
         }
 
         // attributes
-        tensor_size_t   m_cnt{0};                                       ///<
         tensor4d_t      m_tables;                                       ///<
         tensor_size_t   m_feature{0};                                   ///<
         tensor4d_t      m_accumulators;                                 ///< (6, tdim)
@@ -128,16 +125,13 @@ scalar_t wlearner_affine_t<tfun1>::fit(const dataset_t& dataset, fold_t fold, co
         }
 
         // update the parameters if a better feature
-        if (cache.m_cnt > 0)
+        const auto score = cache.score();
+        if (std::isfinite(score) && score < cache.m_score)
         {
-            const auto score = cache.score();
-            if (score < cache.m_score)
-            {
-                cache.m_score = score;
-                cache.m_feature = feature;
-                cache.m_tables.array(0) = cache.a();
-                cache.m_tables.array(1) = cache.b();
-            }
+            cache.m_score = score;
+            cache.m_feature = feature;
+            cache.m_tables.array(0) = cache.a();
+            cache.m_tables.array(1) = cache.b();
         }
     });
 

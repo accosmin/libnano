@@ -15,9 +15,19 @@ public:
         return 3;
     }
 
+    void make_scale(const tensor_size_t sample) override
+    {
+        scale(sample).constant(
+            static_cast<scalar_t>(sample + 1) /
+            static_cast<scalar_t>(samples()));
+    }
+
     void make_target(const tensor_size_t sample) override
     {
-        target(sample).constant(make_table_target(sample, feature(), 3, 5.0, 0));
+        target(sample).constant(
+            make_table_target(sample, feature(), 3, 5.0, 0));
+
+        target(sample).array() *= scale(sample).array();
     }
 
     [[nodiscard]] tensor_size_t the_discrete_feature() const { return feature(); }

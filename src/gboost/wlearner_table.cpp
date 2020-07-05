@@ -13,61 +13,74 @@ namespace
 
         cache_t() = default;
 
+        auto r0(tensor_size_t fv) { return m_accumulators.array(fv, 0); }
+        auto r1(tensor_size_t fv) { return m_accumulators.array(fv, 1); }
+        auto r2(tensor_size_t fv) { return m_accumulators.array(fv, 2); }
+
+        [[nodiscard]] auto r0(tensor_size_t fv) const { return m_accumulators.array(fv, 0); }
+        [[nodiscard]] auto r1(tensor_size_t fv) const { return m_accumulators.array(fv, 1); }
+        [[nodiscard]] auto r2(tensor_size_t fv) const { return m_accumulators.array(fv, 2); }
+
         void clear(const tensor_size_t n_fvalues, const tensor3d_dim_t tdim)
         {
-            m_cnt.resize(n_fvalues);
-            m_res1.resize(cat_dims(n_fvalues, tdim));
-            m_res2.resize(cat_dims(n_fvalues, tdim));
-
-            m_cnt.zero();
-            m_res1.zero();
-            m_res2.zero();
+            m_accumulators.resize(cat_dims(n_fvalues, cat_dims(3, tdim)));
+            m_accumulators.zero();
         }
 
         [[nodiscard]] auto outputs_real(const tensor_size_t fv) const
         {
-            return m_res1.array(fv) / std::max(m_cnt(fv), scalar_t(1));
+            return r1(fv) / r0(fv);
         }
 
         [[nodiscard]] auto outputs_discrete(const tensor_size_t fv) const
         {
-            return m_res1.array(fv).sign();
+            return outputs_real(fv).sign();
         }
 
         template <typename toutputs>
         [[nodiscard]] scalar_t score(const tensor_size_t fv, const toutputs& outputs) const
         {
-            return (m_cnt(fv) * outputs.square() - 2 * outputs * m_res1.array(fv) + m_res2.array(fv)).sum();
+            return (r2(fv) + outputs.square() * r0(fv) - 2 * outputs * r1(fv)).sum();
         }
 
         [[nodiscard]] auto score(const wlearner type) const
         {
             scalar_t score = 0;
-            for (tensor_size_t fv = 0; fv < m_cnt.size(); ++ fv)
+            switch (type)
             {
-                switch (type)
+            case wlearner::real:
+                for (tensor_size_t fv = 0, n_fvalues = m_accumulators.size<0>(); fv < n_fvalues; ++ fv)
                 {
-                case wlearner::real:
                     score += this->score(fv, outputs_real(fv));
-                    break;
-
-                case wlearner::discrete:
-                    score += this->score(fv, outputs_discrete(fv));
-                    break;
-
-                default:
-                    assert(false);
-                    break;
                 }
+                break;
+
+            case wlearner::discrete:
+                for (tensor_size_t fv = 0, n_fvalues = m_accumulators.size<0>(); fv < n_fvalues; ++ fv)
+                {
+                    score += this->score(fv, outputs_discrete(fv));
+                }
+                break;
+
+            default:
+                assert(false);
+                break;
             }
             return score;
+        }
+
+        template <typename tgarray, typename tsarray>
+        void update(tensor_size_t fv, tgarray&& vgrad, tsarray&& scale)
+        {
+            r0(fv) += scale.square();
+            r1(fv) -= scale * vgrad;
+            r2(fv) += vgrad * vgrad;
         }
 
         // attributes
         tensor_size_t   m_feature{-1};                                  ///<
         tensor4d_t      m_tables;                                       ///<
-        tensor1d_t      m_cnt;                                          ///<
-        tensor4d_t      m_res1, m_res2;                                 ///<
+        tensor5d_t      m_accumulators;                                 ///< (#feature_values, 3, tdim)
         scalar_t        m_score{std::numeric_limits<scalar_t>::max()};  ///<
     };
 }
@@ -127,34 +140,35 @@ scalar_t wlearner_table_t::fit(const dataset_t& dataset, fold_t fold, const tens
             critical(fv < 0 || fv >= n_fvalues,
                 scat("table weak learner: invalid feature value ", fv, ", expecting [0, ", n_fvalues, ")"));
 
-            cache.m_cnt(fv) ++;
-            cache.m_res1.array(fv) -= gradients.array(i);
-            cache.m_res2.array(fv) += gradients.array(i) * gradients.array(i);
+            cache.update(fv, gradients.array(i), scales.array(i));
         }
 
         // update the parameters if a better feature
         const auto score = cache.score(type());
-        if (score < cache.m_score)
+        if (std::isfinite(score) && score < cache.m_score)
         {
             cache.m_score = score;
             cache.m_feature = feature;
             cache.m_tables.resize(cat_dims(n_fvalues, dataset.tdim()));
-            for (tensor_size_t fv = 0; fv < cache.m_cnt.size(); ++ fv)
+            switch (type())
             {
-                switch (type())
+            case wlearner::real:
+                for (tensor_size_t fv = 0; fv < n_fvalues; ++ fv)
                 {
-                case wlearner::real:
                     cache.m_tables.array(fv) = cache.outputs_real(fv);
-                    break;
-
-                case wlearner::discrete:
-                    cache.m_tables.array(fv) = cache.outputs_discrete(fv);
-                    break;
-
-                default:
-                    assert(false);
-                    break;
                 }
+                break;
+
+            case wlearner::discrete:
+                for (tensor_size_t fv = 0; fv < n_fvalues; ++ fv)
+                {
+                    cache.m_tables.array(fv) = cache.outputs_discrete(fv);
+                }
+                break;
+
+            default:
+                assert(false);
+                break;
             }
         }
     });

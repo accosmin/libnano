@@ -20,7 +20,7 @@ public:
 
     [[nodiscard]] virtual tensor_size_t groups() const = 0;
 
-    virtual void make_scale(tensor_size_t) {};
+    virtual void make_scale(tensor_size_t) {}
     virtual void make_target(tensor_size_t) = 0;
 
     template <typename toperator>
@@ -109,6 +109,7 @@ public:
             auto target = this->target(s);
             target.random(-100.0, +100.0);
 
+            make_scale(s);
             make_target(s);
         }
 

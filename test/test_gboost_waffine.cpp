@@ -19,7 +19,7 @@ public:
     void make_scale(const tensor_size_t sample) override
     {
         scale(sample).constant(
-            static_cast<scalar_t>(sample) /
+            static_cast<scalar_t>(sample + 1) /
             static_cast<scalar_t>(samples()));
     }
 

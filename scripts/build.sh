@@ -100,7 +100,7 @@ function build_example {
 function cppcheck {
     cd ${libnanodir}
 
-    version=1.90
+    version=2.1
     installed_version=$(/tmp/cppcheck/bin/cppcheck --version)
 
     if [ "${installed_version}" != "Cppcheck ${version}" ]; then

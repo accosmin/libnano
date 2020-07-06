@@ -16,9 +16,19 @@ public:
         return 2;
     }
 
+    void make_scale(const tensor_size_t sample) override
+    {
+        scale(sample).constant(
+            static_cast<scalar_t>(sample + 1) /
+            static_cast<scalar_t>(samples()));
+    }
+
     void make_target(const tensor_size_t sample) override
     {
-        target(sample).constant(make_stump_target(sample, feature(), 5, 2.5, +3.0, -2.1, 0));
+        target(sample).constant(
+            make_stump_target(sample, feature(), 5, 2.5, +3.0, -2.1, 0));
+
+        target(sample).array() *= scale(sample).array();
     }
 
     [[nodiscard]] scalar_t threshold() const { return 2.5; }

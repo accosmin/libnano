@@ -449,6 +449,8 @@ inline void check_predict(const fixture_dataset_t& dataset, fold_t fold, const w
     const auto& cluster = dataset.cluster(fold);
     const auto tsize = ::nano::size(dataset.tdim());
 
+    assert(scales.min() > 0.0);
+
     tensor4d_t outputs;
     UTEST_REQUIRE_NOTHROW(predict(dataset, fold, wlearner, outputs));
 

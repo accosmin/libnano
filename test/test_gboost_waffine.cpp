@@ -57,13 +57,13 @@ static void check_fitting()
     for (const auto type : {::nano::wlearner::discrete, static_cast<::nano::wlearner>(-1)})
     {
         auto wlearner = make_wlearner<wlearner_affine_t<tfun1>>(type);
-        ::detail::check_fit_throws(wlearner, dataset);
+        check_fit_throws(wlearner, dataset);
     }
 
     for (const auto type : {::nano::wlearner::real})
     {
         auto wlearner = make_wlearner<wlearner_affine_t<tfun1>>(type);
-        ::detail::check_no_fit(wlearner, datasetx3);
+        check_no_fit(wlearner, datasetx3);
         check_wlearner(wlearner, dataset, datasetx1, datasetx2, datasetx3);
     }
 }

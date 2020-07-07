@@ -362,8 +362,9 @@ inline auto make_residuals(const dataset_t& dataset, fold_t fold, const loss_t& 
     return residuals;
 }
 
-inline void check_fit(const fixture_dataset_t& dataset, fold_t fold, wlearner_t& wlearner)
+inline void check_fit(wlearner_t& wlearner, const fixture_dataset_t& dataset)
 {
+    const auto fold = make_fold();
     const auto loss = make_loss();
     const auto indices = make_indices(dataset, fold);
     const auto residuals = make_residuals(dataset, fold, *loss);
@@ -375,8 +376,9 @@ inline void check_fit(const fixture_dataset_t& dataset, fold_t fold, wlearner_t&
     UTEST_CHECK_EQUAL(wlearner.odim(), dataset.tdim());
 }
 
-inline void check_no_fit(const fixture_dataset_t& dataset, fold_t fold, wlearner_t& wlearner)
+inline void check_no_fit(wlearner_t& wlearner, const fixture_dataset_t& dataset)
 {
+    const auto fold = make_fold();
     const auto loss = make_loss();
     const auto indices = make_indices(dataset, fold);
     const auto residuals = make_residuals(dataset, fold, *loss);
@@ -388,8 +390,9 @@ inline void check_no_fit(const fixture_dataset_t& dataset, fold_t fold, wlearner
     UTEST_CHECK_EQUAL(fit_score, std::numeric_limits<scalar_t>::max());
 }
 
-inline void check_fit_throws(const fixture_dataset_t& dataset, fold_t fold, wlearner_t& wlearner)
+inline void check_fit_throws(wlearner_t& wlearner, const fixture_dataset_t& dataset)
 {
+    const auto fold = make_fold();
     const auto loss = make_loss();
     const auto indices = make_indices(dataset, fold);
     const auto residuals = make_residuals(dataset, fold, *loss);
@@ -417,17 +420,25 @@ inline void check_split(const dataset_t& dataset, fold_t fold, const cluster_t& 
     }
 }
 
-inline void check_split(const fixture_dataset_t& dataset, const wlearner_t& wlearner)
+inline void check_split(const wlearner_t& wlearner, const fixture_dataset_t& dataset)
 {
     check_split(dataset, fold_t{0, protocol::train}, dataset.tr_cluster(), wlearner);
     check_split(dataset, fold_t{0, protocol::valid}, dataset.vd_cluster(), wlearner);
     check_split(dataset, fold_t{0, protocol::test}, dataset.te_cluster(), wlearner);
 }
 
-inline void check_split_throws(const dataset_t& dataset, fold_t fold, const indices_t& indices, const wlearner_t& wlearner)
+inline void check_split_throws(const wlearner_t& wlearner, const indices_t& indices, const dataset_t& dataset)
 {
+    const auto fold = make_fold();
     cluster_t wcluster;
     UTEST_CHECK_THROW(wcluster = wlearner.split(dataset, fold, indices), std::runtime_error);
+}
+
+template <typename... tdatasets>
+inline void check_split_throws(const wlearner_t& wlearner, const indices_t& indices, const dataset_t& dataset, const tdatasets&... datasets)
+{
+    check_split_throws(wlearner, indices, dataset);
+    check_split_throws(wlearner, indices, datasets...);
 }
 
 inline void predict(const dataset_t& dataset, fold_t fold, const wlearner_t& wlearner, tensor4d_t& outputs)
@@ -439,8 +450,9 @@ inline void predict(const dataset_t& dataset, fold_t fold, const wlearner_t& wle
     });
 }
 
-inline void check_predict(const fixture_dataset_t& dataset, fold_t fold, const wlearner_t& wlearner)
+inline void check_predict(const wlearner_t& wlearner, const fixture_dataset_t& dataset)
 {
+    const auto fold = make_fold();
     const auto inputs = dataset.inputs(fold);
     const auto scales = dataset.scales(fold);
     const auto targets = dataset.targets(fold);
@@ -472,14 +484,23 @@ inline void check_predict(const fixture_dataset_t& dataset, fold_t fold, const w
     }
 }
 
-inline void check_predict_throws(const dataset_t& dataset, fold_t fold, const wlearner_t& wlearner)
+inline void check_predict_throws(const wlearner_t& wlearner, const dataset_t& dataset)
 {
+    const auto fold = make_fold();
     tensor4d_t outputs;
     UTEST_CHECK_THROW(predict(dataset, fold, wlearner, outputs), std::runtime_error);
 }
 
-inline void check_scale(const fixture_dataset_t& dataset, fold_t fold, wlearner_t& wlearner)
+template <typename... tdatasets>
+inline void check_predict_throws(const wlearner_t& wlearner, const dataset_t& dataset, const tdatasets&... datasets)
 {
+    check_predict_throws(wlearner, dataset);
+    check_predict_throws(wlearner, datasets...);
+}
+
+inline void check_scale(wlearner_t& wlearner, const fixture_dataset_t& dataset)
+{
+    const auto fold = make_fold();
     tensor4d_t outputs, outputs_scaled;
     UTEST_CHECK_NOTHROW(predict(dataset, fold, wlearner, outputs));
 
@@ -547,243 +568,34 @@ auto stream_wlearner(const twlearner& wlearner)
     }
 }
 
-namespace detail
-{
-    inline void check_fit(wlearner_t& wlearner, const fixture_dataset_t& dataset)
-    {
-        const auto fold = make_fold();
-        const auto loss = make_loss();
-        const auto indices = make_indices(dataset, fold);
-        const auto residuals = make_residuals(dataset, fold, *loss);
-
-        auto fit_score = feature_t::placeholder_value();
-        UTEST_REQUIRE(!std::isfinite(fit_score));
-        UTEST_REQUIRE_NOTHROW(fit_score = wlearner.fit(dataset, fold, residuals, indices, dataset.scales(fold)));
-        UTEST_REQUIRE(std::isfinite(fit_score));
-        UTEST_CHECK_EQUAL(wlearner.odim(), dataset.tdim());
-    }
-
-    inline void check_no_fit(wlearner_t& wlearner, const fixture_dataset_t& dataset)
-    {
-        const auto fold = make_fold();
-        const auto loss = make_loss();
-        const auto indices = make_indices(dataset, fold);
-        const auto residuals = make_residuals(dataset, fold, *loss);
-
-        auto fit_score = feature_t::placeholder_value();
-        UTEST_REQUIRE(!std::isfinite(fit_score));
-        UTEST_REQUIRE_NOTHROW(fit_score = wlearner.fit(dataset, fold, residuals, indices, dataset.scales(fold)));
-        UTEST_REQUIRE(std::isfinite(fit_score));
-        UTEST_CHECK_EQUAL(fit_score, std::numeric_limits<scalar_t>::max());
-    }
-
-    inline void check_fit_throws(wlearner_t& wlearner, const fixture_dataset_t& dataset)
-    {
-        const auto fold = make_fold();
-        const auto loss = make_loss();
-        const auto indices = make_indices(dataset, fold);
-        const auto residuals = make_residuals(dataset, fold, *loss);
-
-        auto fit_score = feature_t::placeholder_value();
-        UTEST_REQUIRE(!std::isfinite(fit_score));
-        UTEST_REQUIRE_THROW(fit_score = wlearner.fit(dataset, fold, residuals, indices, dataset.scales(fold)), std::runtime_error);
-    }
-
-    inline void check_split(const dataset_t& dataset, fold_t fold, const cluster_t& gcluster, const wlearner_t& wlearner)
-    {
-        const auto indices = make_indices(dataset, fold);
-
-        cluster_t wcluster;
-        UTEST_CHECK_NOTHROW(wcluster = wlearner.split(dataset, fold, indices));
-
-        UTEST_REQUIRE_EQUAL(wcluster.samples(), indices.size());
-        UTEST_REQUIRE_EQUAL(wcluster.samples(), gcluster.samples());
-
-        UTEST_REQUIRE_EQUAL(wcluster.groups(), gcluster.groups());
-        for (tensor_size_t g = 0; g < gcluster.groups(); ++ g)
-        {
-            UTEST_REQUIRE_EQUAL(wcluster.count(g), gcluster.count(g));
-            UTEST_CHECK_EQUAL(wcluster.indices(g), gcluster.indices(g));
-        }
-    }
-
-    inline void check_split(const wlearner_t& wlearner, const fixture_dataset_t& dataset)
-    {
-        ::detail::check_split(dataset, fold_t{0, protocol::train}, dataset.tr_cluster(), wlearner);
-        ::detail::check_split(dataset, fold_t{0, protocol::valid}, dataset.vd_cluster(), wlearner);
-        ::detail::check_split(dataset, fold_t{0, protocol::test}, dataset.te_cluster(), wlearner);
-    }
-
-    inline void check_split_throws(const wlearner_t& wlearner, const indices_t& indices, const dataset_t& dataset)
-    {
-        const auto fold = make_fold();
-        cluster_t wcluster;
-        UTEST_CHECK_THROW(wcluster = wlearner.split(dataset, fold, indices), std::runtime_error);
-    }
-
-    template <typename... tdatasets>
-    inline void check_split_throws(const wlearner_t& wlearner, const indices_t& indices, const dataset_t& dataset, const tdatasets&... datasets)
-    {
-        check_split_throws(wlearner, indices, dataset);
-        check_split_throws(wlearner, indices, datasets...);
-    }
-
-    inline void predict(const dataset_t& dataset, fold_t fold, const wlearner_t& wlearner, tensor4d_t& outputs)
-    {
-        outputs.resize(cat_dims(dataset.samples(fold), dataset.tdim()));
-        dataset.loop(execution::seq, fold, wlearner.batch(), [&] (tensor_range_t range, size_t)
-        {
-            wlearner.predict(dataset, fold, range, outputs.slice(range));
-        });
-    }
-
-    inline void check_predict(const wlearner_t& wlearner, const fixture_dataset_t& dataset)
-    {
-        const auto fold = make_fold();
-        const auto inputs = dataset.inputs(fold);
-        const auto scales = dataset.scales(fold);
-        const auto targets = dataset.targets(fold);
-        const auto imatrix = inputs.reshape(dataset.samples(fold), -1);
-
-        const auto& cluster = dataset.cluster(fold);
-        const auto tsize = ::nano::size(dataset.tdim());
-
-        assert(scales.min() > 0.0);
-
-        tensor4d_t outputs;
-        UTEST_REQUIRE_NOTHROW(::detail::predict(dataset, fold, wlearner, outputs));
-
-        UTEST_REQUIRE_EQUAL(imatrix.rows(), cluster.samples());
-        for (tensor_size_t s = 0; s < imatrix.rows(); ++ s)
-        {
-            if (cluster.group(s) < 0)
-            {
-                UTEST_CHECK_EIGEN_CLOSE(outputs.vector(s), vector_t::Zero(tsize), 1e-8);
-            }
-            else if (wlearner.type() == ::nano::wlearner::real)
-            {
-                UTEST_CHECK_EIGEN_CLOSE(outputs.array(s) * scales.array(s), targets.array(s), 1e-8);
-            }
-            else
-            {
-                UTEST_CHECK_EIGEN_CLOSE(outputs.array(s), targets.array(s).sign(), 1e-8);
-            }
-        }
-    }
-
-    inline void check_predict_throws(const wlearner_t& wlearner, const dataset_t& dataset)
-    {
-        const auto fold = make_fold();
-        tensor4d_t outputs;
-        UTEST_CHECK_THROW(predict(dataset, fold, wlearner, outputs), std::runtime_error);
-    }
-
-    template <typename... tdatasets>
-    inline void check_predict_throws(const wlearner_t& wlearner, const dataset_t& dataset, const tdatasets&... datasets)
-    {
-        check_predict_throws(wlearner, dataset);
-        check_predict_throws(wlearner, datasets...);
-    }
-
-    inline void check_scale(wlearner_t& wlearner, const fixture_dataset_t& dataset)
-    {
-        const auto fold = make_fold();
-        tensor4d_t outputs, outputs_scaled;
-        UTEST_CHECK_NOTHROW(::detail::predict(dataset, fold, wlearner, outputs));
-
-        const auto& cluster = dataset.cluster(fold);
-        {
-            vector_t scale = vector_t::Constant(1, 2.0);
-
-            UTEST_CHECK_NOTHROW(wlearner.scale(scale));
-            UTEST_CHECK_NOTHROW(::detail::predict(dataset, fold, wlearner, outputs_scaled));
-            UTEST_CHECK_EIGEN_CLOSE(outputs.array() * scale(0), outputs_scaled.array(), 1e-8);
-
-            scale = vector_t::Constant(1, 0.5);
-            UTEST_CHECK_NOTHROW(wlearner.scale(scale));
-        }
-        if (cluster.groups() != 1)
-        {
-            vector_t scale = vector_t::Random(cluster.groups());
-            scale.array() += 2.0;
-
-            UTEST_CHECK_NOTHROW(wlearner.scale(scale));
-            UTEST_CHECK_NOTHROW(::detail::predict(dataset, fold, wlearner, outputs_scaled));
-            for (tensor_size_t s = 0; s < cluster.samples(); ++ s)
-            {
-                const auto group = cluster.group(s);
-                const auto factor = (group < 0) ? 1.0 : scale(group);
-                UTEST_CHECK_EIGEN_CLOSE(outputs.array(s) * factor, outputs_scaled.array(s), 1e-8);
-            }
-        }
-        {
-            const vector_t scale = vector_t::Constant(cluster.groups(), -1.0);
-            UTEST_CHECK_THROW(wlearner.scale(scale), std::runtime_error);
-        }
-        {
-            vector_t scale = vector_t::Constant(cluster.groups() + 10, +1.0);
-            UTEST_CHECK_THROW(wlearner.scale(scale), std::runtime_error);
-        }
-    }
-
-    template <typename twlearner>
-    auto stream_wlearner(const twlearner& wlearner)
-    {
-        string_t blob;
-        {
-            std::ostringstream ostream;
-            UTEST_REQUIRE_NOTHROW(wlearner.write(ostream));
-            blob = ostream.str();
-        }
-        {
-            twlearner default_wlearner;
-            std::ostringstream ostream;
-            UTEST_REQUIRE_NOTHROW(default_wlearner.write(ostream));
-        }
-        {
-            std::ostringstream ostream;
-            UTEST_REQUIRE_NOTHROW(wlearner.clone()->write(ostream));
-            UTEST_CHECK_EQUAL(ostream.str(), blob);
-        }
-        {
-            std::istringstream istream(blob);
-            auto iwlearner = twlearner{};
-            UTEST_REQUIRE_NOTHROW(iwlearner.read(istream));
-            UTEST_CHECK_EQUAL(iwlearner.type(), wlearner.type());
-            UTEST_CHECK_EQUAL(iwlearner.batch(), wlearner.batch());
-            return iwlearner;
-        }
-    }
-}
-
 template <typename twlearner, typename tdataset, typename... tinvalid_datasets>
 void check_wlearner(twlearner& wlearner, const tdataset& dataset, const tinvalid_datasets&... idatasets)
 {
     // the weak learner should not be usable before fitting
-    ::detail::check_predict_throws(wlearner, dataset);
-    ::detail::check_predict_throws(wlearner, idatasets...);
+    check_predict_throws(wlearner, dataset);
+    check_predict_throws(wlearner, idatasets...);
 
-    ::detail::check_split_throws(wlearner, make_indices(dataset, make_fold()), dataset);
-    ::detail::check_split_throws(wlearner, make_indices(dataset, make_fold()), idatasets...);
+    check_split_throws(wlearner, make_indices(dataset, make_fold()), dataset);
+    check_split_throws(wlearner, make_indices(dataset, make_fold()), idatasets...);
 
     // check fitting
-    ::detail::check_fit(wlearner, dataset);
+    check_fit(wlearner, dataset);
     dataset.check_wlearner(wlearner);
 
     // check prediction
-    ::detail::check_predict(wlearner, dataset);
-    ::detail::check_predict_throws(wlearner, idatasets...);
+    check_predict(wlearner, dataset);
+    check_predict_throws(wlearner, idatasets...);
 
     // check splitting
-    ::detail::check_split(wlearner, dataset);
-    ::detail::check_split_throws(wlearner, make_indices(dataset, make_fold()), idatasets...);
-    ::detail::check_split_throws(wlearner, make_invalid_indices(dataset, make_fold()), dataset);
-    ::detail::check_split_throws(wlearner, make_invalid_indices(dataset, make_fold()), idatasets...);
+    check_split(wlearner, dataset);
+    check_split_throws(wlearner, make_indices(dataset, make_fold()), idatasets...);
+    check_split_throws(wlearner, make_invalid_indices(dataset, make_fold()), dataset);
+    check_split_throws(wlearner, make_invalid_indices(dataset, make_fold()), idatasets...);
 
     // check model loading and saving from and to binary streams
     const auto iwlearner = stream_wlearner(wlearner);
     dataset.check_wlearner(iwlearner);
 
     // check scaling
-    ::detail::check_scale(wlearner, dataset);
+    check_scale(wlearner, dataset);
 }

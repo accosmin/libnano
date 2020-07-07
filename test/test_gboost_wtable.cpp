@@ -49,7 +49,6 @@ UTEST_BEGIN_MODULE(test_gboost_wtable)
 
 UTEST_CASE(fitting)
 {
-    const auto fold = make_fold();
     const auto dataset = make_dataset<wtable_dataset_t>();
     const auto datasetx1 = make_dataset<wtable_dataset_t>(dataset.isize(), dataset.tsize() + 1);
     const auto datasetx2 = make_dataset<wtable_dataset_t>(dataset.feature(), dataset.tsize());
@@ -59,53 +58,14 @@ UTEST_CASE(fitting)
     for (const auto type : {static_cast<::nano::wlearner>(-1)})
     {
         auto wlearner = make_wlearner<wlearner_table_t>(type);
-        check_fit_throws(dataset, fold, wlearner);
+        ::detail::check_fit_throws(wlearner, dataset);
     }
 
     for (const auto type : {::nano::wlearner::real, ::nano::wlearner::discrete})
     {
         auto wlearner = make_wlearner<wlearner_table_t>(type);
-        check_no_fit(datasetx3, fold, wlearner);
-    }
-
-    for (const auto type : {::nano::wlearner::real, ::nano::wlearner::discrete})
-    {
-        auto wlearner = make_wlearner<wlearner_table_t>(type);
-
-        // the weak learner should not be usable before fitting
-        check_predict_throws(dataset, fold, wlearner);
-        check_predict_throws(datasetx1, fold, wlearner);
-        check_predict_throws(datasetx2, fold, wlearner);
-        check_predict_throws(datasetx3, fold, wlearner);
-        check_predict_throws(datasetx4, fold, wlearner);
-
-        check_split_throws(dataset, fold, make_indices(dataset, fold), wlearner);
-
-        // check fitting
-        check_fit(dataset, fold, wlearner);
-        dataset.check_wlearner(wlearner); // TODO: move to fixture's check_fit!!!
-
-        // check prediction
-        check_predict(dataset, fold, wlearner);
-        check_predict_throws(datasetx1, fold, wlearner);
-        check_predict_throws(datasetx2, fold, wlearner);
-        check_predict_throws(datasetx3, fold, wlearner);
-        check_predict_throws(datasetx4, fold, wlearner);
-
-        // check splitting
-        check_split(dataset, wlearner);
-        check_split_throws(datasetx1, fold, make_indices(datasetx1, fold), wlearner);
-        check_split_throws(datasetx2, fold, make_indices(datasetx2, fold), wlearner);
-        check_split_throws(datasetx3, fold, make_indices(datasetx3, fold), wlearner);
-        check_split_throws(datasetx4, fold, make_indices(datasetx4, fold), wlearner);
-        check_split_throws(dataset, fold, make_invalid_indices(dataset, fold), wlearner);
-
-        // check model loading and saving from and to binary streams
-        const auto iwlearner = stream_wlearner(wlearner);
-        dataset.check_wlearner(iwlearner);
-
-        // check scaling
-        check_scale(dataset, fold, wlearner);
+        ::detail::check_no_fit(wlearner, datasetx3);
+        check_wlearner(wlearner, dataset, datasetx1, datasetx2, datasetx3, datasetx4);
     }
 }
 

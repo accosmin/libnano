@@ -30,6 +30,15 @@ public:
         target(sample).array() *= scale(sample).array();
     }
 
+    void check_wlearner(const wlearner_table_t& wlearner) const
+    {
+        const auto tables = (wlearner.type() == ::nano::wlearner::real) ? rtables() : dtables();
+        UTEST_CHECK_EQUAL(wlearner.odim(), tdim());
+        UTEST_CHECK_EQUAL(wlearner.feature(), feature());
+        UTEST_CHECK_EQUAL(wlearner.tables().dims(), tables.dims());
+        UTEST_CHECK_EIGEN_CLOSE(wlearner.tables().array(), tables.array(), 1e-8);
+    }
+
     [[nodiscard]] tensor_size_t the_discrete_feature() const { return feature(); }
     [[nodiscard]] tensor_size_t feature(bool discrete = true) const { return get_feature(discrete); }
     [[nodiscard]] tensor4d_t rtables() const { return {make_dims(3, 1, 1, 1), std::array<scalar_t, 3>{{-5.0, +0.0, +5.0}}}; }
@@ -42,34 +51,10 @@ UTEST_CASE(fitting)
 {
     const auto fold = make_fold();
     const auto dataset = make_dataset<wtable_dataset_t>();
-
-    for (const auto type : {::nano::wlearner::real, ::nano::wlearner::discrete})
-    {
-        // check fitting
-        auto wlearner = make_wlearner<wlearner_table_t>(type);
-        check_fit(dataset, fold, wlearner);
-
-        const auto tables = (type == ::nano::wlearner::real) ? dataset.rtables() : dataset.dtables();
-
-        UTEST_CHECK_EQUAL(wlearner.odim(), dataset.tdim());
-        UTEST_CHECK_EQUAL(wlearner.feature(), dataset.feature());
-        UTEST_CHECK_EIGEN_CLOSE(wlearner.tables().array(), tables.array(), 1e-8);
-
-        // check scaling
-        check_scale(dataset, fold, wlearner);
-
-        // check model loading and saving from and to binary streams
-        const auto iwlearner = stream_wlearner(wlearner);
-        UTEST_CHECK_EQUAL(wlearner.feature(), iwlearner.feature());
-        UTEST_CHECK_EIGEN_CLOSE(wlearner.tables().array(), iwlearner.tables().array(), 1e-8);
-    }
-}
-
-UTEST_CASE(no_fitting)
-{
-    const auto fold = make_fold();
-    const auto dataset = make_dataset<wtable_dataset_t>();
-    const auto datasetx = make_dataset<no_discrete_features_dataset_t<wtable_dataset_t>>();
+    const auto datasetx1 = make_dataset<wtable_dataset_t>(dataset.isize(), dataset.tsize() + 1);
+    const auto datasetx2 = make_dataset<wtable_dataset_t>(dataset.feature(), dataset.tsize());
+    const auto datasetx3 = make_dataset<no_discrete_features_dataset_t<wtable_dataset_t>>();
+    const auto datasetx4 = make_dataset<different_discrete_feature_dataset_t<wtable_dataset_t>>();
 
     for (const auto type : {static_cast<::nano::wlearner>(-1)})
     {
@@ -80,52 +65,47 @@ UTEST_CASE(no_fitting)
     for (const auto type : {::nano::wlearner::real, ::nano::wlearner::discrete})
     {
         auto wlearner = make_wlearner<wlearner_table_t>(type);
-        check_no_fit(datasetx, fold, wlearner);
+        check_no_fit(datasetx3, fold, wlearner);
     }
-}
-
-UTEST_CASE(predict)
-{
-    const auto fold = make_fold();
-    const auto dataset = make_dataset<wtable_dataset_t>();
-    const auto datasetx1 = make_dataset<wtable_dataset_t>(dataset.isize(), dataset.tsize() + 1);
-    const auto datasetx2 = make_dataset<wtable_dataset_t>(dataset.feature(), dataset.tsize());
-    const auto datasetx3 = make_dataset<no_discrete_features_dataset_t<wtable_dataset_t>>();
-    const auto datasetx4 = make_dataset<different_discrete_feature_dataset_t<wtable_dataset_t>>();
 
     for (const auto type : {::nano::wlearner::real, ::nano::wlearner::discrete})
     {
         auto wlearner = make_wlearner<wlearner_table_t>(type);
+
+        // the weak learner should not be usable before fitting
         check_predict_throws(dataset, fold, wlearner);
         check_predict_throws(datasetx1, fold, wlearner);
         check_predict_throws(datasetx2, fold, wlearner);
         check_predict_throws(datasetx3, fold, wlearner);
         check_predict_throws(datasetx4, fold, wlearner);
 
-        check_fit(dataset, fold, wlearner);
+        check_split_throws(dataset, fold, make_indices(dataset, fold), wlearner);
 
+        // check fitting
+        check_fit(dataset, fold, wlearner);
+        dataset.check_wlearner(wlearner); // TODO: move to fixture's check_fit!!!
+
+        // check prediction
         check_predict(dataset, fold, wlearner);
         check_predict_throws(datasetx1, fold, wlearner);
         check_predict_throws(datasetx2, fold, wlearner);
         check_predict_throws(datasetx3, fold, wlearner);
         check_predict_throws(datasetx4, fold, wlearner);
-    }
-}
 
-UTEST_CASE(split)
-{
-    const auto fold = make_fold();
-    const auto dataset = make_dataset<wtable_dataset_t>();
-
-    for (const auto type : {::nano::wlearner::real, ::nano::wlearner::discrete})
-    {
-        auto wlearner = make_wlearner<wlearner_table_t>(type);
-        check_split_throws(dataset, fold, make_indices(dataset, fold), wlearner);
-
-        check_fit(dataset, fold, wlearner);
-
+        // check splitting
         check_split(dataset, wlearner);
+        check_split_throws(datasetx1, fold, make_indices(datasetx1, fold), wlearner);
+        check_split_throws(datasetx2, fold, make_indices(datasetx2, fold), wlearner);
+        check_split_throws(datasetx3, fold, make_indices(datasetx3, fold), wlearner);
+        check_split_throws(datasetx4, fold, make_indices(datasetx4, fold), wlearner);
         check_split_throws(dataset, fold, make_invalid_indices(dataset, fold), wlearner);
+
+        // check model loading and saving from and to binary streams
+        const auto iwlearner = stream_wlearner(wlearner);
+        dataset.check_wlearner(iwlearner);
+
+        // check scaling
+        check_scale(dataset, fold, wlearner);
     }
 }
 

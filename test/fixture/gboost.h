@@ -478,7 +478,6 @@ inline void check_predict_throws(const dataset_t& dataset, fold_t fold, const wl
     UTEST_CHECK_THROW(predict(dataset, fold, wlearner, outputs), std::runtime_error);
 }
 
-
 inline void check_scale(const fixture_dataset_t& dataset, fold_t fold, wlearner_t& wlearner)
 {
     tensor4d_t outputs, outputs_scaled;

@@ -12,7 +12,6 @@ public:
 
     [[nodiscard]] virtual int min_split() const = 0;
     [[nodiscard]] virtual int max_depth() const = 0;
-    [[nodiscard]] virtual bool can_discrete() const = 0;
     [[nodiscard]] virtual indices_t features() const = 0;
     [[nodiscard]] virtual tensor4d_t rtables() const = 0;
     [[nodiscard]] virtual tensor4d_t dtables() const = 0;
@@ -37,7 +36,6 @@ public:
 
     [[nodiscard]] int min_split() const override { return 1; }
     [[nodiscard]] int max_depth() const override { return 1; }
-    [[nodiscard]] bool can_discrete() const override { return true; }
     [[nodiscard]] tensor_size_t groups() const override { return 2; }
     [[nodiscard]] tensor_size_t feature(bool discrete = false) const { return get_feature(discrete); }
 
@@ -79,7 +77,6 @@ public:
 
     [[nodiscard]] int min_split() const override { return 1; }
     [[nodiscard]] int max_depth() const override { return 1; }
-    [[nodiscard]] bool can_discrete() const override { return true; }
     [[nodiscard]] tensor_size_t groups() const override { return 3; }
     [[nodiscard]] tensor_size_t the_discrete_feature() const { return feature(); }
     [[nodiscard]] tensor_size_t feature(bool discrete = true) const { return get_feature(discrete); }
@@ -123,7 +120,6 @@ public:
 
     [[nodiscard]] int min_split() const override { return 1; }
     [[nodiscard]] int max_depth() const override { return 2; }
-    [[nodiscard]] bool can_discrete() const override { return true; }
     [[nodiscard]] tensor_size_t groups() const override { return 6; }
     [[nodiscard]] tensor_size_t the_discrete_feature() const { return feature0(); }
     [[nodiscard]] tensor_size_t feature0(bool discrete = true) const { return get_feature(discrete); }
@@ -197,7 +193,6 @@ public:
 
     [[nodiscard]] int min_split() const override { return 1; }
     [[nodiscard]] int max_depth() const override { return 3; }
-    [[nodiscard]] bool can_discrete() const override { return false; }
     [[nodiscard]] tensor_size_t groups() const override { return 11; }
     [[nodiscard]] tensor_size_t the_discrete_feature() const { return feature22(); }
     [[nodiscard]] tensor_size_t feature0(bool discrete = false) const { return get_feature(discrete); }
@@ -219,13 +214,11 @@ public:
 
         if (!feature_t::missing(input(tf0)))
         {
-            input(tf0) = static_cast<scalar_t>(sample % 7);
-            if ((sample % 7) < 3)
+            if ((input(tf0) = static_cast<scalar_t>(sample % 7)) < 3.0)
             {
                 if (!feature_t::missing(input(tf10)))
                 {
-                    input(tf10) = static_cast<scalar_t>(sample % 9);
-                    if ((sample % 9) < 5)
+                    if ((input(tf10) = static_cast<scalar_t>(sample % 9)) < 5.0)
                     {
                         target.constant(make_table_target(sample, feature20(), 3, 2.0, 0));
                     }
@@ -240,8 +233,7 @@ public:
             {
                 if (!feature_t::missing(input(tf11)))
                 {
-                    input(tf11) = static_cast<scalar_t>(sample % 11);
-                    if ((sample % 11) < 7)
+                    if ((input(tf11) = static_cast<scalar_t>(sample % 11)) < 7.0)
                     {
                         target.constant(make_table_target(sample, feature22(), 3, 3.0, 5));
                     }

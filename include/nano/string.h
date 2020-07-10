@@ -67,17 +67,9 @@ namespace nano
                 return static_cast<tvalue>(std::stoull(str));
             }
         }
-        else if constexpr (std::is_same<tvalue, float>::value)
+        else if constexpr (std::is_floating_point<tvalue>::value)
         {
-            return std::stof(str);
-        }
-        else if constexpr (std::is_same<tvalue, double>::value)
-        {
-            return std::stod(str);
-        }
-        else if constexpr (std::is_same<tvalue, long double>::value)
-        {
-            return std::stold(str);
+            return static_cast<tvalue>(std::stold(str));
         }
         else if constexpr (std::is_same<tvalue, string_t>::value)
         {

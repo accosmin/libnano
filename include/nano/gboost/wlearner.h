@@ -13,6 +13,22 @@ namespace nano
     using wlearners_t = std::vector<rwlearner_t>;
 
     ///
+    /// \brief weak learner prototype with its ID in the associated factory.
+    ///
+    struct NANO_PUBLIC iwlearner_t
+    {
+        iwlearner_t() = default;
+        iwlearner_t(string_t&& id, rwlearner_t&& wlearner);
+
+        void read(std::istream&);
+        void write(std::ostream&) const;
+
+        string_t        m_id;
+        rwlearner_t     m_wlearner;
+    };
+    using iwlearners_t = std::vector<iwlearner_t>;
+
+    ///
     /// \brief a weak learner is a machine learning model:
     ///     - parametrized by either a single feature or a small subset of features,
     ///     - easy to fit to the given residuals (aka the solution can be found analytically),

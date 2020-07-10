@@ -96,7 +96,7 @@ scalar_t wlearner_affine_t<tfun1>::fit(const dataset_t& dataset, fold_t fold, co
         break;
 
     default:
-        critical(true, "linear weak learner: unhandled wlearner");
+        critical(true, "affine weak learner: unhandled wlearner");
         break;
     }
 

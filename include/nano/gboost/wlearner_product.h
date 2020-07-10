@@ -35,6 +35,26 @@ namespace nano
         wlearner_product_t() = default;
 
         ///
+        /// \brief register a prototype weak learner to choose from by its ID in the associated factory.
+        ///
+        void add(const string_t& id);
+
+        ///
+        /// \brief register a prototype weak learner to choose from.
+        ///
+        template
+        <
+            typename twlearner,
+            typename = typename std::enable_if<std::is_base_of<wlearner_t, twlearner>::value>::type
+        >
+        void add(const twlearner& wlearner)
+        {
+            const auto id = factory_traits_t<twlearner>::id();
+            auto rwlearner = std::make_unique<twlearner>(wlearner);
+            add(id, std::move(rwlearner));
+        }
+
+        ///
         /// \brief @see wlearner_t
         ///
         void read(std::istream&) override;
@@ -43,11 +63,6 @@ namespace nano
         /// \brief @see wlearner_t
         ///
         void write(std::ostream&) const override;
-
-        ///
-        /// \brief @see wlearner_t
-        ///
-        [[nodiscard]] std::ostream& print(std::ostream&) const override;
 
         ///
         /// \brief @see wlearner_t
@@ -72,7 +87,8 @@ namespace nano
         ///
         /// \brief @see wlearner_t
         ///
-        [[nodiscard]] scalar_t fit(const dataset_t&, fold_t, const tensor4d_t& gradients, const indices_t&) override;
+        [[nodiscard]] scalar_t fit(const dataset_t&, fold_t,
+            const tensor4d_t&, const indices_t&, const tensor4d_t&) override;
 
         ///
         /// \brief @see wlearner_t
@@ -85,17 +101,22 @@ namespace nano
         [[nodiscard]] indices_t features() const override;
 
         ///
+        /// \brief change the number of terms in the product.
+        ///
+        void degree(int degree);
+
+        ///
         /// \brief access functions
         ///
-        [[nodiscard]] auto feature() const { return m_feature; }
-        [[nodiscard]] const auto& tables() const { return m_tables; }
+        [[nodiscard]] auto degree() const { return m_degree.get(); }
 
     private:
 
-        void compatible(const dataset_t&) const;
+        void add(string_t id, rwlearner_t&& prototype);
 
         // attributes
-        tensor_size_t   m_feature{-1};  ///< index of the selected feature
-        tensor4d_t      m_tables;       ///< (2, #outputs) - weights + bias
+        iwlearners_t    m_terms;                                        ///< chosen weak learners (terms) in the product
+        iwlearners_t    m_protos;                                       ///< weak learners to choose from
+        iparam1_t       m_degree{"product::degree", 1, LE, 3, LE, 20};  ///< maximum number of terms in the product
     };
 }

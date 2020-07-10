@@ -9,8 +9,6 @@
 
 namespace nano
 {
-    // TODO: implement both L1 and L2 fitting of residuals (can it also work with Cauchy-like criterion).
-    // TODO: polynomials (greedy fitting of one feature at a time until max degree) to replace linear weak learners.
     //
     // TODO: estimate feature importance and stability across folds.
     // TODO: a better splitting criterion for decision trees
@@ -131,23 +129,10 @@ namespace nano
 
     private:
 
-        struct proto_t
-        {
-            proto_t() = default;
-            proto_t(string_t&& id, rwlearner_t&& wlearner);
-
-            void read(std::istream&);
-            void write(std::ostream&) const;
-
-            string_t        m_id;
-            rwlearner_t     m_wlearner;
-        };
-        using protos_t = std::vector<proto_t>;
-
         struct model_t
         {
             tensor1d_t      m_bias;
-            protos_t        m_protos;
+            iwlearners_t    m_protos;
         };
         using models_t = std::vector<model_t>;
 
@@ -164,7 +149,7 @@ namespace nano
 
         // attributes
         models_t        m_models;                                               ///< model per fold
-        protos_t        m_protos;                                               ///< weak learners to choose from
+        iwlearners_t    m_protos;                                               ///< weak learners to choose from
         iparam1_t       m_batch{"gboost::batch", 1, LE, 32, LE, 4096};          ///< #samples to use at once to predict
         iparam1_t       m_rounds{"gboost::rounds", 1, LE, 1000, LE, 10000};     ///< maximum number of boosting rounds
         iparam1_t       m_patience{"gboost::patience", 1, LE, 100, LE, 1000};   ///< #rounds to wait to detect overfitting

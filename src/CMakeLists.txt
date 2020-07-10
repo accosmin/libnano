@@ -49,6 +49,7 @@ target_sources(nano PRIVATE
     gboost/wlearner_table.cpp
     gboost/wlearner_affine.cpp
     gboost/wlearner_feature1.cpp
+    gboost/wlearner_product.cpp
     gboost/model.cpp
     gboost/bias.cpp
     gboost/scale.cpp)

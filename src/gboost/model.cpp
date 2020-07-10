@@ -1,4 +1,3 @@
-#include <fstream>
 #include <nano/tune.h>
 #include <nano/logger.h>
 #include <nano/version.h>
@@ -392,35 +391,6 @@ void gboost_model_t::predict(const dataset_t& dataset, fold_t fold, tensor4d_map
     });
 
     outputs.array() /= std::max(size_t(1), m_models.size());
-}
-
-gboost_model_t::proto_t::proto_t(string_t&& id, rwlearner_t&& wlearner) :
-    m_id(std::move(id)),
-    m_wlearner(std::move(wlearner))
-{
-}
-
-void gboost_model_t::proto_t::read(std::istream& stream)
-{
-    critical(
-        !::nano::detail::read(stream, m_id),
-        "gboost model: failed to read from stream!");
-
-    m_wlearner = wlearner_t::all().get(m_id);
-    critical(
-        m_wlearner == nullptr,
-        scat("gboost model: invalid weak learner id <", m_id, "> read from stream!"));
-
-    m_wlearner->read(stream);
-}
-
-void gboost_model_t::proto_t::write(std::ostream& stream) const
-{
-    critical(
-        !::nano::detail::write(stream, m_id),
-        "gboost model: failed to write to stream!");
-
-    m_wlearner->write(stream);
 }
 
 void gboost_model_t::read(std::istream& stream)

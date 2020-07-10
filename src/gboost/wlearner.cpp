@@ -92,3 +92,32 @@ wlearner_factory_t& wlearner_t::all()
 
     return manager;
 }
+
+iwlearner_t::iwlearner_t(string_t&& id, rwlearner_t&& wlearner) :
+    m_id(std::move(id)),
+    m_wlearner(std::move(wlearner))
+{
+}
+
+void iwlearner_t::read(std::istream& stream)
+{
+    critical(
+        !::nano::detail::read(stream, m_id),
+        "wlearner wid: failed to read from stream!");
+
+    m_wlearner = wlearner_t::all().get(m_id);
+    critical(
+        m_wlearner == nullptr,
+        scat("wlearner wid: invalid weak learner id <", m_id, "> read from stream!"));
+
+    m_wlearner->read(stream);
+}
+
+void iwlearner_t::write(std::ostream& stream) const
+{
+    critical(
+        !::nano::detail::write(stream, m_id),
+        "wlearner wid: failed to write to stream!");
+
+    m_wlearner->write(stream);
+}

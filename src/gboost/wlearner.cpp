@@ -93,6 +93,35 @@ wlearner_factory_t& wlearner_t::all()
     return manager;
 }
 
+iwlearner_t::iwlearner_t() = default;
+
+iwlearner_t::iwlearner_t(iwlearner_t&&) = default;
+
+iwlearner_t::iwlearner_t(const iwlearner_t& other) :
+    m_id(other.m_id)
+{
+    if (static_cast<bool>(other.m_wlearner))
+    {
+        m_wlearner = other.m_wlearner->clone();
+    }
+}
+
+iwlearner_t& iwlearner_t::operator=(iwlearner_t&&) = default;
+
+iwlearner_t& iwlearner_t::operator=(const iwlearner_t& other)
+{
+    if (this != &other)
+    {
+        m_id = other.m_id;
+        if (static_cast<bool>(other.m_wlearner))
+        {
+            m_wlearner = other.m_wlearner->clone();
+        }
+    }
+
+    return *this;
+}
+
 iwlearner_t::iwlearner_t(string_t&& id, rwlearner_t&& wlearner) :
     m_id(std::move(id)),
     m_wlearner(std::move(wlearner))
@@ -120,4 +149,30 @@ void iwlearner_t::write(std::ostream& stream) const
         "wlearner wid: failed to write to stream!");
 
     m_wlearner->write(stream);
+}
+
+void iwlearner_t::read(std::istream& stream, std::vector<iwlearner_t>& protos)
+{
+    uint32_t size = 0;
+    critical(
+        !::nano::detail::read(stream, size),
+        "weak learner: failed to read from stream!");
+
+    protos.resize(size);
+    for (auto& proto : protos)
+    {
+        proto.read(stream);
+    }
+}
+
+void iwlearner_t::write(std::ostream& stream, const std::vector<iwlearner_t>& protos)
+{
+    critical(
+        !::nano::detail::write(stream, static_cast<uint32_t>(protos.size())),
+        "weak learner: failed to write to stream!");
+
+    for (const auto& proto : protos)
+    {
+        proto.write(stream);
+    }
 }

@@ -420,17 +420,9 @@ void gboost_model_t::read(std::istream& stream)
     scale(static_cast<::nano::wscale>(iscale));
     regularization(static_cast<::nano::regularization>(iregularization));
 
+    iwlearner_t::read(stream, m_protos);
+
     uint32_t size = 0;
-    critical(
-        !::nano::detail::read(stream, size),
-        "gboost model: failed to read from stream!");
-
-    m_protos.resize(size);
-    for (auto& proto : m_protos)
-    {
-        proto.read(stream);
-    }
-
     critical(
         !::nano::detail::read(stream, size),
         "gboost model: failed to read from stream!");
@@ -439,15 +431,10 @@ void gboost_model_t::read(std::istream& stream)
     for (auto& model : m_models)
     {
         critical(
-            !::nano::read(stream, model.m_bias) ||
-            !::nano::detail::read(stream, size),
+            !::nano::read(stream, model.m_bias),
             "gboost model: failed to read from stream!");
 
-        model.m_protos.resize(size);
-        for (auto& proto : model.m_protos)
-        {
-            proto.read(stream);
-        }
+        iwlearner_t::read(stream, model.m_protos);
     }
 }
 
@@ -466,14 +453,7 @@ void gboost_model_t::write(std::ostream& stream) const
         !::nano::detail::write(stream, static_cast<int32_t>(m_regularization)),
         "gboost model: failed to write to stream!");
 
-    critical(
-        !::nano::detail::write(stream, static_cast<uint32_t>(m_protos.size())),
-        "gboost model: failed to write to stream!");
-
-    for (const auto& proto : m_protos)
-    {
-        proto.write(stream);
-    }
+    iwlearner_t::write(stream, m_protos);
 
     critical(
         !::nano::detail::write(stream, static_cast<uint32_t>(m_models.size())),
@@ -482,14 +462,10 @@ void gboost_model_t::write(std::ostream& stream) const
     for (const auto& model : m_models)
     {
         critical(
-            !::nano::write(stream, model.m_bias) ||
-            !::nano::detail::write(stream, static_cast<uint32_t>(model.m_protos.size())),
+            !::nano::write(stream, model.m_bias),
             "gboost model: failed to write to stream!");
 
-        for (const auto& proto : model.m_protos)
-        {
-            proto.write(stream);
-        }
+        iwlearner_t::write(stream, model.m_protos);
     }
 }
 

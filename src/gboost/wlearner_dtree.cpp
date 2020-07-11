@@ -191,6 +191,8 @@ namespace
     }
 }
 
+wlearner_dtree_t::wlearner_dtree_t() = default;
+
 void wlearner_dtree_t::max_depth(const int max_depth)
 {
     m_max_depth = max_depth;

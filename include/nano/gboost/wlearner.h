@@ -17,11 +17,18 @@ namespace nano
     ///
     struct NANO_PUBLIC iwlearner_t
     {
-        iwlearner_t() = default;
+        iwlearner_t();
+        iwlearner_t(iwlearner_t&&);
+        iwlearner_t(const iwlearner_t&);
+        iwlearner_t& operator=(iwlearner_t&&);
+        iwlearner_t& operator=(const iwlearner_t&);
         iwlearner_t(string_t&& id, rwlearner_t&& wlearner);
 
         void read(std::istream&);
         void write(std::ostream&) const;
+
+        static void read(std::istream&, std::vector<iwlearner_t>&);
+        static void write(std::ostream&, const std::vector<iwlearner_t>&);
 
         string_t        m_id;
         rwlearner_t     m_wlearner;

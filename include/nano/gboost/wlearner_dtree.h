@@ -84,7 +84,7 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        wlearner_dtree_t() = default;
+        wlearner_dtree_t();
 
         ///
         /// \brief @see wlearner_t

@@ -51,13 +51,6 @@ void wlearner_t::check(const indices_t& indices)
         "weak learner: indices must be sorted!");
 }
 
-void wlearner_t::check(tensor_range_t range, const tensor4d_map_t& outputs) const
-{
-    ::nano::critical(
-        outputs.dims() != cat_dims(range.size(), odim()),
-        "weak learner: mis-matching outputs!");
-}
-
 void wlearner_t::scale(tensor4d_t& tables, const vector_t& scale)
 {
     critical(

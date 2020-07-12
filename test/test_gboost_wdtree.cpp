@@ -20,8 +20,6 @@ public:
     void check_wlearner(const wlearner_dtree_t& wlearner) const
     {
         const auto tables = (wlearner.type() == ::nano::wlearner::real) ? rtables() : dtables();
-
-        UTEST_CHECK_EQUAL(wlearner.odim(), tdim());
         UTEST_CHECK_EQUAL(wlearner.features(), features());
         UTEST_CHECK_EQUAL(wlearner.nodes(), nodes());
         UTEST_CHECK_EIGEN_CLOSE(wlearner.tables().array(), tables.array(), 1e-8);

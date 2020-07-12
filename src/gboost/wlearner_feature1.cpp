@@ -33,11 +33,6 @@ void wlearner_feature1_t::write(std::ostream& stream) const
         "feature1 weak learner: failed to write to stream!");
 }
 
-tensor3d_dim_t wlearner_feature1_t::odim() const
-{
-    return make_dims(m_tables.size<1>(), m_tables.size<2>(), m_tables.size<3>());
-}
-
 void wlearner_feature1_t::scale(const vector_t& scale)
 {
     wlearner_t::scale(m_tables, scale);
@@ -50,7 +45,7 @@ void wlearner_feature1_t::compatible(const dataset_t& dataset) const
         "feature1 weak learner: empty weak learner!");
 
     critical(
-        odim() != dataset.tdim() ||
+        make_dims(m_tables.size<1>(), m_tables.size<2>(), m_tables.size<3>()) != dataset.tdim() ||
         m_feature < 0 || m_feature >= dataset.features() ||
         dataset.ifeature(m_feature).labels().size() != m_labels,
         "feature1 weak learner: mis-matching dataset!");

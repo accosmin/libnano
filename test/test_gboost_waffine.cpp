@@ -33,9 +33,7 @@ public:
 
     void check_wlearner(const wlearner_affine_t<tfun1>& wlearner) const
     {
-        UTEST_CHECK_EQUAL(wlearner.odim(), tdim());
         UTEST_CHECK_EQUAL(wlearner.feature(), gt_feature());
-
         UTEST_REQUIRE_EQUAL(wlearner.tables().dims(), make_dims(2, 1, 1, 1));
         UTEST_CHECK_CLOSE(wlearner.tables()(0), gt_weight(), 1e-8);
         UTEST_CHECK_CLOSE(wlearner.tables()(1), gt_bias(), 1e-8);

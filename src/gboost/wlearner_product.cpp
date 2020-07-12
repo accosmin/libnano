@@ -72,15 +72,6 @@ void wlearner_product_t::scale(const vector_t& scale)
     m_terms.begin()->m_wlearner->scale(scale);
 }
 
-tensor3d_dim_t wlearner_product_t::odim() const
-{
-    critical(
-        m_terms.empty(),
-        "product weak learner: no term fitted!");
-
-    return m_terms.begin()->m_wlearner->odim();
-}
-
 indices_t wlearner_product_t::features() const
 {
     std::vector<tensor_size_t> features;

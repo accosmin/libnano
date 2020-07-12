@@ -33,7 +33,6 @@ public:
     void check_wlearner(const wlearner_table_t& wlearner) const
     {
         const auto tables = (wlearner.type() == ::nano::wlearner::real) ? rtables() : dtables();
-        UTEST_CHECK_EQUAL(wlearner.odim(), tdim());
         UTEST_CHECK_EQUAL(wlearner.feature(), feature());
         UTEST_CHECK_EQUAL(wlearner.tables().dims(), tables.dims());
         UTEST_CHECK_EIGEN_CLOSE(wlearner.tables().array(), tables.array(), 1e-8);

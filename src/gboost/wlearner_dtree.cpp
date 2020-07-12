@@ -238,11 +238,6 @@ rwlearner_t wlearner_dtree_t::clone() const
     return std::make_unique<wlearner_dtree_t>(*this);
 }
 
-tensor3d_dim_t wlearner_dtree_t::odim() const
-{
-    return make_dims(m_tables.size<1>(), m_tables.size<2>(), m_tables.size<3>());
-}
-
 void wlearner_dtree_t::scale(const vector_t& scale)
 {
     wlearner_t::scale(m_tables, scale);
@@ -351,7 +346,7 @@ void wlearner_dtree_t::compatible(const dataset_t& dataset) const
         "dtree weak learner: empty weak learner!");
 
     critical(
-        odim() != dataset.tdim() ||
+        make_dims(m_tables.size<1>(), m_tables.size<2>(), m_tables.size<3>()) != dataset.tdim() ||
         m_features.min() < 0 || m_features.max() >= dataset.features(),
         "dtree weak learner: mis-matching dataset!");
 
@@ -377,7 +372,6 @@ void wlearner_dtree_t::compatible(const dataset_t& dataset) const
 void wlearner_dtree_t::predict(const dataset_t& dataset, fold_t fold, tensor_range_t range, tensor4d_map_t&& outputs) const
 {
     compatible(dataset);
-    check(range, outputs);
 
     const auto fvalues = dataset.inputs(fold, range, m_features);
     for (tensor_size_t i = 0; i < range.size(); ++ i)

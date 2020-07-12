@@ -72,11 +72,6 @@ namespace nano
         [[nodiscard]] virtual rwlearner_t clone() const = 0;
 
         ///
-        /// \brief returns the dimensions of the outputs/predictions.
-        ///
-        [[nodiscard]] virtual tensor3d_dim_t odim() const = 0;
-
-        ///
         /// \brief compute the predictions for the given range of samples in the given fold.
         ///
         virtual void predict(const dataset_t&, fold_t, tensor_range_t, tensor4d_map_t&& outputs) const = 0;
@@ -133,7 +128,6 @@ namespace nano
     protected:
 
         static void check(const indices_t&);
-        void check(tensor_range_t, const tensor4d_map_t& outputs) const;
 
         template <typename toperator>
         static void for_each(tensor_range_t range, const indices_t& indices, const toperator& op)

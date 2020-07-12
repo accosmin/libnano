@@ -80,11 +80,6 @@ namespace nano
         ///
         /// \brief @see wlearner_t
         ///
-        [[nodiscard]] tensor3d_dim_t odim() const override;
-
-        ///
-        /// \brief @see wlearner_t
-        ///
         void scale(const vector_t&) override;
 
         ///

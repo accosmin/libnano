@@ -373,7 +373,6 @@ inline void check_fit(wlearner_t& wlearner, const fixture_dataset_t& dataset)
     UTEST_REQUIRE(!std::isfinite(fit_score));
     UTEST_REQUIRE_NOTHROW(fit_score = wlearner.fit(dataset, fold, residuals, indices, dataset.scales(fold)));
     UTEST_REQUIRE(std::isfinite(fit_score));
-    UTEST_CHECK_EQUAL(wlearner.odim(), dataset.tdim());
 }
 
 inline void check_no_fit(wlearner_t& wlearner, const fixture_dataset_t& dataset)

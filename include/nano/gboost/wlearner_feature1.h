@@ -32,11 +32,6 @@ namespace nano
         ///
         /// \brief @see wlearner_t
         ///
-        [[nodiscard]] tensor3d_dim_t odim() const override;
-
-        ///
-        /// \brief @see wlearner_t
-        ///
         void scale(const vector_t&) override;
 
         ///
@@ -60,7 +55,6 @@ namespace nano
             const toperator& op) const
         {
             compatible(dataset);
-            wlearner_t::check(range, outputs);
 
             const auto fvalues = dataset.inputs(fold, range, m_feature);
             for (tensor_size_t i = 0; i < range.size(); ++ i)

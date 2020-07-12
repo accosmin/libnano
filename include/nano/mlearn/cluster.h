@@ -24,7 +24,6 @@ namespace nano
         ///
         void assign(const tensor_size_t sample, const tensor_size_t group)
         {
-            assert(group >= 0 && group < groups());
             assert(sample >= 0 && sample < samples());
 
             m_indices(sample) = group;

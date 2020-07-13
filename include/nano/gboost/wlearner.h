@@ -18,10 +18,10 @@ namespace nano
     struct NANO_PUBLIC iwlearner_t
     {
         iwlearner_t();
-        iwlearner_t(iwlearner_t&&);
         iwlearner_t(const iwlearner_t&);
-        iwlearner_t& operator=(iwlearner_t&&);
         iwlearner_t& operator=(const iwlearner_t&);
+        iwlearner_t(iwlearner_t&&) noexcept;
+        iwlearner_t& operator=(iwlearner_t&&) noexcept;
         iwlearner_t(string_t&& id, rwlearner_t&& wlearner);
 
         void read(std::istream&);

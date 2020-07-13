@@ -88,7 +88,7 @@ wlearner_factory_t& wlearner_t::all()
 
 iwlearner_t::iwlearner_t() = default;
 
-iwlearner_t::iwlearner_t(iwlearner_t&&) = default;
+iwlearner_t::iwlearner_t(iwlearner_t&&) noexcept = default;
 
 iwlearner_t::iwlearner_t(const iwlearner_t& other) :
     m_id(other.m_id)
@@ -99,7 +99,7 @@ iwlearner_t::iwlearner_t(const iwlearner_t& other) :
     }
 }
 
-iwlearner_t& iwlearner_t::operator=(iwlearner_t&&) = default;
+iwlearner_t& iwlearner_t::operator=(iwlearner_t&&) noexcept = default;
 
 iwlearner_t& iwlearner_t::operator=(const iwlearner_t& other)
 {

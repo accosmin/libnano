@@ -88,6 +88,8 @@ wlearner_factory_t& wlearner_t::all()
 
 iwlearner_t::iwlearner_t() = default;
 
+iwlearner_t::~iwlearner_t() = default;
+
 iwlearner_t::iwlearner_t(iwlearner_t&&) noexcept = default;
 
 iwlearner_t::iwlearner_t(const iwlearner_t& other) :

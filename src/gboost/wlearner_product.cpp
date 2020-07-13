@@ -5,11 +5,13 @@ using namespace nano;
 
 wlearner_product_t::wlearner_product_t() = default;
 
-wlearner_product_t::wlearner_product_t(wlearner_product_t&&) = default;
+wlearner_product_t::~wlearner_product_t() = default;
+
+wlearner_product_t::wlearner_product_t(wlearner_product_t&&) noexcept = default;
 
 wlearner_product_t::wlearner_product_t(const wlearner_product_t&) = default;
 
-wlearner_product_t& wlearner_product_t::operator=(wlearner_product_t&&) = default;
+wlearner_product_t& wlearner_product_t::operator=(wlearner_product_t&&) noexcept = default;
 
 wlearner_product_t& wlearner_product_t::operator=(const wlearner_product_t&) = default;
 
@@ -90,6 +92,20 @@ indices_t wlearner_product_t::features() const
 scalar_t wlearner_product_t::fit(const dataset_t& dataset, fold_t fold,
     const tensor4d_t& gradients, const indices_t& indices, const tensor4d_t&)
 {
+    assert(indices.min() >= 0);
+    assert(indices.max() < dataset.samples(fold));
+    assert(gradients.dims() == cat_dims(dataset.samples(fold), dataset.tdim()));
+
+    switch (type())
+    {
+    case wlearner::real:
+        break;
+
+    default:
+        critical(true, "product weak learner: unhandled wlearner");
+        break;
+    }
+
     const auto samples = dataset.samples(fold);
 
     tensor4d_t scales(cat_dims(samples, dataset.tdim()));
@@ -143,11 +159,19 @@ scalar_t wlearner_product_t::fit(const dataset_t& dataset, fold_t fold,
     return best_score;
 }
 
+void wlearner_product_t::compatible(const dataset_t&) const
+{
+    critical(
+        static_cast<tensor_size_t>(m_terms.size()) != degree(),
+        "product weak learner: empty weak learner!");
+}
+
 cluster_t wlearner_product_t::split(const dataset_t& dataset, fold_t fold, const indices_t& indices) const
 {
-    cluster_t cluster(dataset.samples(fold), 1);
+    compatible(dataset);
 
     // the resulting split is the intersection of the terms' splits
+    cluster_t cluster(dataset.samples(fold), 1);
     tensor_size_t deg = 0;
     for (const auto& term : m_terms)
     {
@@ -177,6 +201,8 @@ cluster_t wlearner_product_t::split(const dataset_t& dataset, fold_t fold, const
 void wlearner_product_t::predict(const dataset_t& dataset, fold_t fold, tensor_range_t range,
     tensor4d_map_t&& outputs) const
 {
+    compatible(dataset);
+
     outputs.constant(1.0);
     tensor4d_t woutputs(outputs.dims());
     for (const auto& term : m_terms)

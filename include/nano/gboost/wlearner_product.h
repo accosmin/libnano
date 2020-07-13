@@ -35,12 +35,17 @@ namespace nano
         wlearner_product_t();
 
         ///
+        /// \brief default destructor
+        ///
+        ~wlearner_product_t();
+
+        ///
         /// \brief enable moving and copying
         ///
-        wlearner_product_t(wlearner_product_t&&);
         wlearner_product_t(const wlearner_product_t&);
-        wlearner_product_t& operator=(wlearner_product_t&&);
+        wlearner_product_t(wlearner_product_t&&) noexcept;
         wlearner_product_t& operator=(const wlearner_product_t&);
+        wlearner_product_t& operator=(wlearner_product_t&&) noexcept;
 
         ///
         /// \brief register a prototype weak learner to choose from by its ID in the associated factory.
@@ -112,9 +117,12 @@ namespace nano
         /// \brief access functions
         ///
         [[nodiscard]] auto degree() const { return m_degree.get(); }
+        [[nodiscard]] const auto& protos() const { return m_protos; }
+        [[nodiscard]] const auto& terms() const { return m_terms; }
 
     private:
 
+        void compatible(const dataset_t&) const;
         void add(string_t id, rwlearner_t&& prototype);
 
         // attributes

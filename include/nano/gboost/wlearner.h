@@ -24,6 +24,8 @@ namespace nano
         iwlearner_t& operator=(iwlearner_t&&) noexcept;
         iwlearner_t(string_t&& id, rwlearner_t&& wlearner);
 
+        ~iwlearner_t();
+
         void read(std::istream&);
         void write(std::ostream&) const;
 

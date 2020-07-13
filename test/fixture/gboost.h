@@ -5,6 +5,7 @@
 #include <nano/gboost/wlearner_table.h>
 #include <nano/gboost/wlearner_stump.h>
 #include <nano/gboost/wlearner_affine.h>
+#include <nano/gboost/wlearner_product.h>
 
 using namespace nano;
 
@@ -383,9 +384,9 @@ inline void check_no_fit(wlearner_t& wlearner, const fixture_dataset_t& dataset)
     const auto residuals = make_residuals(dataset, fold, *loss);
 
     auto fit_score = feature_t::placeholder_value();
-    UTEST_REQUIRE(!std::isfinite(fit_score));
-    UTEST_REQUIRE_NOTHROW(fit_score = wlearner.fit(dataset, fold, residuals, indices, dataset.scales(fold)));
-    UTEST_REQUIRE(std::isfinite(fit_score));
+    UTEST_CHECK_EQUAL(std::isfinite(fit_score), false);
+    UTEST_CHECK_NOTHROW(fit_score = wlearner.fit(dataset, fold, residuals, indices, dataset.scales(fold)));
+    UTEST_CHECK_EQUAL(std::isfinite(fit_score), true);
     UTEST_CHECK_EQUAL(fit_score, std::numeric_limits<scalar_t>::max());
 }
 
@@ -397,8 +398,8 @@ inline void check_fit_throws(wlearner_t& wlearner, const fixture_dataset_t& data
     const auto residuals = make_residuals(dataset, fold, *loss);
 
     auto fit_score = feature_t::placeholder_value();
-    UTEST_REQUIRE(!std::isfinite(fit_score));
-    UTEST_REQUIRE_THROW(fit_score = wlearner.fit(dataset, fold, residuals, indices, dataset.scales(fold)), std::runtime_error);
+    UTEST_CHECK_EQUAL(std::isfinite(fit_score), false);
+    UTEST_CHECK_THROW(fit_score = wlearner.fit(dataset, fold, residuals, indices, dataset.scales(fold)), std::runtime_error);
 }
 
 inline void check_split(const dataset_t& dataset, fold_t fold, const cluster_t& gcluster, const wlearner_t& wlearner)

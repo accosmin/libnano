@@ -5,16 +5,6 @@ using namespace nano;
 
 wlearner_product_t::wlearner_product_t() = default;
 
-wlearner_product_t::~wlearner_product_t() = default;
-
-wlearner_product_t::wlearner_product_t(wlearner_product_t&&) noexcept = default;
-
-wlearner_product_t::wlearner_product_t(const wlearner_product_t&) = default;
-
-wlearner_product_t& wlearner_product_t::operator=(wlearner_product_t&&) noexcept = default;
-
-wlearner_product_t& wlearner_product_t::operator=(const wlearner_product_t&) = default;
-
 void wlearner_product_t::add(const string_t& id)
 {
     add(id, wlearner_t::all().get(id));

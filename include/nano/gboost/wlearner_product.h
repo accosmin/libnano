@@ -35,19 +35,6 @@ namespace nano
         wlearner_product_t();
 
         ///
-        /// \brief default destructor
-        ///
-        ~wlearner_product_t();
-
-        ///
-        /// \brief enable moving and copying
-        ///
-        wlearner_product_t(const wlearner_product_t&);
-        wlearner_product_t(wlearner_product_t&&) noexcept;
-        wlearner_product_t& operator=(const wlearner_product_t&);
-        wlearner_product_t& operator=(wlearner_product_t&&) noexcept;
-
-        ///
         /// \brief register a prototype weak learner to choose from by its ID in the associated factory.
         ///
         void add(const string_t& id);

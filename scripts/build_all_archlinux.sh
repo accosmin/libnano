@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+CXX=g++ GCOV=gcov bash scripts/build.sh --suffix coverage --build-type Debug \
+    --generator Ninja --coverage --config --build --test --codecov
+
 CXX=g++ bash scripts/build.sh --suffix gcc-debug --build-type Debug \
     --generator Ninja --config --build --test --install --build-example
 

@@ -146,7 +146,10 @@ function codecov {
     lcov --remove ${output} '/usr/*' "${HOME}"'/.cache/*' '*/test/*' '*/external/*' --output-file ${output} || return 1
     lcov --list ${output} || return 1
     genhtml --output lcovhtml ${output} || return 1
-    bash <(curl -s https://codecov.io/bash) -f ${output} || return 1
+    if [ -n "$CODECOV_TOKEN" ]; then
+        printf "Uploading code coverage report to codecov.io ...\n"
+        bash <(curl -s https://codecov.io/bash) -f ${output} || return 1
+    fi
     #bash <(curl -s https://codecov.io/bash) -R ${basedir} -f '!*test_*' || return 1
 }
 

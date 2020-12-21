@@ -104,8 +104,8 @@ cifar10_dataset_t::cifar10_dataset_t() :
 
 feature_t cifar10_dataset_t::target() const
 {
-    return  feature_t("class").labels(
-           {"airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"});
+    return  feature_t("class").discrete(strings_t
+            {"airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"});
 }
 
 cifar100c_dataset_t::cifar100c_dataset_t() :
@@ -118,7 +118,7 @@ cifar100c_dataset_t::cifar100c_dataset_t() :
 
 feature_t cifar100c_dataset_t::target() const
 {
-    return  feature_t("class").labels(
+    return  feature_t("class").discrete(strings_t
             {"aquatic mammals", "fish", "flowers", "food containers", "fruit and vegetables",
             "household electrical devices", "household furniture", "insects", "large carnivores",
             "large man-made outdoor things", "large natural outdoor scenes", "large omnivores and herbivores",
@@ -136,7 +136,7 @@ cifar100f_dataset_t::cifar100f_dataset_t() :
 
 feature_t cifar100f_dataset_t::target() const
 {
-    return  feature_t("class").labels(
+    return  feature_t("class").discrete(strings_t
             {"apple", "aquarium_fish", "baby", "bear", "beaver", "bed", "bee", "beetle", "bicycle", "bottle",
             "bowl", "boy", "bridge", "bus", "butterfly", "camel", "can", "castle", "caterpillar", "cattle",
             "chair", "chimpanzee", "clock", "cloud", "cockroach", "couch", "crab", "crocodile", "cup",

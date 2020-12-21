@@ -1,9 +1,8 @@
 #pragma once
 
 #include <cmath>
-#include <nano/scalar.h>
-#include <nano/string.h>
-#include <nano/tensor/index.h>
+#include <nano/tensor.h>
+#include <nano/mlearn/enums.h>
 
 namespace nano
 {
@@ -33,6 +32,45 @@ namespace nano
         }
 
         ///
+        /// \brief set the feature as continuous.
+        ///
+        auto& continuous(feature_type type = feature_type::float32, tensor3d_dim_t dim = make_dims(1, 1, 1))
+        {
+            assert(type == feature_type::float32 || type == feature_type::float64);
+
+            m_dim = dim;
+            m_type = type;
+            m_labels.clear();
+            return *this;
+        }
+
+        ///
+        /// \brief set the feature as discrete, by passing the labels.
+        /// NB: this is useful when the labels are known before loading some dataset.
+        ///
+        auto& discrete(strings_t labels, feature_type type = feature_type::sclass)
+        {
+            assert(type == feature_type::sclass || type == feature_type::mclass);
+
+            m_type = type;
+            m_labels = std::move(labels);
+            return *this;
+        }
+
+        ///
+        /// \brief set the feature as discrete, but the labels are not known.
+        /// NB: this is useful when the labels are discovered while loading some dataset.
+        ///
+        auto& discrete(size_t count, feature_type type = feature_type::sclass)
+        {
+            assert(type == feature_type::sclass || type == feature_type::mclass);
+
+            m_type = type;
+            m_labels = strings_t(count);
+            return *this;
+        }
+
+        ///
         /// \brief set the placeholder (the feature becomes optional if the placeholder is not empty).
         ///
         auto& placeholder(string_t placeholder)
@@ -42,27 +80,8 @@ namespace nano
         }
 
         ///
-        /// \brief set the labels (the feature becomes discrete).
-        ///
-        auto& labels(strings_t labels)
-        {
-            m_labels = std::move(labels);
-            return *this;
-        }
-
-        ///
-        /// \brief set the number of unknown labels (the feature becomes discrete).
-        /// NB: this is useful when the labels are known before loading some dataset.
-        ///
-        auto& labels(size_t count)
-        {
-            auto labels = strings_t(count);
-            return this->labels(std::move(labels));
-        }
-
-        ///
         /// \brief try to add the given label if possible.
-        /// NB: this is useful when the labels are known before loading some dataset.
+        /// NB: this is useful when the labels are discovered while loading some dataset.
         ///
         size_t set_label(const string_t& label)
         {
@@ -149,6 +168,7 @@ namespace nano
         ///
         /// \brief access functions
         ///
+        auto type() const { return m_type; }
         const auto& name() const { return m_name; }
         const auto& labels() const { return m_labels; }
         const auto& placeholder() const { return m_placeholder; }
@@ -156,9 +176,11 @@ namespace nano
     private:
 
         // attributes
-        string_t    m_name;         ///<
-        strings_t   m_labels;       ///< possible labels (if the feature is discrete/categorical)
-        string_t    m_placeholder;  ///< placeholder string used if its value is missing
+        feature_type    m_type{feature_type::float32};  ///<
+        tensor3d_dim_t  m_dim{1, 1, 1};         ///< dimensions (if continuous)
+        string_t        m_name;                 ///<
+        strings_t       m_labels;               ///< possible labels (if the feature is discrete/categorical)
+        string_t        m_placeholder;          ///< placeholder string used if its value is missing
     };
 
     ///
@@ -166,14 +188,16 @@ namespace nano
     ///
     inline bool operator==(const feature_t& f1, const feature_t& f2)
     {
-        return  f1.name() == f2.name() &&
+        return  f1.type() == f2.type() &&
+                f1.name() == f2.name() &&
                 f1.labels() == f2.labels() &&
                 f1.placeholder() == f2.placeholder();
     }
 
     inline bool operator!=(const feature_t& f1, const feature_t& f2)
     {
-        return  f1.name() != f2.name() ||
+        return  f1.type() != f2.type() ||
+                f1.name() != f2.name() ||
                 f1.labels() != f2.labels() ||
                 f1.placeholder() != f2.placeholder();
     }
@@ -183,7 +207,7 @@ namespace nano
     ///
     inline std::ostream& operator<<(std::ostream& stream, const feature_t& feature)
     {
-        stream << "name=" << feature.name() << ",labels[";
+        stream << "name=" << feature.name() << ",type=" << feature.type() << ",labels[";
         for (const auto& label : feature.labels())
         {
             stream << label;

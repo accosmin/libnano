@@ -144,7 +144,7 @@ public:
         {
             // discrete, optional
             feature.placeholder("N/A");
-            feature.labels({"cat1", "cat2", "cat3"});
+            feature.discrete(strings_t{"cat1", "cat2", "cat3"});
             UTEST_REQUIRE(feature.discrete());
             UTEST_REQUIRE(feature.optional());
         }
@@ -262,7 +262,7 @@ public:
         auto feature = tdataset::feature(index);
         if (index == tdataset::the_discrete_feature())
         {
-            feature.labels({"cat1", "more", "more", "too many"});
+            feature.discrete(strings_t{"cat1", "more", "more", "too many"});
         }
         return feature;
     }

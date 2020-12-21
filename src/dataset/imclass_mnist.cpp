@@ -114,7 +114,7 @@ mnist_dataset_t::mnist_dataset_t() :
 
 feature_t mnist_dataset_t::target() const
 {
-    return  feature_t("digit").labels(
+    return  feature_t("digit").discrete(strings_t
             {"digit0", "digit1", "digit2", "digit3", "digit4", "digit5", "digit6", "digit7", "digit8", "digit9"});
 }
 
@@ -125,6 +125,6 @@ fashion_mnist_dataset_t::fashion_mnist_dataset_t() :
 
 feature_t fashion_mnist_dataset_t::target() const
 {
-    return  feature_t("article").labels(
+    return  feature_t("article").discrete(strings_t
             {"T-shirt/top", "Trouser", "Pullover", "Dress", "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot"});
 }

@@ -42,6 +42,34 @@ namespace nano
     }
 
     ///
+    /// \brief input or target feature type.
+    ///
+    enum class feature_type
+    {
+        float32 = 0,    ///< continuous feature (low precision storage)
+        float64,        ///< continuous feature (high precision storage)
+        sclass,         ///< categorical feature (single-label - one value possible out of a fixed set)
+        mclass,         ///< categorical feature (mulit-label - a subset of values possible out of a fixed set)
+    };
+
+    template <>
+    inline enum_map_t<feature_type> enum_string<feature_type>()
+    {
+        return
+        {
+            { feature_type::float32,    "float32" },
+            { feature_type::float64,    "float64" },
+            { feature_type::sclass,     "sclass" },
+            { feature_type::mclass,     "mclass" },
+        };
+    }
+
+    inline std::ostream& operator<<(std::ostream& stream, feature_type value)
+    {
+        return stream << scat(value);
+    }
+
+    ///
     /// \brief input normalization (feature scaling) methods.
     ///
     enum class normalization

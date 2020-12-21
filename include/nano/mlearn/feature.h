@@ -169,6 +169,7 @@ namespace nano
         /// \brief access functions
         ///
         auto type() const { return m_type; }
+        const auto& dim() const { return m_dim; }
         const auto& name() const { return m_name; }
         const auto& labels() const { return m_labels; }
         const auto& placeholder() const { return m_placeholder; }

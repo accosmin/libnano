@@ -12,6 +12,8 @@ UTEST_CASE(_default)
 
     feature = feature_t{"feature"};
     UTEST_CHECK_EQUAL(static_cast<bool>(feature), true);
+    UTEST_CHECK_EQUAL(feature.dim(), make_dims(1, 1, 1));
+    UTEST_CHECK_EQUAL(feature.type(), feature_type::float32);
 
     UTEST_CHECK(feature_t::missing(feature_t::placeholder_value()));
     UTEST_CHECK(!feature_t::missing(0));

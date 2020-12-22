@@ -36,7 +36,7 @@ namespace nano
         ///
         feature_t feature(const tensor_size_t index) const override
         {
-            assert(index >= 0 && index < ::nano::size(idim()));
+            assert(index >= 0 && index < ::nano::size(idims()));
             return m_source.feature(reindex(index));
         }
 
@@ -97,17 +97,17 @@ namespace nano
         ///
         /// \brief @see dataset_t
         ///
-        tensor3d_dim_t idim() const override
+        tensor3d_dims_t idims() const override
         {
-            return make_dims(nano::size(m_source.idim()) - 1, 1, 1);
+            return make_dims(nano::size(m_source.idims()) - 1, 1, 1);
         }
 
         ///
         /// \brief @see dataset_t
         ///
-        tensor3d_dim_t tdim() const override
+        tensor3d_dims_t tdims() const override
         {
-            return m_source.tdim();
+            return m_source.tdims();
         }
 
     private:

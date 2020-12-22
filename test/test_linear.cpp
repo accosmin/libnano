@@ -16,8 +16,8 @@ static auto make_dataset(const tensor_size_t isize = 5, const tensor_size_t tsiz
 {
     auto dataset = synthetic_affine_dataset_t{};
     dataset.noise(epsilon1<scalar_t>());
-    dataset.idim(make_dims(isize, 1, 1));
-    dataset.tdim(make_dims(tsize, 1, 1));
+    dataset.idims(make_dims(isize, 1, 1));
+    dataset.tdims(make_dims(tsize, 1, 1));
     dataset.modulo(1);
     dataset.samples(100);
     UTEST_CHECK_NOTHROW(dataset.load());

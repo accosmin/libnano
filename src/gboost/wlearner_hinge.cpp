@@ -15,11 +15,11 @@ namespace
 
         cache_t() = default;
 
-        explicit cache_t(const tensor3d_dim_t& tdim) :
-            m_beta0(tdim),
-            m_acc_sum(tdim),
-            m_acc_neg(tdim),
-            m_tables(cat_dims(2, tdim))
+        explicit cache_t(const tensor3d_dims_t& tdims) :
+            m_beta0(tdims),
+            m_acc_sum(tdims),
+            m_acc_neg(tdims),
+            m_tables(cat_dims(2, tdims))
         {
             m_beta0.zero();
         }
@@ -145,9 +145,9 @@ scalar_t wlearner_hinge_t::fit(const dataset_t& dataset, const indices_t& sample
 {
     assert(samples.min() >= 0);
     assert(samples.max() < dataset.samples());
-    assert(gradients.dims() == cat_dims(dataset.samples(), dataset.tdim()));
+    assert(gradients.dims() == cat_dims(dataset.samples(), dataset.tdims()));
 
-    std::vector<cache_t> caches(tpool_t::size(), cache_t{dataset.tdim()});
+    std::vector<cache_t> caches(tpool_t::size(), cache_t{dataset.tdims()});
     wlearner_feature1_t::loopc(dataset, samples, [&] (tensor_size_t feature, const tensor1d_t& fvalues, size_t tnum)
     {
         // update accumulators

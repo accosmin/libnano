@@ -15,8 +15,8 @@ namespace
 
         cache_t() = default;
 
-        explicit cache_t(const tensor3d_dim_t& tdim) :
-            m_acc(tdim)
+        explicit cache_t(const tensor3d_dims_t& tdims) :
+            m_acc(tdims)
         {
         }
 
@@ -73,9 +73,9 @@ scalar_t wlearner_table_t::fit(const dataset_t& dataset, const indices_t& sample
 {
     assert(samples.min() >= 0);
     assert(samples.max() < dataset.samples());
-    assert(gradients.dims() == cat_dims(dataset.samples(), dataset.tdim()));
+    assert(gradients.dims() == cat_dims(dataset.samples(), dataset.tdims()));
 
-    std::vector<cache_t> caches(tpool_t::size(), cache_t{dataset.tdim()});
+    std::vector<cache_t> caches(tpool_t::size(), cache_t{dataset.tdims()});
     wlearner_feature1_t::loopd(dataset, samples,
         [&] (tensor_size_t feature, const tensor1d_t& fvalues, tensor_size_t n_fvalues, size_t tnum)
     {
@@ -103,7 +103,7 @@ scalar_t wlearner_table_t::fit(const dataset_t& dataset, const indices_t& sample
         {
             cache.m_score = score;
             cache.m_feature = feature;
-            cache.m_tables.resize(cat_dims(n_fvalues, dataset.tdim()));
+            cache.m_tables.resize(cat_dims(n_fvalues, dataset.tdims()));
             for (tensor_size_t fv = 0; fv < n_fvalues; ++ fv)
             {
                 cache.m_tables.array(fv) = cache.output(fv);

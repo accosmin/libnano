@@ -9,8 +9,8 @@ class gboost_dataset_t final : public memfixed_dataset_t<scalar_t>
 {
 public:
 
-    using memfixed_dataset_t::idim;
-    using memfixed_dataset_t::tdim;
+    using memfixed_dataset_t::idims;
+    using memfixed_dataset_t::tdims;
     using memfixed_dataset_t::target;
     using memfixed_dataset_t::samples;
 
@@ -18,7 +18,7 @@ public:
 
     void load() override
     {
-        resize(cat_dims(m_samples, m_idim), cat_dims(m_samples, m_tdim));
+        resize(cat_dims(m_samples, m_idims), cat_dims(m_samples, m_tdims));
 
         m_scale = vector_t::Random(m_groups);
         m_scale.array() += 1.1;
@@ -55,8 +55,8 @@ public:
         return cluster;
     }
 
-    void idim(const tensor3d_dim_t idim) { m_idim = idim; }
-    void tdim(const tensor3d_dim_t tdim) { m_tdim = tdim; }
+    void idims(const tensor3d_dims_t idims) { m_idims = idims; }
+    void tdims(const tensor3d_dims_t tdims) { m_tdims = tdims; }
     void groups(const tensor_size_t groups) { m_groups = groups; }
     void samples(const tensor_size_t samples) { m_samples = samples; }
 
@@ -80,8 +80,8 @@ private:
     tensor4d_t          m_woutputs;         ///<
     tensor_size_t       m_groups{1};        ///<
     tensor_size_t       m_samples{100};     ///< total number of samples to generate (train + validation + test)
-    tensor3d_dim_t      m_idim{{10, 1, 1}}; ///< dimension of an input sample
-    tensor3d_dim_t      m_tdim{{3, 1, 1}};  ///< dimension of a target/output sample
+    tensor3d_dims_t     m_idims{{10, 1, 1}};///< dimension of an input sample
+    tensor3d_dims_t     m_tdims{{3, 1, 1}}; ///< dimension of a target/output sample
 };
 
 static auto make_samples()
@@ -92,8 +92,8 @@ static auto make_samples()
 static auto make_dataset(const tensor_size_t isize = 3, const tensor_size_t tsize = 2, const tensor_size_t groups = 3)
 {
     auto dataset = gboost_dataset_t{};
-    dataset.idim(make_dims(isize, 1, 1));
-    dataset.tdim(make_dims(tsize, 1, 1));
+    dataset.idims(make_dims(isize, 1, 1));
+    dataset.tdims(make_dims(tsize, 1, 1));
     dataset.samples(100);
     dataset.groups(groups);
     UTEST_CHECK_NOTHROW(dataset.load());

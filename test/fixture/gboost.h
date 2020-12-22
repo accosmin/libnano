@@ -13,8 +13,8 @@ class fixture_dataset_t : public memfixed_dataset_t<scalar_t>
 {
 public:
 
-    using memfixed_dataset_t::idim;
-    using memfixed_dataset_t::tdim;
+    using memfixed_dataset_t::idims;
+    using memfixed_dataset_t::tdims;
     using memfixed_dataset_t::target;
     using memfixed_dataset_t::samples;
 
@@ -307,7 +307,7 @@ inline auto make_invalid_samples(const dataset_t& dataset)
 
 inline auto make_residuals(const dataset_t& dataset, const loss_t& loss)
 {
-    tensor4d_t outputs(cat_dims(dataset.samples(), dataset.tdim()));
+    tensor4d_t outputs(cat_dims(dataset.samples(), dataset.tdims()));
     outputs.constant(+0.0);
 
     tensor4d_t residuals;
@@ -381,7 +381,7 @@ inline void check_predict(const wlearner_t& wlearner, const fixture_dataset_t& d
     const auto imatrix = inputs.reshape(samples.size(), -1);
 
     const auto& cluster = dataset.cluster();
-    const auto tsize = ::nano::size(dataset.tdim());
+    const auto tsize = ::nano::size(dataset.tdims());
 
     tensor4d_t outputs;
     UTEST_REQUIRE_NOTHROW(outputs = wlearner.predict(dataset, samples));

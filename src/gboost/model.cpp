@@ -55,11 +55,11 @@ scalar_t gboost_model_t::fit(
 
     m_iwlearners.clear();
 
-    const auto tdim = dataset.tdim();
+    const auto tdims = dataset.tdims();
 
-    tensor4d_t outputs(cat_dims(samples.size(), tdim));
-    tensor4d_t woutputs(cat_dims(samples.size(), tdim));
-    tensor4d_t fit_vgrads(cat_dims(dataset.samples(), tdim));   // NB: gradients for ALL samples, to index with samples!
+    tensor4d_t outputs(cat_dims(samples.size(), tdims));
+    tensor4d_t woutputs(cat_dims(samples.size(), tdims));
+    tensor4d_t fit_vgrads(cat_dims(dataset.samples(), tdims));   // NB: gradients for ALL samples, to index with samples!
     fit_vgrads.constant(std::numeric_limits<scalar_t>::quiet_NaN());
 
     // estimate bias
@@ -240,7 +240,7 @@ void gboost_model_t::scale(const cluster_t& cluster, const indices_t& samples, c
 tensor1d_t gboost_model_t::evaluate(
     const dataset_t& dataset, const indices_t& samples, const loss_t& loss, const tensor4d_t& outputs) const
 {
-    assert(outputs.dims() == cat_dims(samples.size(), dataset.tdim()));
+    assert(outputs.dims() == cat_dims(samples.size(), dataset.tdims()));
 
     tensor1d_t errors(samples.size());
     loopr(samples.size(), batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t)
@@ -256,11 +256,11 @@ tensor1d_t gboost_model_t::evaluate(
 tensor4d_t gboost_model_t::predict(const dataset_t& dataset, const indices_t& samples) const
 {
     critical(
-        m_bias.size() != ::nano::size(dataset.tdim()) &&
+        m_bias.size() != ::nano::size(dataset.tdims()) &&
         m_iwlearners.empty(),
         "gboost model: cannot predict without a trained model!");
 
-    tensor4d_t outputs(cat_dims(samples.size(), dataset.tdim()));
+    tensor4d_t outputs(cat_dims(samples.size(), dataset.tdims()));
     outputs.reshape(samples.size(), -1).matrix().rowwise() = m_bias.vector().transpose();
 
     loopr(samples.size(), batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t)
@@ -391,7 +391,7 @@ const auto vd_fold = fold_t{0U, protocol::valid};
 const auto tr_samples = dataset.samples(tr_fold);
 const auto vd_samples = dataset.samples(vd_fold);
 
-tensor4d_t targets(cat_dims(tr_samples + vd_samples, dataset.tdim()));
+tensor4d_t targets(cat_dims(tr_samples + vd_samples, dataset.tdims()));
 tensor5d_t moutputs(cat_dims(static_cast<tensor_size_t>(dataset.folds()), targets.dims()));
 
 for (size_t fold = 0, folds = dataset.folds(); fold < folds; ++ fold)
@@ -476,7 +476,7 @@ log_info() << std::setprecision(4) << std::fixed
             const auto folds = static_cast<tensor_size_t>(dataset.folds());
 
             tensor1d_t values(folds);
-            tensor5d_t moutputs(cat_dims(folds, cat_dims(range.size(), dataset.tdim())));
+            tensor5d_t moutputs(cat_dims(folds, cat_dims(range.size(), dataset.tdims())));
 
             tensor_size_t imodel = 0;
             for (const auto& model : m_iwlearnerss)

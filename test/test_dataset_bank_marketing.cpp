@@ -35,8 +35,8 @@ UTEST_CASE(load)
     UTEST_CHECK(!dataset->feature(18).discrete() && !dataset->feature(18).optional());
     UTEST_CHECK(!dataset->feature(19).discrete() && !dataset->feature(19).optional());
 
-    UTEST_CHECK_EQUAL(dataset->idim(), make_dims(20, 1, 1));
-    UTEST_CHECK_EQUAL(dataset->tdim(), make_dims(2, 1, 1));
+    UTEST_CHECK_EQUAL(dataset->idims(), make_dims(20, 1, 1));
+    UTEST_CHECK_EQUAL(dataset->tdims(), make_dims(2, 1, 1));
 
     UTEST_CHECK_EQUAL(dataset->samples(), 41188);
     UTEST_CHECK_EQUAL(dataset->test_samples(), arange(0, 0));

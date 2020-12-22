@@ -99,7 +99,7 @@ static void check_predict(const dataset_t& dataset, const gboost_model_t& model)
 
     tensor4d_t outputs;
     UTEST_REQUIRE_NOTHROW(outputs = model.predict(dataset, samples));
-    UTEST_CHECK_EQUAL(outputs.dims(), cat_dims(samples.size(), dataset.tdim()));
+    UTEST_CHECK_EQUAL(outputs.dims(), cat_dims(samples.size(), dataset.tdims()));
     UTEST_CHECK_EIGEN_CLOSE(targets.vector(), outputs.vector(), 1e-3);
 
     // check that the predictions shouldn't change at all when reloading the model

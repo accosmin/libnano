@@ -239,8 +239,8 @@ UTEST_CASE(load_no_target)
     UTEST_CHECK(!dataset.target());
     UTEST_CHECK_EQUAL(dataset.type(), task_type::unsupervised);
 
-    UTEST_CHECK_EQUAL(dataset.idim(), make_dims(4, 1, 1));
-    UTEST_CHECK_EQUAL(dataset.tdim(), make_dims(0, 1, 1));
+    UTEST_CHECK_EQUAL(dataset.idims(), make_dims(4, 1, 1));
+    UTEST_CHECK_EQUAL(dataset.tdims(), make_dims(0, 1, 1));
 
     UTEST_CHECK_EQUAL(dataset.samples(), 30);
     UTEST_CHECK_EQUAL(dataset.train_samples(), ::nano::arange(0, 20));
@@ -273,8 +273,8 @@ UTEST_CASE(load_with_cont_target)
     UTEST_CHECK_EQUAL(dataset.target(), feature_cont());
     UTEST_CHECK_EQUAL(dataset.type(), task_type::regression);
 
-    UTEST_CHECK_EQUAL(dataset.idim(), make_dims(3, 1, 1));
-    UTEST_CHECK_EQUAL(dataset.tdim(), make_dims(1, 1, 1));
+    UTEST_CHECK_EQUAL(dataset.idims(), make_dims(3, 1, 1));
+    UTEST_CHECK_EQUAL(dataset.tdims(), make_dims(1, 1, 1));
 
     UTEST_CHECK_EQUAL(dataset.samples(), 30);
     UTEST_CHECK_EQUAL(dataset.train_samples(), ::nano::arange(0, 20));
@@ -307,8 +307,8 @@ UTEST_CASE(load_with_cate_target)
     UTEST_CHECK_EQUAL(dataset.target(), feature_cate());
     UTEST_CHECK_EQUAL(dataset.type(), task_type::sclassification);
 
-    UTEST_CHECK_EQUAL(dataset.idim(), make_dims(3, 1, 1));
-    UTEST_CHECK_EQUAL(dataset.tdim(), make_dims(3, 1, 1));
+    UTEST_CHECK_EQUAL(dataset.idims(), make_dims(3, 1, 1));
+    UTEST_CHECK_EQUAL(dataset.tdims(), make_dims(3, 1, 1));
 
     UTEST_CHECK_EQUAL(dataset.samples(), 30);
     UTEST_CHECK_EQUAL(dataset.train_samples(), ::nano::arange(0, 20));

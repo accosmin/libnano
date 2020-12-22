@@ -45,7 +45,7 @@ void wlearner_feature1_t::compatible(const dataset_t& dataset) const
         "feature1 weak learner: empty weak learner!");
 
     critical(
-        make_dims(m_tables.size<1>(), m_tables.size<2>(), m_tables.size<3>()) != dataset.tdim() ||
+        make_dims(m_tables.size<1>(), m_tables.size<2>(), m_tables.size<3>()) != dataset.tdims() ||
         m_feature < 0 || m_feature >= dataset.features() ||
         dataset.feature(m_feature).labels().size() != m_labels,
         "feature1 weak learner: mis-matching dataset!");

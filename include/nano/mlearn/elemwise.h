@@ -21,7 +21,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        explicit elemwise_stats_t(const tensor3d_dim_t dims) :
+        explicit elemwise_stats_t(const tensor3d_dims_t dims) :
             m_min(dims),
             m_max(dims),
             m_mean(dims),

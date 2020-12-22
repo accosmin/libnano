@@ -31,11 +31,11 @@ namespace nano
         ///
         feature_t feature(const tensor_size_t index) const override
         {
-            const auto idim = this->idim();
-            assert(index >= 0 && ::nano::size(idim));
+            const auto idims = this->idims();
+            assert(index >= 0 && ::nano::size(idims));
 
-            const auto modx = std::get<1>(idim) * std::get<2>(idim);
-            const auto mody = std::get<2>(idim);
+            const auto modx = std::get<1>(idims) * std::get<2>(idims);
+            const auto mody = std::get<2>(idims);
             const auto x = index / modx;
             const auto y = (index - x * modx) / mody;
             const auto z = index - x * modx - y * mody;
@@ -110,7 +110,7 @@ namespace nano
         ///
         /// \brief @see dataset_t
         ///
-        tensor3d_dim_t idim() const override
+        tensor3d_dims_t idims() const override
         {
             return make_dims(m_inputs.template size<1>(), m_inputs.template size<2>(), m_inputs.template size<3>());
         }
@@ -118,7 +118,7 @@ namespace nano
         ///
         /// \brief @see dataset_t
         ///
-        tensor3d_dim_t tdim() const override
+        tensor3d_dims_t tdims() const override
         {
             return make_dims(m_targets.size<1>(), m_targets.size<2>(), m_targets.size<3>());
         }
@@ -146,12 +146,12 @@ namespace nano
         ///
         /// \brief allocate input and target tensors
         ///
-        void resize(const tensor4d_dim_t& idim, const tensor4d_dim_t& tdim)
+        void resize(const tensor4d_dims_t& idims, const tensor4d_dims_t& tdims)
         {
-            assert(std::get<0>(idim) == std::get<0>(tdim));
+            assert(std::get<0>(idims) == std::get<0>(tdims));
 
-            m_inputs.resize(idim);
-            m_targets.resize(tdim);
+            m_inputs.resize(idims);
+            m_targets.resize(tdims);
         }
 
     private:

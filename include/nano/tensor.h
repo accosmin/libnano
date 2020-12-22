@@ -19,11 +19,11 @@ namespace nano
     using tensor4d_t = tensor_mem_t<scalar_t, 4>;
     using tensor5d_t = tensor_mem_t<scalar_t, 5>;
 
-    using tensor1d_dim_t = tensor1d_t::tdims;
-    using tensor2d_dim_t = tensor2d_t::tdims;
-    using tensor3d_dim_t = tensor3d_t::tdims;
-    using tensor4d_dim_t = tensor4d_t::tdims;
-    using tensor5d_dim_t = tensor5d_t::tdims;
+    using tensor1d_dims_t = tensor1d_t::tdims;
+    using tensor2d_dims_t = tensor2d_t::tdims;
+    using tensor3d_dims_t = tensor3d_t::tdims;
+    using tensor4d_dims_t = tensor4d_t::tdims;
+    using tensor5d_dims_t = tensor5d_t::tdims;
 
     using tensor1d_map_t = tensor_map_t<scalar_t, 1>;
     using tensor2d_map_t = tensor_map_t<scalar_t, 2>;

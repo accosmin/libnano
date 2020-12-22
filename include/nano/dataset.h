@@ -63,14 +63,14 @@ namespace nano
         virtual tensor_size_t samples() const = 0;
 
         ///
-        /// \brief returns the dimension of a sample.
+        /// \brief returns the dimensions of a sample.
         ///
-        virtual tensor3d_dim_t idim() const = 0;
+        virtual tensor3d_dims_t idims() const = 0;
 
         ///
-        /// \brief returns the dimension of the target (if provided).
+        /// \brief returns the dimensions of the target (if provided).
         ///
-        virtual tensor3d_dim_t tdim() const = 0;
+        virtual tensor3d_dims_t tdims() const = 0;
 
         ///
         /// \brief returns the feature description of the target (if provided).
@@ -80,7 +80,7 @@ namespace nano
         ///
         /// \brief returns the toal number of input features.
         ///
-        tensor_size_t features() const { return ::nano::size(idim()); }
+        tensor_size_t features() const { return ::nano::size(idims()); }
 
         ///
         /// \brief returns the feature description of a given feature index.
@@ -128,7 +128,7 @@ namespace nano
         ///
         elemwise_stats_t istats(const indices_cmap_t& samples, tensor_size_t batch) const
         {
-            std::vector<elemwise_stats_t> stats(tpool_t::size(), elemwise_stats_t{idim()});
+            std::vector<elemwise_stats_t> stats(tpool_t::size(), elemwise_stats_t{idims()});
             loopr(samples.size(), batch, [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
             {
                 const auto range = make_range(begin, end);

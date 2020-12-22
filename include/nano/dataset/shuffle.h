@@ -105,17 +105,17 @@ namespace nano
         ///
         /// \brief @see dataset_t
         ///
-        tensor3d_dim_t idim() const override
+        tensor3d_dims_t idims() const override
         {
-            return m_source.idim();
+            return m_source.idims();
         }
 
         ///
         /// \brief @see dataset_t
         ///
-        tensor3d_dim_t tdim() const override
+        tensor3d_dims_t tdims() const override
         {
-            return m_source.tdim();
+            return m_source.tdims();
         }
 
     private:

@@ -77,7 +77,7 @@ gboost_scale_function_t::gboost_scale_function_t(const loss_t& loss, const datas
     m_woutputs(woutputs)
 {
     assert(m_outputs.dims() == m_woutputs.dims());
-    assert(m_outputs.dims() == cat_dims(samples.size(), m_dataset.tdim()));
+    assert(m_outputs.dims() == cat_dims(samples.size(), m_dataset.tdims()));
 }
 
 scalar_t gboost_scale_function_t::vgrad(const vector_t& x, vector_t* gx) const
@@ -133,7 +133,7 @@ scalar_t gboost_scale_function_t::vgrad(const vector_t& x, vector_t* gx) const
 }
 
 gboost_bias_function_t::gboost_bias_function_t(const loss_t& loss, const dataset_t& dataset, const indices_t& samples) :
-    gboost_function_t(::nano::size(dataset.tdim())),
+    gboost_function_t(::nano::size(dataset.tdims())),
     m_loss(loss),
     m_dataset(dataset),
     m_samples(samples)
@@ -142,7 +142,7 @@ gboost_bias_function_t::gboost_bias_function_t(const loss_t& loss, const dataset
 
 scalar_t gboost_bias_function_t::vgrad(const vector_t& x, vector_t* gx) const
 {
-    const auto tsize = nano::size(m_dataset.tdim());
+    const auto tsize = nano::size(m_dataset.tdims());
 
     assert(!gx || gx->size() == x.size());
     assert(x.size() == tsize);
@@ -181,18 +181,18 @@ scalar_t gboost_bias_function_t::vgrad(const vector_t& x, vector_t* gx) const
 }
 
 gboost_grads_function_t::gboost_grads_function_t(const loss_t& loss, const dataset_t& dataset, const indices_t& samples) :
-    gboost_function_t(samples.size() * nano::size(dataset.tdim())),
+    gboost_function_t(samples.size() * nano::size(dataset.tdims())),
     m_loss(loss),
     m_dataset(dataset),
     m_samples(samples),
     m_values(samples.size()),
-    m_vgrads(cat_dims(samples.size(), dataset.tdim()))
+    m_vgrads(cat_dims(samples.size(), dataset.tdims()))
 {
 }
 
 scalar_t gboost_grads_function_t::vgrad(const vector_t& x, vector_t* gx) const
 {
-    const auto odims = cat_dims(m_samples.size(), m_dataset.tdim());
+    const auto odims = cat_dims(m_samples.size(), m_dataset.tdims());
 
     assert(!gx || gx->size() == x.size());
     assert(x.size() == nano::size(odims));

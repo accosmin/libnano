@@ -86,7 +86,7 @@ namespace nano
         {
             compatible(dataset);
 
-            assert(outputs.dims() == cat_dims(samples.size(), dataset.tdim()));
+            assert(outputs.dims() == cat_dims(samples.size(), dataset.tdims()));
             for (tensor_size_t begin = 0; begin < samples.size(); begin += batch())
             {
                 const auto end = std::min(samples.size(), begin + static_cast<tensor_size_t>(batch()));

@@ -13,8 +13,8 @@ UTEST_CASE(affine)
     dataset.noise(0);
     dataset.modulo(2);
     dataset.samples(100);
-    dataset.idim(make_dims(7, 1, 1));
-    dataset.tdim(make_dims(3, 1, 1));
+    dataset.idims(make_dims(7, 1, 1));
+    dataset.tdims(make_dims(3, 1, 1));
 
     UTEST_REQUIRE_NOTHROW(dataset.load());
 

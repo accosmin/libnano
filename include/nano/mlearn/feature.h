@@ -34,11 +34,11 @@ namespace nano
         ///
         /// \brief set the feature as continuous.
         ///
-        auto& continuous(feature_type type = feature_type::float32, tensor3d_dim_t dim = make_dims(1, 1, 1))
+        auto& continuous(feature_type type = feature_type::float32, tensor3d_dims_t dims = make_dims(1, 1, 1))
         {
             assert(type == feature_type::float32 || type == feature_type::float64);
 
-            m_dim = dim;
+            m_dims = dims;
             m_type = type;
             m_labels.clear();
             return *this;
@@ -163,13 +163,41 @@ namespace nano
         ///
         /// \brief returns true if the feature is valid (aka defined).
         ///
-        operator bool() const { return !m_name.empty(); } // NOLINT(hicpp-explicit-conversions)
+        operator bool() const // NOLINT(hicpp-explicit-conversions)
+        {
+            return !m_name.empty();
+        }
+
+        ///
+        /// \brief returns the associated machine learning task if this feature is the target.
+        ///
+        operator task_type() const
+        {
+            if (!static_cast<bool>(*this))
+            {
+                return task_type::unsupervised;
+            }
+            else
+            {
+                switch (m_type)
+                {
+                case feature_type::sclass:
+                    return task_type::sclassification;
+
+                case feature_type::mclass:
+                    return task_type::mclassification;
+
+                default:
+                    return task_type::regression;
+                }
+            }
+        }
 
         ///
         /// \brief access functions
         ///
         auto type() const { return m_type; }
-        const auto& dim() const { return m_dim; }
+        const auto& dims() const { return m_dims; }
         const auto& name() const { return m_name; }
         const auto& labels() const { return m_labels; }
         const auto& placeholder() const { return m_placeholder; }
@@ -178,7 +206,7 @@ namespace nano
 
         // attributes
         feature_type    m_type{feature_type::float32};  ///<
-        tensor3d_dim_t  m_dim{1, 1, 1};         ///< dimensions (if continuous)
+        tensor3d_dims_t m_dims{1, 1, 1};        ///< dimensions (if continuous)
         string_t        m_name;                 ///<
         strings_t       m_labels;               ///< possible labels (if the feature is discrete/categorical)
         string_t        m_placeholder;          ///< placeholder string used if its value is missing

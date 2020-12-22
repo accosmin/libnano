@@ -9,14 +9,54 @@ UTEST_CASE(_default)
 {
     feature_t feature;
     UTEST_CHECK_EQUAL(static_cast<bool>(feature), false);
+    UTEST_CHECK_EQUAL(static_cast<task_type>(feature), task_type::unsupervised);
 
     feature = feature_t{"feature"};
     UTEST_CHECK_EQUAL(static_cast<bool>(feature), true);
-    UTEST_CHECK_EQUAL(feature.dim(), make_dims(1, 1, 1));
+    UTEST_CHECK_EQUAL(feature.dims(), make_dims(1, 1, 1));
     UTEST_CHECK_EQUAL(feature.type(), feature_type::float32);
+    UTEST_CHECK_EQUAL(static_cast<task_type>(feature), task_type::regression);
 
     UTEST_CHECK(feature_t::missing(feature_t::placeholder_value()));
     UTEST_CHECK(!feature_t::missing(0));
+}
+
+UTEST_CASE(task_type)
+{
+    {
+        auto feature = feature_t{};
+        UTEST_CHECK_EQUAL(static_cast<task_type>(feature), task_type::unsupervised);
+    }
+    {
+        auto feature = feature_t{"feature"}.discrete(7);
+        UTEST_CHECK_EQUAL(static_cast<task_type>(feature), task_type::sclassification);
+    }
+    {
+        auto feature = feature_t{"feature"}.discrete(7, feature_type::sclass);
+        UTEST_CHECK_EQUAL(static_cast<task_type>(feature), task_type::sclassification);
+    }
+    {
+        auto feature = feature_t{"feature"}.discrete(7, feature_type::mclass);
+        UTEST_CHECK_EQUAL(static_cast<task_type>(feature), task_type::mclassification);
+    }
+    {
+        auto feature = feature_t{"feature"};
+        UTEST_CHECK_EQUAL(static_cast<task_type>(feature), task_type::regression);
+    }
+    {
+        auto feature = feature_t{"feature"}.continuous();
+        UTEST_CHECK_EQUAL(static_cast<task_type>(feature), task_type::regression);
+    }
+    {
+        auto feature = feature_t{"feature"}.continuous(feature_type::float32, make_dims(1, 1, 2));
+        UTEST_CHECK_EQUAL(feature.dims(), make_dims(1, 1, 2));
+        UTEST_CHECK_EQUAL(static_cast<task_type>(feature), task_type::regression);
+    }
+    {
+        auto feature = feature_t{"feature"}.continuous(feature_type::float64, make_dims(3, 2, 1));
+        UTEST_CHECK_EQUAL(feature.dims(), make_dims(3, 2, 1));
+        UTEST_CHECK_EQUAL(static_cast<task_type>(feature), task_type::regression);
+    }
 }
 
 UTEST_CASE(discrete)

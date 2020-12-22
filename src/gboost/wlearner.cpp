@@ -62,7 +62,7 @@ void wlearner_t::scale(tensor4d_t& tables, const vector_t& scale)
 
 tensor4d_t wlearner_t::predict(const dataset_t& dataset, const indices_cmap_t& samples) const
 {
-    tensor4d_t outputs(cat_dims(samples.size(), dataset.tdim()));
+    tensor4d_t outputs(cat_dims(samples.size(), dataset.tdims()));
     outputs.zero();
     predict(dataset, samples, outputs);
 

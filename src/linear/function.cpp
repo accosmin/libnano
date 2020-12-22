@@ -5,12 +5,12 @@
 using namespace nano;
 
 linear_function_t::linear_function_t(const loss_t& loss, const dataset_t& dataset, const indices_t& samples) :
-    function_t("linear", (::nano::size(dataset.idim()) + 1) * ::nano::size(dataset.tdim()), convexity::yes),
+    function_t("linear", (::nano::size(dataset.idims()) + 1) * ::nano::size(dataset.tdims()), convexity::yes),
     m_loss(loss),
     m_dataset(dataset),
     m_samples(samples),
-    m_isize(::nano::size(dataset.idim())),
-    m_tsize(::nano::size(dataset.tdim())),
+    m_isize(::nano::size(dataset.idims())),
+    m_tsize(::nano::size(dataset.tdims())),
     m_istats(m_dataset.istats(m_samples, batch()))
 {
     assert(m_isize > 0);

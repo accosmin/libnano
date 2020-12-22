@@ -54,7 +54,7 @@ scalar_t linear_model_t::fit(
     istats.upscale(function.normalization(), m_weights, m_bias);
 
     tensor1d_t errors(samples.size());
-    tensor4d_t outputs(cat_dims(samples.size(), dataset.tdim()));
+    tensor4d_t outputs(cat_dims(samples.size(), dataset.tdims()));
 
     loopr(samples.size(), batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t)
     {
@@ -103,7 +103,7 @@ void linear_model_t::write(std::ostream& stream) const
 
 tensor4d_t linear_model_t::predict(const dataset_t& dataset, const indices_t& samples) const
 {
-    tensor4d_t outputs(cat_dims(samples.size(), dataset.tdim()));
+    tensor4d_t outputs(cat_dims(samples.size(), dataset.tdims()));
 
     loopr(samples.size(), batch(), [&] (tensor_size_t begin, tensor_size_t end, size_t)
     {

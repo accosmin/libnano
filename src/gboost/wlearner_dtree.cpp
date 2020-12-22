@@ -248,12 +248,12 @@ scalar_t wlearner_dtree_t::fit(const dataset_t& dataset, const indices_t& sample
 {
     assert(samples.min() >= 0);
     assert(samples.max() < dataset.samples());
-    assert(gradients.dims() == cat_dims(dataset.samples(), dataset.tdim()));
+    assert(gradients.dims() == cat_dims(dataset.samples(), dataset.tdims()));
 
     scalar_t score = 0;
 
     m_nodes.clear();
-    m_tables.resize(cat_dims(0, dataset.tdim()));
+    m_tables.resize(cat_dims(0, dataset.tdims()));
 
     auto stump = wlearner_stump_t{};
     auto table = wlearner_table_t{};
@@ -354,7 +354,7 @@ void wlearner_dtree_t::compatible(const dataset_t& dataset) const
         "dtree weak learner: empty weak learner!");
 
     critical(
-        make_dims(m_tables.size<1>(), m_tables.size<2>(), m_tables.size<3>()) != dataset.tdim() ||
+        make_dims(m_tables.size<1>(), m_tables.size<2>(), m_tables.size<3>()) != dataset.tdims() ||
         m_features.min() < 0 || m_features.max() >= dataset.features(),
         "dtree weak learner: mis-matching dataset!");
 

@@ -16,8 +16,8 @@ UTEST_CASE(load)
     UTEST_CHECK(!dataset->target().optional());
     UTEST_CHECK_EQUAL(dataset->target().labels().size(), 10U);
 
-    UTEST_CHECK_EQUAL(dataset->idim(), make_dims(32, 32, 3));
-    UTEST_CHECK_EQUAL(dataset->tdim(), make_dims(10, 1, 1));
+    UTEST_CHECK_EQUAL(dataset->idims(), make_dims(32, 32, 3));
+    UTEST_CHECK_EQUAL(dataset->tdims(), make_dims(10, 1, 1));
 
     UTEST_CHECK_EQUAL(dataset->samples(), 60000);
     UTEST_CHECK_EQUAL(dataset->train_samples(), arange(0, 50000));

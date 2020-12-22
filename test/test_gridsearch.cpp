@@ -51,7 +51,7 @@ public:
 
     static scalar_t error(const dataset_t& dataset, int64_t iparam1, int64_t iparam2, scalar_t sparam1)
     {
-        return delta(iparam1, iparam2, sparam1) * static_cast<scalar_t>(nano::size(dataset.tdim()));
+        return delta(iparam1, iparam2, sparam1) * static_cast<scalar_t>(nano::size(dataset.tdims()));
     }
 
     int64_t iparam1() const { return ivalue("iparam1"); }

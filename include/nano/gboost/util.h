@@ -38,19 +38,19 @@ namespace nano { namespace gboost
     {
     public:
 
-        explicit accumulator_t(const tensor3d_dim_t& tdim = make_dims(0, 0, 0)) :
+        explicit accumulator_t(const tensor3d_dims_t& tdims = make_dims(0, 0, 0)) :
             m_x0(1),
             m_x1(1),
             m_x2(1),
-            m_r1(cat_dims(1, tdim)),
-            m_rx(cat_dims(1, tdim)),
-            m_r2(cat_dims(1, tdim))
+            m_r1(cat_dims(1, tdims)),
+            m_rx(cat_dims(1, tdims)),
+            m_r2(cat_dims(1, tdims))
         {
             clear();
         }
 
         auto fvalues() const { return m_r1.size<0>(); }
-        auto tdim() const { return make_dims(m_r1.size<1>(), m_r1.size<2>(), m_r1.size<3>()); }
+        auto tdims() const { return make_dims(m_r1.size<1>(), m_r1.size<2>(), m_r1.size<3>()); }
 
         auto& x0(tensor_size_t fv = 0) { return m_x0(fv); }
         auto& x1(tensor_size_t fv = 0) { return m_x1(fv); }
@@ -81,9 +81,9 @@ namespace nano { namespace gboost
             m_x0.resize(fvalues);
             m_x1.resize(fvalues);
             m_x2.resize(fvalues);
-            m_r1.resize(cat_dims(fvalues, tdim()));
-            m_rx.resize(cat_dims(fvalues, tdim()));
-            m_r2.resize(cat_dims(fvalues, tdim()));
+            m_r1.resize(cat_dims(fvalues, tdims()));
+            m_rx.resize(cat_dims(fvalues, tdims()));
+            m_r2.resize(cat_dims(fvalues, tdims()));
 
             clear();
         }

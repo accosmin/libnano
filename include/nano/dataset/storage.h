@@ -84,7 +84,7 @@ namespace nano
         {
             if (target == string_t::npos)
             {
-                dataset_storage_t::resize(samples, make_dims(0, 0, 0));
+                dataset_storage_t::resize(samples, feature_t{});
             }
             else
             {
@@ -93,7 +93,7 @@ namespace nano
                 const auto& feature = features[target];
                 assert(!feature.optional());
 
-                dataset_storage_t::resize(resize, make_dims(static_cast<tensor_size_t>(feature.labels.size()), 1, 1));
+                dataset_storage_t::resize(resize, feature);
             }
 
             features_t u1_features, u2_features, f4_features;

@@ -1,57 +1,77 @@
 #pragma once
 
-#include <nano/tensor.h>
+#include <variant>
+#include <nano/dataset.h>
 
 namespace nano
 {
     ///
-    /// \brief base class for storing the sample of a machine learning dataset.
+    /// \brief
     ///
-    class dataset_storage_t
+    class feature_storage_t
     {
     public:
 
-        using targets_t = tensor_mem_t<scalar_t, 4>;
+        using storage_t = std::variant
+        <
+            // continuous
+            tensor_mem_t<float, 4>,
+            tensor_mem_t<double, 4>,
+            tensor_mem_t<uint8_t, 4>,
+            tensor_mem_t<uint16_t, 4>,
+            tensor_mem_t<uint32_t, 4>,
+            tensor_mem_t<uint64_t, 4>,
+            tensor_mem_t<int8_t, 4>,
+            tensor_mem_t<int16_t, 4>,
+            tensor_mem_t<int32_t, 4>,
+            tensor_mem_t<int64_t, 4>,
 
-        dataset_storage_t() = default;
+            // discrete
+            tensor_mem_t<uint8_t, 1>,
+            tensor_mem_t<uint16_t, 1>,
+        >;
 
-        void resize(tensor_size_t samples, feature_t target)
-        {
-            m_target = std::move(target);
+        feature_storage_t() = default;
 
-            if (!m_target)
-            {
-                // unsupervised machine learning task
-                m_targets.resize(make_dims(samples, 0, 0, 0));
-            }
-            else
-            {
-                // supervised machine learning task
-                switch (m_target.type())
-                {
-                case feature_type::sclass:
-                case feature_type::mclass:
-                    m_targets.resize(make_dims(samples, static_cast<tensor_size_t>(m_target.labels().size()), 1, 1));
-                    break;
+        feature_storage_t(feature_t, tensor_size_t samples);
 
-                default:
-                    m_targets.resize(cat_dims(samples, m_target.dims()));
-                    break;
-                }
-            }
-        }
-
-        auto samples() const { return m_targets.size<0>(); }
-        auto tdim() const { return make_dims(m_targets.size<1>(), m_targets.size<2>(), m_targets.size<3>()); }
-
-        const auto& target() const { return m_target; }
-        const auto& targets() const { return m_targets; }
+        tensor_size_t samples() const;
+        const auto& feature() const { return m_feature; }
+        const auto& storage() const { return m_storage; }
 
     private:
 
         // attributes
-        feature_t       m_target;   ///< target feature
-        targets_t       m_targets;  ///< optional targets (#samples, ...)
+        feature_t       m_feature;  ///<
+        storage_t       m_storage;  ///<
+    };
+
+    ///
+    /// \brief
+    ///
+    class memory_dataset_t : public dataset_t
+    {
+    public:
+
+        memory_dataset_t();
+
+        feature_t target() const override;
+        tensor_size_t samples() const override;
+        tensor3d_dims_t tdims() const override;
+
+        const auto& istorage() const { return m_inputs; }
+        const auto& tstorage() const { return m_target; }
+
+        void resize(tensor_size_t samples, const features_t& features, size_t target);
+
+    private:
+
+        using target_t = feature_storage_t;
+        using inputs_t = std::vector<feature_storage_t>;
+
+        // attributes
+        target_t        m_target;   ///<
+        inputs_t        m_inputs;   ///<
     };
 
     ///
@@ -63,7 +83,7 @@ namespace nano
     /// NB: the discrete input features cannot be multi-class.
     /// NB: the continuous input features cannot be multi-dimensional (::dims() == (1, 1, 1)).
     ///
-    class tabular_dataset_storage_t : private dataset_storage_t
+    class tabular_dataset_t : private dataset_t
     {
     public:
 
@@ -73,18 +93,18 @@ namespace nano
         using tabular_f32_t = tensor_mem_t<float, 2>;
         using tabular_f64_t = tensor_mem_t<double, 2>;
 
-        using dataset_storage_t::tdim;
-        using dataset_storage_t::target;
-        using dataset_storage_t::samples;
-        using dataset_storage_t::targets;
+        using dataset_t::tdim;
+        using dataset_t::target;
+        using dataset_t::samples;
+        using dataset_t::targets;
 
-        tabular_dataset_storage_t() = default;
+        tabular_dataset_t() = default;
 
         void resize(tensor_size_t samples, const features_t& features, size_t target)
         {
             if (target == string_t::npos)
             {
-                dataset_storage_t::resize(samples, feature_t{});
+                dataset_t::resize(samples, feature_t{});
             }
             else
             {
@@ -93,7 +113,7 @@ namespace nano
                 const auto& feature = features[target];
                 assert(!feature.optional());
 
-                dataset_storage_t::resize(resize, feature);
+                dataset_t::resize(resize, feature);
             }
 
             features_t u1_features, u2_features, f4_features;
@@ -154,13 +174,13 @@ namespace nano
     /// \brief fixed size, non-optional, continuous
     ///
     template <typename tscalar, size_t tfeature_rank>
-    class tensor_dataset_storage_t<tscalar, tfeature_rank>
+    class tensor_dataset_t<tscalar, tfeature_rank>
     {
     public:
 
         using inputs_t = tensor_mem_t<tscalar, tfeature_rank + 1>;
 
-        tensor_dataset_storage_t() = default;
+        tensor_dataset_t() = default;
 
         void resize(tensor_size_t samples, feature_t input, feature_t target)
         {

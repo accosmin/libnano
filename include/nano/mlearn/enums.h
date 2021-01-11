@@ -46,8 +46,19 @@ namespace nano
     ///
     enum class feature_type
     {
-        float32 = 0,    ///< continuous feature (low precision storage)
-        float64,        ///< continuous feature (high precision storage)
+        // continuous features
+        int8 = 0,
+        int16,
+        int32,
+        int64,
+        uint8,
+        uint16,
+        uint32,
+        uint64,
+        float32,
+        float64,
+
+        // discrete features
         sclass,         ///< categorical feature (single-label - one value possible out of a fixed set)
         mclass,         ///< categorical feature (mulit-label - a subset of values possible out of a fixed set)
     };
@@ -57,6 +68,14 @@ namespace nano
     {
         return
         {
+            { feature_type::int8,       "int8" },
+            { feature_type::int16,      "int16" },
+            { feature_type::int32,      "int32" },
+            { feature_type::int64,      "int64" },
+            { feature_type::uint8,      "uint8" },
+            { feature_type::uint16,     "uint16" },
+            { feature_type::uint32,     "uint32" },
+            { feature_type::uint64,     "uint64" },
             { feature_type::float32,    "float32" },
             { feature_type::float64,    "float64" },
             { feature_type::sclass,     "sclass" },

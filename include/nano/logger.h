@@ -86,6 +86,16 @@ namespace nano
     }
 
     ///
+    /// \brief throws an exception as a critical condition is satisfied.
+    ///
+    template <typename tmessage>
+    void critical(const tmessage& message)
+    {
+        log_error() << message;
+        throw std::runtime_error("critical check failed!");
+    }
+
+    ///
     /// \brief checks and throws an exception if the given condition is satisfied.
     ///
     template <typename tresult, typename tmessage>
@@ -93,8 +103,7 @@ namespace nano
     {
         if (static_cast<bool>(result))
         {
-            log_error() << message;
-            throw std::runtime_error("critical check failed!");
+            critical(message);
         }
     }
 

@@ -143,7 +143,7 @@ public:
         if (is_discrete(index))
         {
             // discrete, optional
-            feature.placeholder("N/A");
+            feature.optional(true);
             feature.discrete(strings_t{"cat1", "cat2", "cat3"});
             UTEST_REQUIRE(feature.discrete());
             UTEST_REQUIRE(feature.optional());
@@ -151,7 +151,7 @@ public:
         else
         {
             // continuous, optional
-            feature.placeholder("N/A");
+            feature.optional(true);
             UTEST_REQUIRE(!feature.discrete());
             UTEST_REQUIRE(feature.optional());
         }

@@ -10,7 +10,7 @@ namespace nano
     using features_t = std::vector<feature_t>;
 
     ///
-    /// \brief input feature (e.g. describes a column in a CSV file)
+    /// \brief input feature (e.g. describes a column in a csv file)
     ///     that can be either discrete/categorical or scalar/continuous
     ///     and with or without missing values.
     ///
@@ -71,11 +71,11 @@ namespace nano
         }
 
         ///
-        /// \brief set the placeholder (the feature becomes optional if the placeholder is not empty).
+        /// \brief set the feature optional.
         ///
-        auto& placeholder(string_t placeholder)
+        auto& optional(bool optional)
         {
-            m_placeholder = std::move(placeholder);
+            m_optional = optional;
             return *this;
         }
 
@@ -119,14 +119,6 @@ namespace nano
         bool discrete() const
         {
             return !m_labels.empty();
-        }
-
-        ///
-        /// \brief returns true if the feature is optional.
-        ///
-        bool optional() const
-        {
-            return !m_placeholder.empty();
         }
 
         ///
@@ -197,19 +189,19 @@ namespace nano
         /// \brief access functions
         ///
         auto type() const { return m_type; }
+        auto optional() const { return m_optional; }
         const auto& dims() const { return m_dims; }
         const auto& name() const { return m_name; }
         const auto& labels() const { return m_labels; }
-        const auto& placeholder() const { return m_placeholder; }
 
     private:
 
         // attributes
+        bool            m_optional{false};      ///<
         feature_type    m_type{feature_type::float32};  ///<
         tensor3d_dims_t m_dims{1, 1, 1};        ///< dimensions (if continuous)
         string_t        m_name;                 ///<
         strings_t       m_labels;               ///< possible labels (if the feature is discrete/categorical)
-        string_t        m_placeholder;          ///< placeholder string used if its value is missing
     };
 
     ///
@@ -220,7 +212,7 @@ namespace nano
         return  f1.type() == f2.type() &&
                 f1.name() == f2.name() &&
                 f1.labels() == f2.labels() &&
-                f1.placeholder() == f2.placeholder();
+                f1.optional() == f2.optional();
     }
 
     inline bool operator!=(const feature_t& f1, const feature_t& f2)
@@ -228,7 +220,7 @@ namespace nano
         return  f1.type() != f2.type() ||
                 f1.name() != f2.name() ||
                 f1.labels() != f2.labels() ||
-                f1.placeholder() != f2.placeholder();
+                f1.optional() != f2.optional();
     }
 
     ///
@@ -245,7 +237,7 @@ namespace nano
                 stream << ",";
             }
         }
-        return stream << "],placeholder=" << feature.placeholder();
+        return stream << "]," << (feature.optional() ? "optional" : "mandatory");
     }
 
     ///

@@ -11,7 +11,7 @@ static auto feature_cont()
 
 static auto feature_cont_opt()
 {
-    return feature_t{"cont_opt"}.placeholder("?");
+    return feature_t{"cont_opt"}.optional(true);
 }
 
 static auto feature_cate()
@@ -21,7 +21,7 @@ static auto feature_cate()
 
 static auto feature_cate_opt()
 {
-    return feature_t{"cate_opt"}.discrete(strings_t{"cate_opt0", "cate_opt1"}).placeholder("?");
+    return feature_t{"cate_opt"}.discrete(strings_t{"cate_opt0", "cate_opt1"}).optional(true);
 }
 
 class fixture_dataset_t final : public tabular_dataset_t
@@ -35,8 +35,8 @@ public:
     {
         return csvs_t(
         {
-            csv_t{data_path()}.delim(",").header(false).expected(data_expected).skip('@'),
-            csv_t{test_path()}.delim(",").header(true).expected(test_expected).skip('@').testing(0, test_expected)
+            csv_t{data_path()}.delim(",").header(false).expected(data_expected).skip('@').placeholder("?"),
+            csv_t{test_path()}.delim(",").header(true).expected(test_expected).skip('@').testing(0, test_expected).placeholder("?")
         });
     }
 

@@ -26,6 +26,7 @@ namespace nano
         auto& delim(string_t delim) { m_delim = std::move(delim); return *this; }
         auto& testing(tensor_range_t testing) { m_testing = testing; return *this; }
         auto& testing(tensor_size_t begin, tensor_size_t end) { return testing(make_range(begin, end)); }
+        auto& placeholder(string_t placeholder) { m_placeholder = std::move(placeholder); return *this; }
 
         ///
         /// \brief parse the current configured CSV and call the given operator for each line.
@@ -61,5 +62,6 @@ namespace nano
         bool            m_header{false};    ///< skip the first line with the header
         int             m_expected{-1};     ///< expected number of lines to read (excepting skipped lines and the header)
         tensor_range_t  m_testing;          ///< optional range of samples (relative to the file) to be used for testing
+        string_t        m_placeholder;          ///< placeholder string used if its value is missing
     };
 }

@@ -105,25 +105,27 @@ dataset_factory_t& dataset_t::all()
             "predict if a person makes more than 50K per year (Kohavi & Becker, 1994)",
             csvs_t
             {
-                csv_t{dir + "/adult/adult.data"}.skip('|').delim(", .").header(false).expected(32561),
-                csv_t{dir + "/adult/adult.test"}.skip('|').delim(", .").header(false).expected(16281).testing(make_range(0, 16281))
+                csv_t{dir + "/adult/adult.data"}.
+                    skip('|').delim(", .").header(false).expected(32561).placeholder("?"),
+                csv_t{dir + "/adult/adult.test"}.
+                    skip('|').delim(", .").header(false).expected(16281).testing(make_range(0, 16281)).placeholder("?")
             },
             features_t
             {
                 feature_t{"age"},
-                feature_t{"workclass"}.placeholder("?").discrete(8),
+                feature_t{"workclass"}.optional(true).discrete(8),
                 feature_t{"fnlwgt"},
                 feature_t{"education"}.discrete(16),
                 feature_t{"education-num"},
                 feature_t{"marital-status"}.discrete(7),
-                feature_t{"occupation"}.placeholder("?").discrete(14),
+                feature_t{"occupation"}.optional(true).discrete(14),
                 feature_t{"relationship"}.discrete(6),
                 feature_t{"race"}.discrete(5),
                 feature_t{"sex"}.discrete({"Female", "Male"}),
                 feature_t{"capital-gain"},
                 feature_t{"capital-loss"},
                 feature_t{"hours-per-week"},
-                feature_t{"native-country"}.placeholder("?").discrete(41),
+                feature_t{"native-country"}.optional(true).discrete(41),
                 feature_t{"income"}.discrete(2),
             }, 14);
 

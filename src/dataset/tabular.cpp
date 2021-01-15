@@ -72,7 +72,7 @@ void tabular_dataset_t::load()
         critical(
             !csv.parse([&] (const string_t& line, const tensor_size_t line_index)
             {
-                return this->parse(csv.m_path, line, csv.m_delim, line_index, row ++);
+                return this->parse(csv, line, line_index, row ++);
             }),
             "failed to read file!");
 
@@ -128,8 +128,7 @@ void tabular_dataset_t::store(const tensor_size_t row, const size_t col, const t
     }
 }
 
-bool tabular_dataset_t::parse(const string_t& path, const string_t& line, const string_t& delim,
-    const tensor_size_t line_index, const tensor_size_t row)
+bool tabular_dataset_t::parse(const csv_t& csv, const string_t& line, tensor_size_t line_index, tensor_size_t row)
 {
     if (row >= all_inputs().size<0>())
     {
@@ -137,11 +136,11 @@ bool tabular_dataset_t::parse(const string_t& path, const string_t& line, const 
         return false;
     }
 
-    for (auto tokenizer = tokenizer_t{line, delim.c_str()}; tokenizer; ++ tokenizer)
+    for (auto tokenizer = tokenizer_t{line, csv.m_delim.c_str()}; tokenizer; ++ tokenizer)
     {
         if (tokenizer.count() > m_features.size())
         {
-            log_error() << "tabular dataset: invalid line " << path << ":" << line_index
+            log_error() << "tabular dataset: invalid line " << csv.m_path << ":" << line_index
                 << ", expecting " << m_features.size() << " tokens!";
             return false;
         }
@@ -150,7 +149,7 @@ bool tabular_dataset_t::parse(const string_t& path, const string_t& line, const 
         const auto token = tokenizer.get();
         auto& feature = m_features[f];
 
-        if (token == feature.placeholder())
+        if (feature.optional() && token == csv.m_placeholder)
         {
             assert(f != m_target);
             store(row, f, feature_t::placeholder_value());
@@ -163,7 +162,7 @@ bool tabular_dataset_t::parse(const string_t& path, const string_t& line, const 
             }
             catch (std::exception& e)
             {
-                log_error() << "tabular dataset: invalid line " << path << ":" << line_index
+                log_error() << "tabular dataset: invalid line " << csv.m_path << ":" << line_index
                     << ", expecting arithmetic token [" << token << "] for feature [" << feature.name() << "]!";
                 return false;
             }
@@ -173,7 +172,7 @@ bool tabular_dataset_t::parse(const string_t& path, const string_t& line, const 
             const auto ilabel = feature.set_label(token);
             if (ilabel == string_t::npos)
             {
-                log_error() << "tabular dataset: invalid line " << path << ":" << line_index
+                log_error() << "tabular dataset: invalid line " << csv.m_path << ":" << line_index
                     << ", invalid label [" << token << "] for feature [" << feature.name() << "]!";
                 return false;
             }

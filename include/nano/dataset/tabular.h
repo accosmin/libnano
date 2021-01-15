@@ -49,7 +49,7 @@ namespace nano
 
         void store(tensor_size_t row, size_t col, scalar_t value);
         void store(tensor_size_t row, size_t col, tensor_size_t category);
-        bool parse(const string_t&, const string_t&, const string_t&, tensor_size_t, tensor_size_t);
+        bool parse(const csv_t&, const string_t&, tensor_size_t, tensor_size_t);
 
     private:
 

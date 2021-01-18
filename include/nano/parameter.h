@@ -114,9 +114,8 @@ namespace nano
                 !std::isfinite(_value) || !std::isfinite(value) ||
                 !detail::check(m_mincomp, m_min, value) ||
                 !detail::check(m_maxcomp, value, m_max),
-                scat("invalid parameter '", m_name, "': !(",
-                    m_min, detail::name(m_mincomp),
-                    value, detail::name(m_maxcomp), m_max, ")"));
+                "invalid parameter '", m_name, "': !(", m_min, detail::name(m_mincomp),
+                value, detail::name(m_maxcomp), m_max, ")");
 
             return value;
         }
@@ -175,10 +174,10 @@ namespace nano
                 !detail::check(m_mincomp, m_min, value1) ||
                 !detail::check(m_valcomp, value1, value2) ||
                 !detail::check(m_maxcomp, value2, m_max),
-                scat("invalid parameter '", m_name, "': !(",
-                    m_min, detail::name(m_mincomp),
-                    value1, detail::name(m_valcomp),
-                    value2, detail::name(m_maxcomp), m_max, ")"));
+                "invalid parameter '", m_name, "': !(",
+                m_min, detail::name(m_mincomp),
+                value1, detail::name(m_valcomp),
+                value2, detail::name(m_maxcomp), m_max, ")");
 
             return std::make_pair(value1, value2);
         }
@@ -252,7 +251,7 @@ namespace nano
             const auto values = enum_values<tenum>();
             critical(
                 std::find(values.begin(), values.end(), value) == values.end(),
-                scat("invalid parameter '", m_name, "': (", static_cast<int64_t>(value), ")"));
+                "invalid parameter '", m_name, "': (", static_cast<int64_t>(value), ")");
 
             return static_cast<int64_t>(value);
         }

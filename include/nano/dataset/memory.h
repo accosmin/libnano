@@ -17,14 +17,14 @@ namespace nano
             // continuous
             tensor_mem_t<float, 4>,
             tensor_mem_t<double, 4>,
-            tensor_mem_t<uint8_t, 4>,
-            tensor_mem_t<uint16_t, 4>,
-            tensor_mem_t<uint32_t, 4>,
-            tensor_mem_t<uint64_t, 4>,
             tensor_mem_t<int8_t, 4>,
             tensor_mem_t<int16_t, 4>,
             tensor_mem_t<int32_t, 4>,
             tensor_mem_t<int64_t, 4>,
+            tensor_mem_t<uint8_t, 4>,
+            tensor_mem_t<uint16_t, 4>,
+            tensor_mem_t<uint32_t, 4>,
+            tensor_mem_t<uint64_t, 4>,
 
             // discrete (single label)
             tensor_mem_t<uint8_t, 1>,
@@ -39,11 +39,50 @@ namespace nano
         feature_storage_t(feature_t, tensor_size_t samples);
 
         tensor_size_t samples() const;
-        const auto& feature() const { return m_feature; }
-        const auto& storage() const { return m_storage; }
+        const feature_t& feature() const { return m_feature; }
+        const storage_t& storage() const { return m_storage; }
 
-        tensor_cmap_t<float, 4> as_float() const;
-        tensor_cmap_t<float, 4> as_double() const;
+        void set(tensor_size_t sample, float value);
+        void set(tensor_size_t sample, double value);
+        void set(tensor_size_t sample, int8_t value);
+        void set(tensor_size_t sample, int16_t value);
+        void set(tensor_size_t sample, int32_t value);
+        void set(tensor_size_t sample, int64_t value);
+        void set(tensor_size_t sample, uint8_t value);
+        void set(tensor_size_t sample, uint16_t value);
+        void set(tensor_size_t sample, uint32_t value);
+        void set(tensor_size_t sample, uint64_t value);
+
+        void set(tensor_size_t sample, tensor_cmap_t<float, 3> values);
+        void set(tensor_size_t sample, tensor_cmap_t<double, 3> values);
+        void set(tensor_size_t sample, tensor_cmap_t<int8_t, 3> values);
+        void set(tensor_size_t sample, tensor_cmap_t<int16_t, 3> values);
+        void set(tensor_size_t sample, tensor_cmap_t<int32_t, 3> values);
+        void set(tensor_size_t sample, tensor_cmap_t<int64_t, 3> values);
+        void set(tensor_size_t sample, tensor_cmap_t<uint8_t, 3> values);
+        void set(tensor_size_t sample, tensor_cmap_t<uint16_t, 3> values);
+        void set(tensor_size_t sample, tensor_cmap_t<uint32_t, 3> values);
+        void set(tensor_size_t sample, tensor_cmap_t<uint64_t, 3> values);
+
+        void set(tensor_size_t sample, const strings_t& labels);
+        void set(tensor_size_t sample, const string_t& value_or_label);
+
+        tensor_cmap_t<float, 4> continuous_float() const;
+        tensor_cmap_t<double, 4> continuous_double() const;
+        tensor_cmap_t<int8_t, 4> continuous_int8() const;
+        tensor_cmap_t<int16_t, 4> continuous_int16() const;
+        tensor_cmap_t<int32_t, 4> continuous_int32() const;
+        tensor_cmap_t<int64_t, 4> continuous_int64() const;
+        tensor_cmap_t<uint8_t, 4> continuous_uint8() const;
+        tensor_cmap_t<uint16_t, 4> continuous_uint16() const;
+        tensor_cmap_t<uint32_t, 4> continuous_uint32() const;
+        tensor_cmap_t<uint64_t, 4> continuous_uint64() const;
+
+        tensor_cmap_t<uint8_t, 1> sclass_uint8() const;
+        tensor_cmap_t<uint16_t, 1> sclass_uint16() const;
+
+        tensor_cmap_t<uint8_t, 2> mclass_uint8() const;
+        tensor_cmap_t<uint16_t, 2> mclass_uint16() const;
 
     private:
 
@@ -79,17 +118,15 @@ namespace nano
 
         void resize(tensor_size_t samples, const features_t& features, size_t target);
 
-        template <typename tscalar>
-        void write(tensor_size_t sample, tensor_size_t feature, tscalar value);
+        template <typename tvalue>
+        void set(tensor_size_t sample, tensor_size_t feature, const tvalue& value);
 
-        template <typename tscalar>
-        void write(tensor_size_t sample, tensor_size_t feature, tensor_cmap_t<tscalar, 3> value);
-
-        template <typename tscalar>
-        void write(tensor_size_t sample, tensor_size_t feature, tensor_size_t);
+        template <typename tvalue>
+        void set(tensor_size_t sample, const tvalue& value);
 
         bool missing(tensor_size_t sample, tensor_size_t feature) const
         {
+            const auto mask = 0x01 << (7 - (feature % 8));
             return (m_missing(sample, feature / 8) & (0x01 << (7 - feature % 8))) != 0x00;
         }
 

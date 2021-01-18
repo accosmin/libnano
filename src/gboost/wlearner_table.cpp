@@ -91,8 +91,9 @@ scalar_t wlearner_table_t::fit(const dataset_t& dataset, const indices_t& sample
             }
 
             const auto fv = static_cast<tensor_size_t>(value);
-            critical(fv < 0 || fv >= n_fvalues,
-                scat("table weak learner: invalid feature value ", fv, ", expecting [0, ", n_fvalues, ")"));
+            critical(
+                fv < 0 || fv >= n_fvalues,
+                "table weak learner: invalid feature value ", fv, ", expecting [0, ", n_fvalues, ")");
 
             cache.m_acc.update(gradients.array(samples(i)), fv);
         }
@@ -130,7 +131,7 @@ void wlearner_table_t::predict(const dataset_t& dataset, const indices_cmap_t& s
         const auto index = static_cast<tensor_size_t>(x);
         critical(
             index < 0 || index >= fvalues(),
-            scat("table weak learner: invalid feature value ", x, ", expecting [0, ", fvalues(), ")"));
+            "table weak learner: invalid feature value ", x, ", expecting [0, ", fvalues(), ")");
         outputs.vector() += vector(index);
     });
 }
@@ -142,7 +143,7 @@ cluster_t wlearner_table_t::split(const dataset_t& dataset, const indices_t& sam
         const auto index = static_cast<tensor_size_t>(x);
         critical(
             index < 0 || index >= fvalues(),
-            scat("table weak learner: invalid feature value ", x, ", expecting [0, ", fvalues(), ")"));
+            "table weak learner: invalid feature value ", x, ", expecting [0, ", fvalues(), ")");
         return index;
     });
 }

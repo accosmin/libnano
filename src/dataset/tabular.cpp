@@ -22,12 +22,12 @@ void tabular_dataset_t::load()
     critical(
         m_target != string_t::npos &&
         m_target >= m_features.size(),
-        scat("tabular dataset: the target feature (", m_target,
-             ") is not valid, expecting in the [0, ", m_features.size(), ") range!"));
+        "tabular dataset: the target feature (", m_target,
+        ") is not valid, expecting in the [0, ", m_features.size(), ") range!");
 
     critical(
         m_target < m_features.size() && m_features[m_target].optional(),
-        scat("tabular dataset: the target feature (", m_target, ") cannot be optional!"));
+        "tabular dataset: the target feature (", m_target, ") cannot be optional!");
 
     // allocate storage
     tensor_size_t data_size = 0;
@@ -79,7 +79,7 @@ void tabular_dataset_t::load()
         const auto samples_read = row - old_row;
         critical(
             csv.m_expected > 0 && samples_read != csv.m_expected,
-            scat("tabular dataset: read ", samples_read, ", expecting ", csv.m_expected, " samples!"));
+            "tabular dataset: read ", samples_read, ", expecting ", csv.m_expected, " samples!");
 
         dataset_t::testing(make_range(
             old_row + csv.m_testing.begin(),
@@ -90,7 +90,7 @@ void tabular_dataset_t::load()
 
     critical(
         row != data_size,
-        scat("tabular dataset: read ", row, " samples, expecting ", data_size, "!"));
+        "tabular dataset: read ", row, " samples, expecting ", data_size, "!");
 }
 
 void tabular_dataset_t::store(const tensor_size_t row, const size_t col, const scalar_t value)

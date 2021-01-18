@@ -369,7 +369,7 @@ feature_infos_t gboost_model_t::features(
             break;
 
         default:
-            critical(true, "gboost model: unhandled feature importance method!");
+            critical0("gboost model: unhandled feature importance method!");
         }
 
         info.importance(feature_error - baseline_error);
@@ -498,7 +498,7 @@ log_info() << std::setprecision(4) << std::fixed
         break;
 
     default:
-        critical(true, "gboost model: unhandled ensemble method when predicting");
+        critical0("gboost model: unhandled ensemble method when predicting");
     }
 */
 

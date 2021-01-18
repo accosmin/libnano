@@ -24,7 +24,7 @@ task_type dataset_t::type() const
     {
         critical(
             target.optional(),
-            scat("dataset: the target feature (", target.name(), ") cannot be optional!"));
+            "dataset: the target feature (", target.name(), ") cannot be optional!");
 
         if (!target.discrete())
         {

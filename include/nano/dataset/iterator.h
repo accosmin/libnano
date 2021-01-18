@@ -28,8 +28,8 @@ namespace nano
 
         virtual ~dataset_iterator_t() = default;
 
-        virtual bool cache_inputs(int64_t bytes) = 0;
-        virtual bool cache_targets(int64_t bytes) = 0;
+        virtual bool cache_inputs(int64_t bytes, execution) = 0;
+        virtual bool cache_targets(int64_t bytes, execution) = 0;
 
         virtual feature_t target() const = 0;
         virtual tensor3d_dims_t tdims() const = 0;

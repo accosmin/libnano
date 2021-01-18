@@ -98,7 +98,7 @@ void model_param_t::set(int64_t value)
     }
     else
     {
-        critical(true, scat("model parameter (", name(), "): cannot set enumeration with integer (", value, ")!"));
+        critical0("model parameter (", name(), "): cannot set enumeration with integer (", value, ")!");
     }
 }
 
@@ -110,7 +110,7 @@ void model_param_t::set(scalar_t value)
     }
     else
     {
-        critical(true, scat("model parameter (", name(), "): cannot set not-scalar with scalar (", value, ")!"));
+        critical0("model parameter (", name(), "): cannot set not-scalar with scalar (", value, ")!");
     }
 }
 
@@ -195,9 +195,7 @@ void model_param_t::read(std::istream& stream)
         break;
 
     default:
-        critical(
-            false,
-            scat("model parameter: failed to read from stream (type=", type, ")!"));
+        critical0("model parameter: failed to read from stream (type=", type, ")!");
         break;
     }
 }
@@ -211,7 +209,7 @@ void model_param_t::write(std::ostream& stream) const
         critical(
             !::nano::write(stream, type) ||
             !::nano::write(stream, eparam()),
-            scat("model parameter (", name(), "): failed to write to stream!"));
+            "model parameter (", name(), "): failed to write to stream!");
     }
     else if (is_ivalue())
     {
@@ -219,7 +217,7 @@ void model_param_t::write(std::ostream& stream) const
         critical(
             !::nano::write(stream, type) ||
             !::nano::write(stream, iparam()),
-            scat("model parameter (", name(), "): failed to write to stream!"));
+            "model parameter (", name(), "): failed to write to stream!");
     }
     else
     {
@@ -227,7 +225,7 @@ void model_param_t::write(std::ostream& stream) const
         critical(
             !::nano::write(stream, type) ||
             !::nano::write(stream, sparam()),
-            scat("model parameter (", name(), "): failed to write to stream!"));
+            "model parameter (", name(), "): failed to write to stream!");
     }
 }
 
@@ -405,7 +403,7 @@ model_param_t& model_t::find(const string_t& name)
         return param.name() == name;
     });
 
-    critical(it == m_params.end(), scat("model: cannot find parameter by name (", name, ")!"));
+    critical(it == m_params.end(), "model: cannot find parameter by name (", name, ")!");
     return *it;
 }
 
@@ -416,7 +414,7 @@ const model_param_t& model_t::find(const string_t& name) const
         return param.name() == name;
     });
 
-    critical(it == m_params.end(), scat("model: cannot find parameter by name (", name, ")!"));
+    critical(it == m_params.end(), "model: cannot find parameter by name (", name, ")!");
     return *it;
 }
 
@@ -451,11 +449,11 @@ kfold_result_t nano::kfold(const model_t& model_,
 
     critical(
         folds < min_folds,
-        scat("kfold: the number of folds (", folds, ") should be greater than ", min_folds, "!"));
+        "kfold: the number of folds (", folds, ") should be greater than ", min_folds, "!");
 
     critical(
         repetitions < min_repetitions,
-        scat("kfold: the number of repetitions (", repetitions, ") should be greater than ", min_repetitions, "!"));
+        "kfold: the number of repetitions (", repetitions, ") should be greater than ", min_repetitions, "!");
 
     kfold_result_t result{folds * repetitions};
     for (tensor_size_t repetition = 0, index = 0; repetition < repetitions; ++ repetition)

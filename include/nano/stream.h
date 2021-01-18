@@ -297,7 +297,7 @@ namespace nano
             m_object = tobject::all().get(m_id);
             critical(
                 m_object == nullptr,
-                scat("identifiable: invalid id <", m_id, "> read from stream!"));
+                "identifiable: invalid id <", m_id, "> read from stream!");
 
             m_object->read(stream);
         }

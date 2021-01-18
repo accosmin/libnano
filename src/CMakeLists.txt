@@ -41,6 +41,7 @@ target_sources(nano PRIVATE
     mlearn/kfold.cpp
     mlearn/train.cpp
     mlearn/cluster.cpp
+    mlearn/feature.cpp
     mlearn/stacking.cpp
     gboost/model.cpp
     gboost/function.cpp

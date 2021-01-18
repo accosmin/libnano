@@ -23,7 +23,7 @@ void solver_t::lsearch0(const string_t& id, rlsearch0_t&& init)
 {
     critical(
         !init,
-        scat("solver: invalid line-search initialization (", id, ")!"));
+        "solver: invalid line-search initialization (", id, ")!");
 
     m_lsearch0_id = id;
     m_lsearch0 = std::move(init);
@@ -38,7 +38,7 @@ void solver_t::lsearchk(const string_t& id, rlsearchk_t&& strategy)
 {
     critical(
         !strategy,
-        scat("solver: invalid line-search strategy (", id, ")!"));
+        "solver: invalid line-search strategy (", id, ")!");
 
     m_lsearchk_id = id;
     m_lsearchk = std::move(strategy);

@@ -27,7 +27,7 @@ void cifar_dataset_t::load()
     const auto tfeature = this->target();
     critical(
         !tfeature.discrete() || tfeature.labels().size() != static_cast<size_t>(m_labels),
-        scat(m_name, ": invalid target features!"));
+        m_name, ": invalid target features!");
 
     resize(make_dims(60000, 32, 32, 3), make_dims(60000, m_labels, 1, 1));
 
@@ -37,7 +37,7 @@ void cifar_dataset_t::load()
         log_info() << m_name << ": loading file <" << (m_dir + file.m_filename) << "> ...";
         critical(
             !iread(file),
-            scat(m_name, ": failed to load file <", m_dir, file.m_filename,  ">!"));
+            m_name, ": failed to load file <", m_dir, file.m_filename,  ">!");
 
         sample += file.m_expected;
         log_info() << m_name << ": loaded " << sample << " samples.";

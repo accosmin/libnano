@@ -38,12 +38,12 @@ void base_mnist_dataset_t::load()
         log_info() << m_name << ": loading file <" << ifile << ">...";
         critical(
             !iread(ifile, offset, expected),
-            scat(m_name, ": failed to load file <", ifile, ">!"));
+            m_name, ": failed to load file <", ifile, ">!");
 
         log_info() << m_name << ": loading file <" << tfile << ">...";
         critical(
             !tread(tfile, offset, expected),
-            scat(m_name, ": failed to load file <", tfile, ">!"));
+            m_name, ": failed to load file <", tfile, ">!");
 
         sample += expected;
         log_info() << m_name << ": loaded " << sample << " samples.";

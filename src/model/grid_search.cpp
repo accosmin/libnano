@@ -18,7 +18,7 @@ grid_search_model_t::grid_search_model_t(
 {
     critical(
         !m_imodel,
-        scat("grid-search model: invalid prototype model with id (", m_imodel.id(), ")!"));
+        "grid-search model: invalid prototype model with id (", m_imodel.id(), ")!");
 
     critical(
         m_grid.empty(),
@@ -33,7 +33,7 @@ grid_search_model_t::grid_search_model_t(
                 std::get<std::vector<int64_t>>(pvalues.second).empty() :
                 std::get<std::vector<scalar_t>>(pvalues.second).empty()
             ),
-            scat("grid-search model: empty hyper-parameter config (", pvalues.first, ")!"));
+            "grid-search model: empty hyper-parameter config (", pvalues.first, ")!");
 
         if (std::holds_alternative<std::vector<int64_t>>(pvalues.second))
         {
@@ -123,7 +123,7 @@ scalar_t grid_search_model_t::fit(
 {
     critical(
         !m_imodel,
-        scat("grid-search model: invalid prototype model with id (", m_imodel.id(), ")!"));
+        "grid-search model: invalid prototype model with id (", m_imodel.id(), ")!");
 
     // initialize the hyper-parameter configurations to evaluate
     const auto max_trials = static_cast<tensor_size_t>(this->max_trials());
@@ -183,7 +183,7 @@ tensor4d_t grid_search_model_t::predict(const dataset_t& dataset, const indices_
 {
     critical(
         !m_imodel,
-        scat("grid-search model: invalid prototype model with id (", m_imodel.id(), ")!"));
+        "grid-search model: invalid prototype model with id (", m_imodel.id(), ")!");
 
     return m_imodel.get().predict(dataset, samples);
 }

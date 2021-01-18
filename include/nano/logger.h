@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <nano/arch.h>
+#include <nano/string.h>
 
 namespace nano
 {
@@ -88,22 +89,22 @@ namespace nano
     ///
     /// \brief throws an exception as a critical condition is satisfied.
     ///
-    template <typename tmessage>
-    void critical(const tmessage& message)
+    template <typename... tmessage>
+    void critical0(const tmessage&... message)
     {
-        log_error() << message;
+        log_error() << scat(message...);
         throw std::runtime_error("critical check failed!");
     }
 
     ///
     /// \brief checks and throws an exception if the given condition is satisfied.
     ///
-    template <typename tresult, typename tmessage>
-    void critical(const tresult& result, const tmessage& message)
+    template <typename tcondition, typename... tmessage>
+    void critical(const tcondition& condition, const tmessage&... message)
     {
-        if (static_cast<bool>(result))
+        if (static_cast<bool>(condition))
         {
-            critical(message);
+            critical0(message...);
         }
     }
 

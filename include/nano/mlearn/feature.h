@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cmath>
+#include <variant>
+#include <nano/arch.h>
 #include <nano/tensor.h>
 #include <nano/mlearn/enums.h>
 
@@ -14,143 +16,67 @@ namespace nano
     ///     that can be either discrete/categorical or scalar/continuous
     ///     and with or without missing values.
     ///
-    class feature_t
+    class NANO_PUBLIC feature_t
     {
     public:
 
         ///
         /// \brief default constructor
         ///
-        feature_t() = default;
+        feature_t();
 
         ///
         /// \brief constructor
         ///
-        explicit feature_t(string_t name) :
-            m_name(std::move(name))
-        {
-        }
+        explicit feature_t(string_t name);
 
         ///
         /// \brief set the feature as continuous.
         ///
-        auto& continuous(feature_type type = feature_type::float32, tensor3d_dims_t dims = make_dims(1, 1, 1))
-        {
-            assert(type == feature_type::float32 || type == feature_type::float64);
-
-            m_dims = dims;
-            m_type = type;
-            m_labels.clear();
-            return *this;
-        }
+        feature_t& continuous(feature_type type = feature_type::float32, tensor3d_dims_t dims = make_dims(1, 1, 1));
 
         ///
         /// \brief set the feature as discrete, by passing the labels.
         /// NB: this is useful when the labels are known before loading some dataset.
         ///
-        auto& discrete(strings_t labels, feature_type type = feature_type::sclass)
-        {
-            assert(type == feature_type::sclass || type == feature_type::mclass);
-
-            m_type = type;
-            m_labels = std::move(labels);
-            return *this;
-        }
+        feature_t& discrete(strings_t labels, feature_type type = feature_type::sclass);
 
         ///
         /// \brief set the feature as discrete, but the labels are not known.
         /// NB: this is useful when the labels are discovered while loading some dataset.
         ///
-        auto& discrete(size_t count, feature_type type = feature_type::sclass)
-        {
-            assert(type == feature_type::sclass || type == feature_type::mclass);
-
-            m_type = type;
-            m_labels = strings_t(count);
-            return *this;
-        }
+        feature_t& discrete(size_t count, feature_type type = feature_type::sclass);
 
         ///
         /// \brief set the feature optional.
         ///
-        auto& optional(bool optional)
-        {
-            m_optional = optional;
-            return *this;
-        }
+        feature_t& optional(bool optional);
 
         ///
         /// \brief try to add the given label if possible.
         /// NB: this is useful when the labels are discovered while loading some dataset.
         ///
-        size_t set_label(const string_t& label)
-        {
-            if (label.empty())
-            {
-                return string_t::npos;
-            }
-
-            const auto it = std::find(m_labels.begin(), m_labels.end(), label);
-            if (it == m_labels.end())
-            {
-                // new label, replace the first empty label with it
-                for (size_t i = 0; i < m_labels.size(); ++ i)
-                {
-                    if (m_labels[i].empty())
-                    {
-                        m_labels[i] = label;
-                        return i;
-                    }
-                }
-
-                // new label, but no new place for it
-                return string_t::npos;
-            }
-            else
-            {
-                // known label, ignore
-                return static_cast<size_t>(std::distance(m_labels.begin(), it));
-            }
-        }
+        size_t set_label(const string_t& label);
 
         ///
         /// \brief returns true if the feature is discrete.
         ///
-        bool discrete() const
-        {
-            return !m_labels.empty();
-        }
+        bool discrete() const;
 
         ///
         /// \brief returns the value to store when the feature value is missing.
         ///
-        static auto placeholder_value()
-        {
-            return std::numeric_limits<scalar_t>::quiet_NaN();
-        }
+        static scalar_t placeholder_value();
 
         ///
         /// \brief returns true if the given stored value indicates that the feature value is missing.
         ///
-        static bool missing(const scalar_t value)
-        {
-            return !std::isfinite(value);
-        }
+        static bool missing(const scalar_t value);
 
         ///
         /// \brief returns the label associated to the given feature value (if possible).
         ///
-        auto label(const scalar_t value) const
-        {
-            if (!discrete())
-            {
-                throw std::invalid_argument("labels are only available for discrete features");
-            }
-            else
-            {
-                return missing(value) ? string_t() : m_labels.at(static_cast<size_t>(value));
-            }
-        }
+        string_t label(const scalar_t value) const;
 
         ///
         /// \brief returns true if the feature is valid (aka defined).
@@ -207,38 +133,13 @@ namespace nano
     ///
     /// \brief compare two features.
     ///
-    inline bool operator==(const feature_t& f1, const feature_t& f2)
-    {
-        return  f1.type() == f2.type() &&
-                f1.name() == f2.name() &&
-                f1.labels() == f2.labels() &&
-                f1.optional() == f2.optional();
-    }
-
-    inline bool operator!=(const feature_t& f1, const feature_t& f2)
-    {
-        return  f1.type() != f2.type() ||
-                f1.name() != f2.name() ||
-                f1.labels() != f2.labels() ||
-                f1.optional() != f2.optional();
-    }
+    NANO_PUBLIC bool operator==(const feature_t& f1, const feature_t& f2);
+    NANO_PUBLIC bool operator!=(const feature_t& f1, const feature_t& f2);
 
     ///
     /// \brief stream the given feature.
     ///
-    inline std::ostream& operator<<(std::ostream& stream, const feature_t& feature)
-    {
-        stream << "name=" << feature.name() << ",type=" << feature.type() << ",labels[";
-        for (const auto& label : feature.labels())
-        {
-            stream << label;
-            if (&label != &(*(feature.labels().rbegin())))
-            {
-                stream << ",";
-            }
-        }
-        return stream << "]," << (feature.optional() ? "optional" : "mandatory");
-    }
+    NANO_PUBLIC std::ostream& operator<<(std::ostream& stream, const feature_t& feature);
 
     ///
     /// \brief describe a feature (e.g. as selected by a weak learner) in terms of
@@ -247,54 +148,34 @@ namespace nano
     class feature_info_t;
     using feature_infos_t = std::vector<feature_info_t>;
 
-    class feature_info_t
+    class NANO_PUBLIC feature_info_t
     {
     public:
 
         ///
         /// \brief default constructor
         ///
-        feature_info_t() = default;
+        feature_info_t();
 
         ///
         /// \brief constructor
         ///
-        feature_info_t(tensor_size_t feature, tensor_size_t count, scalar_t importance) :
-            m_feature(feature),
-            m_count(count),
-            m_importance(importance)
-        {
-        }
+        feature_info_t(tensor_size_t feature, tensor_size_t count, scalar_t importance);
 
         ///
         /// \brief sort a list of (selected) features by their index.
         ///
-        static void sort_by_index(feature_infos_t& features)
-        {
-            std::stable_sort(features.begin(), features.end(), [] (const auto& lhs, const auto& rhs)
-            {
-                return lhs.m_feature < rhs.m_feature;
-            });
-        }
+        static void sort_by_index(feature_infos_t& features);
 
         ///
         /// \brief sort a list of (selected) features descendingly by their importance.
         ///
-        static void sort_by_importance(feature_infos_t& features)
-        {
-            std::stable_sort(features.begin(), features.end(), [] (const auto& lhs, const auto& rhs)
-            {
-                return lhs.m_importance > rhs.m_importance;
-            });
-        }
+        static void sort_by_importance(feature_infos_t& features);
 
         ///
         /// \brief change the feature's importance.
         ///
-        void importance(scalar_t importance)
-        {
-            m_importance = importance;
-        }
+        void importance(scalar_t importance);
 
         ///
         /// \brief access functions
@@ -309,5 +190,91 @@ namespace nano
         tensor_size_t   m_feature{-1};      ///< feature index
         tensor_size_t   m_count{0};         ///< how many times it was selected (e.g. folds)
         scalar_t        m_importance{0.0};  ///< feature importance (e.g. impact on performance)
+    };
+
+    ///
+    /// \brief store the feature values of a collection of samples as compact as possible.
+    ///
+    class NANO_PUBLIC feature_storage_t
+    {
+    public:
+
+        using storage_t = std::variant
+        <
+            // continuous
+            tensor_mem_t<float, 4>,
+            tensor_mem_t<double, 4>,
+            tensor_mem_t<int8_t, 4>,
+            tensor_mem_t<int16_t, 4>,
+            tensor_mem_t<int32_t, 4>,
+            tensor_mem_t<int64_t, 4>,
+            tensor_mem_t<uint8_t, 4>,
+            tensor_mem_t<uint16_t, 4>,
+            tensor_mem_t<uint32_t, 4>,
+            tensor_mem_t<uint64_t, 4>,
+
+            // discrete (single label)
+            tensor_mem_t<uint8_t, 1>,
+            tensor_mem_t<uint16_t, 1>,
+
+            // discrete (multi label)
+            tensor_mem_t<uint8_t, 2>,
+            tensor_mem_t<uint16_t, 2>
+        >;
+
+        feature_storage_t();
+        feature_storage_t(feature_t, tensor_size_t samples);
+
+        tensor_size_t samples() const;
+        const feature_t& feature() const { return m_feature; }
+        const storage_t& storage() const { return m_storage; }
+
+        void set(tensor_size_t sample, float value);
+        void set(tensor_size_t sample, double value);
+        void set(tensor_size_t sample, int8_t value);
+        void set(tensor_size_t sample, int16_t value);
+        void set(tensor_size_t sample, int32_t value);
+        void set(tensor_size_t sample, int64_t value);
+        void set(tensor_size_t sample, uint8_t value);
+        void set(tensor_size_t sample, uint16_t value);
+        void set(tensor_size_t sample, uint32_t value);
+        void set(tensor_size_t sample, uint64_t value);
+
+        void set(tensor_size_t sample, tensor_cmap_t<float, 3> values);
+        void set(tensor_size_t sample, tensor_cmap_t<double, 3> values);
+        void set(tensor_size_t sample, tensor_cmap_t<int8_t, 3> values);
+        void set(tensor_size_t sample, tensor_cmap_t<int16_t, 3> values);
+        void set(tensor_size_t sample, tensor_cmap_t<int32_t, 3> values);
+        void set(tensor_size_t sample, tensor_cmap_t<int64_t, 3> values);
+        void set(tensor_size_t sample, tensor_cmap_t<uint8_t, 3> values);
+        void set(tensor_size_t sample, tensor_cmap_t<uint16_t, 3> values);
+        void set(tensor_size_t sample, tensor_cmap_t<uint32_t, 3> values);
+        void set(tensor_size_t sample, tensor_cmap_t<uint64_t, 3> values);
+
+        void set(tensor_size_t sample, const strings_t& labels);
+        void set(tensor_size_t sample, const string_t& value_or_label);
+
+        tensor_cmap_t<float, 4> continuous_float() const;
+        tensor_cmap_t<double, 4> continuous_double() const;
+        tensor_cmap_t<int8_t, 4> continuous_int8() const;
+        tensor_cmap_t<int16_t, 4> continuous_int16() const;
+        tensor_cmap_t<int32_t, 4> continuous_int32() const;
+        tensor_cmap_t<int64_t, 4> continuous_int64() const;
+        tensor_cmap_t<uint8_t, 4> continuous_uint8() const;
+        tensor_cmap_t<uint16_t, 4> continuous_uint16() const;
+        tensor_cmap_t<uint32_t, 4> continuous_uint32() const;
+        tensor_cmap_t<uint64_t, 4> continuous_uint64() const;
+
+        tensor_cmap_t<uint8_t, 1> sclass_uint8() const;
+        tensor_cmap_t<uint16_t, 1> sclass_uint16() const;
+
+        tensor_cmap_t<uint8_t, 2> mclass_uint8() const;
+        tensor_cmap_t<uint16_t, 2> mclass_uint16() const;
+
+    private:
+
+        // attributes
+        feature_t       m_feature;  ///<
+        storage_t       m_storage;  ///<
     };
 }

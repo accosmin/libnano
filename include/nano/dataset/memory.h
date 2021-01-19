@@ -1,96 +1,9 @@
 #pragma once
 
-#include <variant>
 #include <nano/dataset.h>
 
 namespace nano
 {
-    ///
-    /// \brief
-    ///
-    class feature_storage_t
-    {
-    public:
-
-        using storage_t = std::variant
-        <
-            // continuous
-            tensor_mem_t<float, 4>,
-            tensor_mem_t<double, 4>,
-            tensor_mem_t<int8_t, 4>,
-            tensor_mem_t<int16_t, 4>,
-            tensor_mem_t<int32_t, 4>,
-            tensor_mem_t<int64_t, 4>,
-            tensor_mem_t<uint8_t, 4>,
-            tensor_mem_t<uint16_t, 4>,
-            tensor_mem_t<uint32_t, 4>,
-            tensor_mem_t<uint64_t, 4>,
-
-            // discrete (single label)
-            tensor_mem_t<uint8_t, 1>,
-            tensor_mem_t<uint16_t, 1>,
-
-            // discrete (multi label)
-            tensor_mem_t<uint8_t, 2>,
-            tensor_mem_t<uint16_t, 2>,
-        >;
-
-        feature_storage_t();
-        feature_storage_t(feature_t, tensor_size_t samples);
-
-        tensor_size_t samples() const;
-        const feature_t& feature() const { return m_feature; }
-        const storage_t& storage() const { return m_storage; }
-
-        void set(tensor_size_t sample, float value);
-        void set(tensor_size_t sample, double value);
-        void set(tensor_size_t sample, int8_t value);
-        void set(tensor_size_t sample, int16_t value);
-        void set(tensor_size_t sample, int32_t value);
-        void set(tensor_size_t sample, int64_t value);
-        void set(tensor_size_t sample, uint8_t value);
-        void set(tensor_size_t sample, uint16_t value);
-        void set(tensor_size_t sample, uint32_t value);
-        void set(tensor_size_t sample, uint64_t value);
-
-        void set(tensor_size_t sample, tensor_cmap_t<float, 3> values);
-        void set(tensor_size_t sample, tensor_cmap_t<double, 3> values);
-        void set(tensor_size_t sample, tensor_cmap_t<int8_t, 3> values);
-        void set(tensor_size_t sample, tensor_cmap_t<int16_t, 3> values);
-        void set(tensor_size_t sample, tensor_cmap_t<int32_t, 3> values);
-        void set(tensor_size_t sample, tensor_cmap_t<int64_t, 3> values);
-        void set(tensor_size_t sample, tensor_cmap_t<uint8_t, 3> values);
-        void set(tensor_size_t sample, tensor_cmap_t<uint16_t, 3> values);
-        void set(tensor_size_t sample, tensor_cmap_t<uint32_t, 3> values);
-        void set(tensor_size_t sample, tensor_cmap_t<uint64_t, 3> values);
-
-        void set(tensor_size_t sample, const strings_t& labels);
-        void set(tensor_size_t sample, const string_t& value_or_label);
-
-        tensor_cmap_t<float, 4> continuous_float() const;
-        tensor_cmap_t<double, 4> continuous_double() const;
-        tensor_cmap_t<int8_t, 4> continuous_int8() const;
-        tensor_cmap_t<int16_t, 4> continuous_int16() const;
-        tensor_cmap_t<int32_t, 4> continuous_int32() const;
-        tensor_cmap_t<int64_t, 4> continuous_int64() const;
-        tensor_cmap_t<uint8_t, 4> continuous_uint8() const;
-        tensor_cmap_t<uint16_t, 4> continuous_uint16() const;
-        tensor_cmap_t<uint32_t, 4> continuous_uint32() const;
-        tensor_cmap_t<uint64_t, 4> continuous_uint64() const;
-
-        tensor_cmap_t<uint8_t, 1> sclass_uint8() const;
-        tensor_cmap_t<uint16_t, 1> sclass_uint16() const;
-
-        tensor_cmap_t<uint8_t, 2> mclass_uint8() const;
-        tensor_cmap_t<uint16_t, 2> mclass_uint16() const;
-
-    private:
-
-        // attributes
-        feature_t       m_feature;  ///<
-        storage_t       m_storage;  ///<
-    };
-
     ///
     /// \brief in-memory tabular datasets mixes features of different types:
     ///     - discrete features stored using either 8-bit or 16-bit integers

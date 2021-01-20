@@ -239,6 +239,7 @@ namespace nano
         void set(tensor_size_t sample, uint16_t value);
         void set(tensor_size_t sample, uint32_t value);
         void set(tensor_size_t sample, uint64_t value);
+        void set(tensor_size_t sample, const string_t& value);
 
         void set(tensor_size_t sample, tensor_cmap_t<float, 3> values);
         void set(tensor_size_t sample, tensor_cmap_t<double, 3> values);
@@ -251,8 +252,8 @@ namespace nano
         void set(tensor_size_t sample, tensor_cmap_t<uint32_t, 3> values);
         void set(tensor_size_t sample, tensor_cmap_t<uint64_t, 3> values);
 
-        void set(tensor_size_t sample, const strings_t& labels);
-        void set(tensor_size_t sample, const string_t& value_or_label);
+        // TODO: interface to set multi-label features!
+        // void set(tensor_size_t sample, const strings_t& labels);
 
         tensor_cmap_t<float, 4> continuous_float() const;
         tensor_cmap_t<double, 4> continuous_double() const;

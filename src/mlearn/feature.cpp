@@ -220,114 +220,250 @@ feature_storage_t::feature_storage_t(feature_t feature, tensor_size_t samples) :
 
 tensor_size_t feature_storage_t::samples() const
 {
-         if (auto pvalue = std::get_if<tensor_mem_t<float, 4>>(&m_storage)) { return pvalue->size<0>(); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<double, 4>>(&m_storage)) { return pvalue->size<0>(); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<int8_t, 4>>(&m_storage)) { return pvalue->size<0>(); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<int16_t, 4>>(&m_storage)) { return pvalue->size<0>(); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<int32_t, 4>>(&m_storage)) { return pvalue->size<0>(); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<int64_t, 4>>(&m_storage)) { return pvalue->size<0>(); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<uint8_t, 4>>(&m_storage)) { return pvalue->size<0>(); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<uint16_t, 4>>(&m_storage)) { return pvalue->size<0>(); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<uint32_t, 4>>(&m_storage)) { return pvalue->size<0>(); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<uint64_t, 4>>(&m_storage)) { return pvalue->size<0>(); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<uint8_t, 1>>(&m_storage)) { return pvalue->size<0>(); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<uint8_t, 2>>(&m_storage)) { return pvalue->size<0>(); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<uint16_t, 1>>(&m_storage)) { return pvalue->size<0>(); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<uint16_t, 2>>(&m_storage)) { return pvalue->size<0>(); }
+         if (auto tensor = std::get_if<tensor_mem_t<float, 4>>(&m_storage)) { return tensor->size<0>(); }
+    else if (auto tensor = std::get_if<tensor_mem_t<double, 4>>(&m_storage)) { return tensor->size<0>(); }
+    else if (auto tensor = std::get_if<tensor_mem_t<int8_t, 4>>(&m_storage)) { return tensor->size<0>(); }
+    else if (auto tensor = std::get_if<tensor_mem_t<int16_t, 4>>(&m_storage)) { return tensor->size<0>(); }
+    else if (auto tensor = std::get_if<tensor_mem_t<int32_t, 4>>(&m_storage)) { return tensor->size<0>(); }
+    else if (auto tensor = std::get_if<tensor_mem_t<int64_t, 4>>(&m_storage)) { return tensor->size<0>(); }
+    else if (auto tensor = std::get_if<tensor_mem_t<uint8_t, 4>>(&m_storage)) { return tensor->size<0>(); }
+    else if (auto tensor = std::get_if<tensor_mem_t<uint16_t, 4>>(&m_storage)) { return tensor->size<0>(); }
+    else if (auto tensor = std::get_if<tensor_mem_t<uint32_t, 4>>(&m_storage)) { return tensor->size<0>(); }
+    else if (auto tensor = std::get_if<tensor_mem_t<uint64_t, 4>>(&m_storage)) { return tensor->size<0>(); }
+    else if (auto tensor = std::get_if<tensor_mem_t<uint8_t, 1>>(&m_storage)) { return tensor->size<0>(); }
+    else if (auto tensor = std::get_if<tensor_mem_t<uint8_t, 2>>(&m_storage)) { return tensor->size<0>(); }
+    else if (auto tensor = std::get_if<tensor_mem_t<uint16_t, 1>>(&m_storage)) { return tensor->size<0>(); }
+    else if (auto tensor = std::get_if<tensor_mem_t<uint16_t, 2>>(&m_storage)) { return tensor->size<0>(); }
     else { return tensor_size_t{0}; }
 }
 
-/*
-
-template <typename tscalar_storage, typename tscalar_value>
-static void set_scalar(
-    const feature_t& feature, tensor_mem_t<tscalar_storage, 4>& tensor, tensor_size_t sample, tscalar_value value)
-{
-    critical(
-        ::nano::size(feature.dims()) != 1 ||
-        sample < 0 || sample >= tensor.size<0>(),
-        "cannot set continuous feature <", feature.name(), "> of dimensions ", tensor.dims(), " from scalar!");
-
-    tensor(sample) = static_cast<tscalar_storage>(value);
-}
-
-template <typename tscalar_storage, typename tscalar_value>
-static void set_scalar(
-    const feature_t& feature, tensor_mem_t<tscalar_storage, 1>& tensor, tensor_size_t sample, tscalar_value value)
+template
+<
+    typename tscalar,
+    typename tvalue,
+    typename = typename std::enable_if<std::is_arithmetic<tvalue>::value>::type
+>
+static void set(const feature_t& feature, tensor_mem_t<tscalar, 1>& tensor, tensor_size_t sample, tvalue value)
 {
     const auto label = static_cast<tensor_size_t>(value);
     const auto labels = static_cast<tensor_size_t>(feature.labels().size());
 
     critical(
         label < 0 || label >= labels ||
-        sample < 0 || sample >= tensor.size<0>(),
-        "cannot set single-label categorical feature <", feature.name(), "> to label ", label, "/", labels, "!");
+        sample < 0 || sample >= tensor.size(),
+        "cannot set single-label discrete feature <", feature.name(), "> to label ", label, "/", labels, "!");
 
-    tensor(sample
+    tensor(sample) = static_cast<tscalar>(value);
+}
 
-    tensor(0) = static_cast<tscalar_storage>(value);
+template
+<
+    typename tscalar,
+    typename tvalue,
+    typename = typename std::enable_if<std::is_arithmetic<tvalue>::value>::type
+>
+static void set(const feature_t& feature, tensor_mem_t<tscalar, 2>&, tensor_size_t, tvalue)
+{
+    critical0("cannot set multi-label discrete feature <", feature.name(), ">!");
+}
+
+template
+<
+    typename tscalar,
+    typename tvalue,
+    typename = typename std::enable_if<std::is_arithmetic<tvalue>::value>::type
+>
+static void set(const feature_t& feature, tensor_mem_t<tscalar, 4>& tensor, tensor_size_t sample, tvalue value)
+{
+    critical(
+        ::nano::size(feature.dims()) != 1 ||
+        sample < 0 || sample >= tensor.size(),
+        "cannot set continuous feature <", feature.name(), "> of dimensions ", tensor.dims(), " from scalar!");
+
+    tensor(sample) = static_cast<tscalar>(value);
+}
+
+template
+<
+    typename tscalar,
+    typename tvalue,
+    typename = typename std::enable_if<std::is_arithmetic<tvalue>::value>::type
+>
+static void set(const feature_t& feature, tensor_mem_t<tscalar, 1>&, tensor_size_t, tensor_cmap_t<tvalue, 3>)
+{
+    critical0("cannot set single-label discrete feature <", feature.name(), "> from tensor!");
+}
+
+template
+<
+    typename tscalar,
+    typename tvalue,
+    typename = typename std::enable_if<std::is_arithmetic<tvalue>::value>::type
+>
+static void set(const feature_t& feature, tensor_mem_t<tscalar, 2>&, tensor_size_t, tensor_cmap_t<tvalue, 3>)
+{
+    critical0("cannot set single-label discrete feature <", feature.name(), "> from tensor!");
+}
+
+template
+<
+    typename tscalar,
+    typename tvalue,
+    typename = typename std::enable_if<std::is_arithmetic<tvalue>::value>::type
+>
+static void set(const feature_t& feature, tensor_mem_t<tscalar, 4>& tensor, tensor_size_t sample, tensor_cmap_t<tvalue, 3> values)
+{
+    critical(
+        feature.dims() != values.dims() ||
+        sample < 0 || sample >= tensor.size(),
+        "cannot set continuous feature <", feature.name(), "> from tensor of dimensions ", values.dims(), "/", tensor.dims(), "!");
+
+    tensor.vector(sample) = values.vector().template cast<tscalar>();
 }
 
 template <typename tscalar>
-static void set_scalar(const string_t& name, feature_storage_t::storage_t& storage, tscalar value)
+static void set(const feature_t& feature, tensor_mem_t<tscalar, 1>& tensor, tensor_size_t sample, const string_t& value)
 {
-         if (auto pvalue = std::get_if<tensor_mem_t<float, 4>>(&m_storage)) { set_scalar(name, *pvalue, value); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<double, 4>>(&m_storage)) { set_scalar(name, *pvalue, value); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<int8_t, 4>>(&m_storage)) { set_scalar(name, *pvalue, value); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<int16_t, 4>>(&m_storage)) { set_scalar(name, *pvalue, value); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<int32_t, 4>>(&m_storage)) { set_scalar(name, *pvalue, value); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<int64_t, 4>>(&m_storage)) { set_scalar(name, *pvalue, value); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<uint8_t, 4>>(&m_storage)) { set_scalar(name, *pvalue, value); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<uint16_t, 4>>(&m_storage)) { set_scalar(name, *pvalue, value); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<uint32_t, 4>>(&m_storage)) { set_scalar(name, *pvalue, value); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<uint64_t, 4>>(&m_storage)) { set_scalar(name, *pvalue, value); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<uint8_t, 1>>(&m_storage)) { return pvalue->size<0>(); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<uint8_t, 2>>(&m_storage)) { return pvalue->size<0>(); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<uint16_t, 1>>(&m_storage)) { return pvalue->size<0>(); }
-    else if (auto pvalue = std::get_if<tensor_mem_t<uint16_t, 2>>(&m_storage)) { return pvalue->size<0>(); }
-    else { return tensor_size_t{0}; }
-
+    set(feature, tensor, sample, ::nano::from_string<tensor_size_t>(value));
 }
 
-void set(tensor_size_t sample, float value);
-void set(tensor_size_t sample, double value);
-void set(tensor_size_t sample, int8_t value);
-void set(tensor_size_t sample, int16_t value);
-void set(tensor_size_t sample, int32_t value);
-void set(tensor_size_t sample, int64_t value);
-void set(tensor_size_t sample, uint8_t value);
-void set(tensor_size_t sample, uint16_t value);
-void set(tensor_size_t sample, uint32_t value);
-void set(tensor_size_t sample, uint64_t value);
+template <typename tscalar>
+static void set(const feature_t& feature, tensor_mem_t<tscalar, 2>& tensor, tensor_size_t sample, const string_t& value)
+{
+    set(feature, tensor, sample, ::nano::from_string<tensor_size_t>(value));
+}
 
-void set(tensor_size_t sample, tensor_cmap_t<float, 3> values);
-void set(tensor_size_t sample, tensor_cmap_t<double, 3> values);
-void set(tensor_size_t sample, tensor_cmap_t<int8_t, 3> values);
-void set(tensor_size_t sample, tensor_cmap_t<int16_t, 3> values);
-void set(tensor_size_t sample, tensor_cmap_t<int32_t, 3> values);
-void set(tensor_size_t sample, tensor_cmap_t<int64_t, 3> values);
-void set(tensor_size_t sample, tensor_cmap_t<uint8_t, 3> values);
-void set(tensor_size_t sample, tensor_cmap_t<uint16_t, 3> values);
-void set(tensor_size_t sample, tensor_cmap_t<uint32_t, 3> values);
-void set(tensor_size_t sample, tensor_cmap_t<uint64_t, 3> values);
+template <typename tscalar>
+static void set(const feature_t& feature, tensor_mem_t<tscalar, 4>& tensor, tensor_size_t sample, const string_t& value)
+{
+    set(feature, tensor, sample, ::nano::from_string<tscalar>(value));
+}
 
-void set(tensor_size_t sample, const strings_t& labels);
-void set(tensor_size_t sample, const string_t& value_or_label);
+template <typename tvalue>
+static void set(
+    const feature_t& feature, feature_storage_t::storage_t& storage, tensor_size_t sample, const tvalue& value)
+{
+         if (auto tensor = std::get_if<tensor_mem_t<float, 4>>(&storage))    { ::set(feature, *tensor, sample, value); }
+    else if (auto tensor = std::get_if<tensor_mem_t<double, 4>>(&storage))   { ::set(feature, *tensor, sample, value); }
+    else if (auto tensor = std::get_if<tensor_mem_t<int8_t, 4>>(&storage))   { ::set(feature, *tensor, sample, value); }
+    else if (auto tensor = std::get_if<tensor_mem_t<int16_t, 4>>(&storage))  { ::set(feature, *tensor, sample, value); }
+    else if (auto tensor = std::get_if<tensor_mem_t<int32_t, 4>>(&storage))  { ::set(feature, *tensor, sample, value); }
+    else if (auto tensor = std::get_if<tensor_mem_t<int64_t, 4>>(&storage))  { ::set(feature, *tensor, sample, value); }
+    else if (auto tensor = std::get_if<tensor_mem_t<uint8_t, 4>>(&storage))  { ::set(feature, *tensor, sample, value); }
+    else if (auto tensor = std::get_if<tensor_mem_t<uint16_t, 4>>(&storage)) { ::set(feature, *tensor, sample, value); }
+    else if (auto tensor = std::get_if<tensor_mem_t<uint32_t, 4>>(&storage)) { ::set(feature, *tensor, sample, value); }
+    else if (auto tensor = std::get_if<tensor_mem_t<uint64_t, 4>>(&storage)) { ::set(feature, *tensor, sample, value); }
+    else if (auto tensor = std::get_if<tensor_mem_t<uint8_t, 1>>(&storage))  { ::set(feature, *tensor, sample, value); }
+    else if (auto tensor = std::get_if<tensor_mem_t<uint8_t, 2>>(&storage))  { ::set(feature, *tensor, sample, value); }
+    else if (auto tensor = std::get_if<tensor_mem_t<uint16_t, 1>>(&storage)) { ::set(feature, *tensor, sample, value); }
+    else if (auto tensor = std::get_if<tensor_mem_t<uint16_t, 2>>(&storage)) { ::set(feature, *tensor, sample, value); }
+    else
+    {
+        critical0("cannot set unitialized feature <", feature.name(), ">!");
+    }
+}
 
-tensor_cmap_t<float, 4> continuous_float() const;
-tensor_cmap_t<double, 4> continuous_double() const;
-tensor_cmap_t<int8_t, 4> continuous_int8() const;
-tensor_cmap_t<int16_t, 4> continuous_int16() const;
-tensor_cmap_t<int32_t, 4> continuous_int32() const;
-tensor_cmap_t<int64_t, 4> continuous_int64() const;
-tensor_cmap_t<uint8_t, 4> continuous_uint8() const;
-tensor_cmap_t<uint16_t, 4> continuous_uint16() const;
-tensor_cmap_t<uint32_t, 4> continuous_uint32() const;
-tensor_cmap_t<uint64_t, 4> continuous_uint64() const;
+void feature_storage_t::set(tensor_size_t sample, float value)
+{
+    ::set(m_feature, m_storage, sample, value);
+}
 
-tensor_cmap_t<uint8_t, 1> sclass_uint8() const;
-tensor_cmap_t<uint16_t, 1> sclass_uint16() const;
+void feature_storage_t::set(tensor_size_t sample, double value)
+{
+    ::set(m_feature, m_storage, sample, value);
+}
 
-tensor_cmap_t<uint8_t, 2> mclass_uint8() const;
-tensor_cmap_t<uint16_t, 2> mclass_uint16() const;
-*/
+void feature_storage_t::set(tensor_size_t sample, int8_t value)
+{
+    ::set(m_feature, m_storage, sample, value);
+}
+
+void feature_storage_t::set(tensor_size_t sample, int16_t value)
+{
+    ::set(m_feature, m_storage, sample, value);
+}
+
+void feature_storage_t::set(tensor_size_t sample, int32_t value)
+{
+    ::set(m_feature, m_storage, sample, value);
+}
+
+void feature_storage_t::set(tensor_size_t sample, int64_t value)
+{
+    ::set(m_feature, m_storage, sample, value);
+}
+
+void feature_storage_t::set(tensor_size_t sample, uint8_t value)
+{
+    ::set(m_feature, m_storage, sample, value);
+}
+
+void feature_storage_t::set(tensor_size_t sample, uint16_t value)
+{
+    ::set(m_feature, m_storage, sample, value);
+}
+
+void feature_storage_t::set(tensor_size_t sample, uint32_t value)
+{
+    ::set(m_feature, m_storage, sample, value);
+}
+
+void feature_storage_t::set(tensor_size_t sample, uint64_t value)
+{
+    ::set(m_feature, m_storage, sample, value);
+}
+
+void feature_storage_t::set(tensor_size_t sample, const string_t& value)
+{
+    ::set(m_feature, m_storage, sample, value);
+}
+
+void feature_storage_t::set(tensor_size_t sample, tensor_cmap_t<float, 3> values)
+{
+    ::set(m_feature, m_storage, sample, values);
+}
+
+void feature_storage_t::set(tensor_size_t sample, tensor_cmap_t<double, 3> values)
+{
+    ::set(m_feature, m_storage, sample, values);
+}
+
+void feature_storage_t::set(tensor_size_t sample, tensor_cmap_t<int8_t, 3> values)
+{
+    ::set(m_feature, m_storage, sample, values);
+}
+
+void feature_storage_t::set(tensor_size_t sample, tensor_cmap_t<int16_t, 3> values)
+{
+    ::set(m_feature, m_storage, sample, values);
+}
+
+void feature_storage_t::set(tensor_size_t sample, tensor_cmap_t<int32_t, 3> values)
+{
+    ::set(m_feature, m_storage, sample, values);
+}
+
+void feature_storage_t::set(tensor_size_t sample, tensor_cmap_t<int64_t, 3> values)
+{
+    ::set(m_feature, m_storage, sample, values);
+}
+
+void feature_storage_t::set(tensor_size_t sample, tensor_cmap_t<uint8_t, 3> values)
+{
+    ::set(m_feature, m_storage, sample, values);
+}
+
+void feature_storage_t::set(tensor_size_t sample, tensor_cmap_t<uint16_t, 3> values)
+{
+    ::set(m_feature, m_storage, sample, values);
+}
+
+void feature_storage_t::set(tensor_size_t sample, tensor_cmap_t<uint32_t, 3> values)
+{
+    ::set(m_feature, m_storage, sample, values);
+}
+
+void feature_storage_t::set(tensor_size_t sample, tensor_cmap_t<uint64_t, 3> values)
+{
+    ::set(m_feature, m_storage, sample, values);
+}

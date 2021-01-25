@@ -583,7 +583,7 @@ void get(
     const feature_t& feature,
     [[maybe_unused]] const mclass_storage_t<tscalar>& tensor,
     [[maybe_unused]] const feature_mask_t& mask,
-    [[maybe_unused]] indices_cmap_t samples,
+    [[maybe_unused]] const indices_cmap_t& samples,
     [[maybe_unused]] tensor_mem_t<scalar_t, 4>& values)
 {
     critical0("cannot access multi-label feature <", feature.name(), ">!");
@@ -625,7 +625,7 @@ void get(
     const feature_t& feature,
     [[maybe_unused]] const mclass_storage_t<tscalar>& tensor,
     [[maybe_unused]] const feature_mask_t& mask,
-    [[maybe_unused]] indices_cmap_t samples,
+    [[maybe_unused]] const indices_cmap_t& samples,
     [[maybe_unused]] tensor_mem_t<tensor_size_t, 1>& values)
 {
     critical0("cannot access multi-label feature <", feature.name(), ">!");
@@ -636,7 +636,7 @@ void get(
     const feature_t& feature,
     [[maybe_unused]] const scalar_storage_t<tscalar>& tensor,
     [[maybe_unused]] const feature_mask_t& mask,
-    [[maybe_unused]] indices_cmap_t samples,
+    [[maybe_unused]] const indices_cmap_t& samples,
     [[maybe_unused]] tensor_mem_t<tensor_size_t, 2>& values)
 {
     critical0("cannot access scalar feature <", feature.name(), ">!");
@@ -647,7 +647,7 @@ void get(
     const feature_t& feature,
     [[maybe_unused]] const sclass_storage_t<tscalar>& tensor,
     [[maybe_unused]] const feature_mask_t& mask,
-    [[maybe_unused]] indices_cmap_t samples,
+    [[maybe_unused]] const indices_cmap_t& samples,
     [[maybe_unused]] tensor_mem_t<tensor_size_t, 2>& values)
 {
     critical0("cannot access single-label feature <", feature.name(), ">!");
@@ -658,7 +658,7 @@ void get(
     const feature_t& feature,
     const mclass_storage_t<tscalar>& tensor,
     const feature_mask_t& mask,
-    const indices_cmap_t samples,
+    const indices_cmap_t& samples,
     tensor_mem_t<tensor_size_t, 2>& values)
 {
     const auto labels = static_cast<tensor_size_t>(feature.labels().size());

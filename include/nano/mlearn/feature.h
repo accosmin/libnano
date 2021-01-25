@@ -192,6 +192,21 @@ namespace nano
         scalar_t        m_importance{0.0};  ///< feature importance (e.g. impact on performance)
     };
 
+    // continuous feature: (sample, dim1, dim2, dim3)
+    template <typename tscalar>
+    using scalar_storage_t = tensor_mem_t<tscalar, 4>;
+
+    // single-label discrete feature: (sample) = label index
+    template <typename tscalar>
+    using sclass_storage_t = tensor_mem_t<tscalar, 1>;
+
+    // multi-label discrete feature: (sample, label_index) = 1 if the label index is active, otherwise 0
+    template <typename tscalar>
+    using mclass_storage_t = tensor_mem_t<tscalar, 2>;
+
+    // feature value mask: (sample) = 1 if the feature value is present, otherwise 0
+    using feature_mask_t = tensor_mem_t<uint8_t, 1>;
+
     ///
     /// \brief store the feature values of a collection of samples as compact as possible.
     ///
@@ -201,34 +216,40 @@ namespace nano
 
         using storage_t = std::variant
         <
-            // continuous
-            tensor_mem_t<float, 4>,
-            tensor_mem_t<double, 4>,
-            tensor_mem_t<int8_t, 4>,
-            tensor_mem_t<int16_t, 4>,
-            tensor_mem_t<int32_t, 4>,
-            tensor_mem_t<int64_t, 4>,
-            tensor_mem_t<uint8_t, 4>,
-            tensor_mem_t<uint16_t, 4>,
-            tensor_mem_t<uint32_t, 4>,
-            tensor_mem_t<uint64_t, 4>,
+            scalar_storage_t<float>,
+            scalar_storage_t<double>,
+            scalar_storage_t<int8_t>,
+            scalar_storage_t<int16_t>,
+            scalar_storage_t<int32_t>,
+            scalar_storage_t<int64_t>,
+            scalar_storage_t<uint8_t>,
+            scalar_storage_t<uint16_t>,
+            scalar_storage_t<uint32_t>,
+            scalar_storage_t<uint64_t>,
 
-            // discrete (single label)
-            tensor_mem_t<uint8_t, 1>,
-            tensor_mem_t<uint16_t, 1>,
+            sclass_storage_t<uint8_t>,
+            sclass_storage_t<uint16_t>,
 
-            // discrete (multi label)
-            tensor_mem_t<uint8_t, 2>,
-            tensor_mem_t<uint16_t, 2>
+            mclass_storage_t<uint8_t>
         >;
 
         feature_storage_t();
         feature_storage_t(feature_t, tensor_size_t samples);
 
-        tensor_size_t samples() const;
+        ///
+        /// \brief access functions
+        ///
         const feature_t& feature() const { return m_feature; }
         const storage_t& storage() const { return m_storage; }
 
+        ///
+        /// \brief returns the number of stored samples.
+        ///
+        tensor_size_t samples() const;
+
+        ///
+        /// \brief set the feature value(s) of a sample.
+        ///
         void set(tensor_size_t sample, float value);
         void set(tensor_size_t sample, double value);
         void set(tensor_size_t sample, int8_t value);
@@ -241,6 +262,17 @@ namespace nano
         void set(tensor_size_t sample, uint64_t value);
         void set(tensor_size_t sample, const string_t& value);
 
+        void set(tensor_size_t sample, tensor_cmap_t<float, 1> values);
+        void set(tensor_size_t sample, tensor_cmap_t<double, 1> values);
+        void set(tensor_size_t sample, tensor_cmap_t<int8_t, 1> values);
+        void set(tensor_size_t sample, tensor_cmap_t<int16_t, 1> values);
+        void set(tensor_size_t sample, tensor_cmap_t<int32_t, 1> values);
+        void set(tensor_size_t sample, tensor_cmap_t<int64_t, 1> values);
+        void set(tensor_size_t sample, tensor_cmap_t<uint8_t, 1> values);
+        void set(tensor_size_t sample, tensor_cmap_t<uint16_t, 1> values);
+        void set(tensor_size_t sample, tensor_cmap_t<uint32_t, 1> values);
+        void set(tensor_size_t sample, tensor_cmap_t<uint64_t, 1> values);
+
         void set(tensor_size_t sample, tensor_cmap_t<float, 3> values);
         void set(tensor_size_t sample, tensor_cmap_t<double, 3> values);
         void set(tensor_size_t sample, tensor_cmap_t<int8_t, 3> values);
@@ -252,30 +284,83 @@ namespace nano
         void set(tensor_size_t sample, tensor_cmap_t<uint32_t, 3> values);
         void set(tensor_size_t sample, tensor_cmap_t<uint64_t, 3> values);
 
-        // TODO: interface to set multi-label features!
-        // void set(tensor_size_t sample, const strings_t& labels);
+        ///
+        /// \brief set the feature values of a set of samples.
+        ///
+        void set(indices_cmap_t samples, tensor_cmap_t<float, 1> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<double, 1> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<int8_t, 1> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<int16_t, 1> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<int32_t, 1> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<int64_t, 1> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<uint8_t, 1> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<uint16_t, 1> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<uint32_t, 1> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<uint64_t, 1> values);
 
-        tensor_cmap_t<float, 4> continuous_float() const;
-        tensor_cmap_t<double, 4> continuous_double() const;
-        tensor_cmap_t<int8_t, 4> continuous_int8() const;
-        tensor_cmap_t<int16_t, 4> continuous_int16() const;
-        tensor_cmap_t<int32_t, 4> continuous_int32() const;
-        tensor_cmap_t<int64_t, 4> continuous_int64() const;
-        tensor_cmap_t<uint8_t, 4> continuous_uint8() const;
-        tensor_cmap_t<uint16_t, 4> continuous_uint16() const;
-        tensor_cmap_t<uint32_t, 4> continuous_uint32() const;
-        tensor_cmap_t<uint64_t, 4> continuous_uint64() const;
+        void set(indices_cmap_t samples, tensor_cmap_t<float, 2> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<double, 2> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<int8_t, 2> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<int16_t, 2> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<int32_t, 2> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<int64_t, 2> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<uint8_t, 2> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<uint16_t, 2> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<uint32_t, 2> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<uint64_t, 2> values);
 
-        tensor_cmap_t<uint8_t, 1> sclass_uint8() const;
-        tensor_cmap_t<uint16_t, 1> sclass_uint16() const;
+        void set(indices_cmap_t samples, tensor_cmap_t<float, 4> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<double, 4> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<int8_t, 4> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<int16_t, 4> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<int32_t, 4> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<int64_t, 4> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<uint8_t, 4> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<uint16_t, 4> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<uint32_t, 4> values);
+        void set(indices_cmap_t samples, tensor_cmap_t<uint64_t, 4> values);
 
-        tensor_cmap_t<uint8_t, 2> mclass_uint8() const;
-        tensor_cmap_t<uint16_t, 2> mclass_uint16() const;
+        ///
+        /// \brief access the feature as scalar values for the given set of samples.
+        ///
+        void get(indices_cmap_t samples, tensor_mem_t<scalar_t, 4>& values);
+
+        ///
+        /// \brief access the feature as single-label indices for the given set of samples.
+        ///
+        void get(indices_cmap_t samples, tensor_mem_t<tensor_size_t, 1>& labels);
+
+        ///
+        /// \brief access the feature as multi-label indicator values for the given set of samples.
+        ///
+        void get(indices_cmap_t samples, tensor_mem_t<tensor_size_t, 2>& labels);
+
+        ///
+        /// \brief returns true if the given scalar value is valid,
+        ///     otherwise it indicates a missing feature value for some sample.
+        ///
+        static bool missing(scalar_t value)
+        {
+            return !std::isfinite(value);
+        }
+
+        ///
+        /// \brief returns true if the given label index  is valid,
+        ///     otherwise it indicates a missing feature value for some sample.
+        ///
+        static bool missing(tensor_size_t label)
+        {
+            return label < 0;
+        }
 
     private:
+
+        void set(tensor_size_t sample);
+        void set(indices_cmap_t samples);
 
         // attributes
         feature_t       m_feature;  ///<
         storage_t       m_storage;  ///<
+        feature_mask_t  m_mask;     ///< bitwise mask to indicate missing values
     };
 }

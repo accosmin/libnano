@@ -9,7 +9,11 @@ namespace nano
     ///     - stores dimensions
     ///     - handles the indexing
     ///
-    template <typename tscalar, size_t trank>
+    template
+    <
+        typename tscalar, size_t trank,
+        typename = typename std::enable_if<std::is_arithmetic<tscalar>::value>::type
+    >
     class tensor_base_t
     {
     public:

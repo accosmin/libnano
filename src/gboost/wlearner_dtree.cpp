@@ -116,8 +116,8 @@ namespace
         {
             if (node.m_feature >= 0)
             {
-                const auto it = ufeatures.find(node.m_feature);
-                node.m_feature = static_cast<tensor_size_t>(std::distance(ufeatures.begin(), it));
+                const auto pos = ufeatures.find(node.m_feature);
+                node.m_feature = static_cast<tensor_size_t>(std::distance(ufeatures.begin(), pos));
             }
         }
     }

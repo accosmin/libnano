@@ -225,7 +225,7 @@ function clang_tidy {
     printf "Logging to ${log} ...\n"
 
     wrapper=run-clang-tidy${clang_tidy_suffix}
-    wrapper=$(which ${wrapper} || which ${wrapper}.py)
+    wrapper=$(which ${wrapper} || which ${wrapper}.py || which /usr/share/clang/${wrapper}.py)
     printf "Using wrapper ${wrapper} ...\n"
     ${wrapper} -clang-tidy-binary clang-tidy${clang_tidy_suffix} \
         -header-filter=.* -checks=-*,${check} -quiet > $log 2>&1
@@ -330,6 +330,19 @@ function clang_tidy_cppcoreguidelines {
     clang_tidy ${checks}
 }
 
+function clang_tidy_all {
+    clang_tidy_misc
+    clang_tidy_cert
+    clang_tidy_hicpp
+    clang_tidy_bugprone
+    clang_tidy_modernize
+    clang_tidy_performance
+    clang_tidy_portability
+    clang_tidy_readability
+    clang_tidy_clang_analyzer
+    clang_tidy_cppcoreguidelines
+}
+
 function usage {
     cat <<EOF
 usage: $0 [OPTIONS]
@@ -381,6 +394,7 @@ options:
         run a particular clang-tidy check (e.g. misc, cert)
     --clang-tidy-suffix <string>
         suffix for the clang-tidy binaries (e.g. -6.0)
+    --clang-tidy-all
     --clang-tidy-misc
     --clang-tidy-cert
     --clang-tidy-hicpp
@@ -432,6 +446,7 @@ while [ "$1" != "" ]; do
         --helgrind)                     helgrind || exit 1;;
         --clang-tidy-check)             shift; clang_tidy $1 || exit 1;;
         --clang-tidy-suffix)            shift; clang_tidy_suffix=$1;;
+        --clang-tidy-all)               clang_tidy_all || exit 1;;
         --clang-tidy-misc)              clang_tidy_misc || exit 1;;
         --clang-tidy-cert)              clang_tidy_cert || exit 1;;
         --clang-tidy-hicpp)             clang_tidy_hicpp || exit 1;;

@@ -33,19 +33,21 @@ namespace nano
         ///
         /// \brief set the feature as continuous.
         ///
-        feature_t& continuous(feature_type type = feature_type::float32, tensor3d_dims_t dims = make_dims(1, 1, 1));
+        feature_t& scalar(feature_type type = feature_type::float32, tensor3d_dims_t dims = make_dims(1, 1, 1));
 
         ///
         /// \brief set the feature as discrete, by passing the labels.
         /// NB: this is useful when the labels are known before loading some dataset.
         ///
-        feature_t& discrete(strings_t labels, feature_type type = feature_type::sclass);
+        feature_t& sclass(strings_t labels);
+        feature_t& mclass(strings_t labels);
 
         ///
         /// \brief set the feature as discrete, but the labels are not known.
         /// NB: this is useful when the labels are discovered while loading some dataset.
         ///
-        feature_t& discrete(size_t count, feature_type type = feature_type::sclass);
+        feature_t& sclass(size_t count);
+        feature_t& mclass(size_t count);
 
         ///
         /// \brief set the feature optional.
@@ -249,6 +251,8 @@ namespace nano
 
         ///
         /// \brief set the feature value(s) of a sample.
+        /// NB: the feature values are interpreted as label indices if single-label feature
+        ///     of as class {0, 1} indicators if multi-label feature.
         ///
         void set(tensor_size_t sample, float value);
         void set(tensor_size_t sample, double value);
@@ -285,42 +289,6 @@ namespace nano
         void set(tensor_size_t sample, tensor_cmap_t<uint64_t, 3> values);
 
         ///
-        /// \brief set the feature values of a set of samples.
-        ///
-        void set(indices_cmap_t samples, tensor_cmap_t<float, 1> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<double, 1> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<int8_t, 1> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<int16_t, 1> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<int32_t, 1> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<int64_t, 1> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<uint8_t, 1> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<uint16_t, 1> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<uint32_t, 1> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<uint64_t, 1> values);
-
-        void set(indices_cmap_t samples, tensor_cmap_t<float, 2> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<double, 2> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<int8_t, 2> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<int16_t, 2> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<int32_t, 2> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<int64_t, 2> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<uint8_t, 2> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<uint16_t, 2> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<uint32_t, 2> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<uint64_t, 2> values);
-
-        void set(indices_cmap_t samples, tensor_cmap_t<float, 4> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<double, 4> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<int8_t, 4> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<int16_t, 4> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<int32_t, 4> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<int64_t, 4> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<uint8_t, 4> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<uint16_t, 4> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<uint32_t, 4> values);
-        void set(indices_cmap_t samples, tensor_cmap_t<uint64_t, 4> values);
-
-        ///
         /// \brief access the feature as scalar values for the given set of samples.
         ///
         void get(indices_cmap_t samples, tensor_mem_t<scalar_t, 4>& values);
@@ -334,6 +302,11 @@ namespace nano
         /// \brief access the feature as multi-label indicator values for the given set of samples.
         ///
         void get(indices_cmap_t samples, tensor_mem_t<tensor_size_t, 2>& labels);
+
+        ///
+        /// \brief returns true if the feature is optional (aka some samples haven't been set).
+        ///
+        bool optional() const;
 
         ///
         /// \brief returns true if the given scalar value is valid,

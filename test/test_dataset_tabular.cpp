@@ -16,12 +16,12 @@ static auto feature_cont_opt()
 
 static auto feature_cate()
 {
-    return feature_t{"cate"}.discrete(strings_t{"cate0", "cate1", "cate2"});
+    return feature_t{"cate"}.sclass(strings_t{"cate0", "cate1", "cate2"});
 }
 
 static auto feature_cate_opt()
 {
-    return feature_t{"cate_opt"}.discrete(strings_t{"cate_opt0", "cate_opt1"}).optional(true);
+    return feature_t{"cate_opt"}.sclass(strings_t{"cate_opt0", "cate_opt1"}).optional(true);
 }
 
 class fixture_dataset_t final : public tabular_dataset_t

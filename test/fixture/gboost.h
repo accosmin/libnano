@@ -144,7 +144,7 @@ public:
         {
             // discrete, optional
             feature.optional(true);
-            feature.discrete(strings_t{"cat1", "cat2", "cat3"});
+            feature.sclass(strings_t{"cat1", "cat2", "cat3"});
             UTEST_REQUIRE(feature.discrete());
             UTEST_REQUIRE(feature.optional());
         }
@@ -262,7 +262,7 @@ public:
         auto feature = tdataset::feature(index);
         if (index == tdataset::the_discrete_feature())
         {
-            feature.discrete(strings_t{"cat1", "more", "more", "too many"});
+            feature.sclass(strings_t{"cat1", "more", "more", "too many"});
         }
         return feature;
     }

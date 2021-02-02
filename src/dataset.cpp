@@ -72,7 +72,7 @@ dataset_factory_t& dataset_t::all()
                 feature_t{"sepal_width_cm"},
                 feature_t{"petal_length_cm"},
                 feature_t{"petal_width_cm"},
-                feature_t{"class"}.discrete(3),
+                feature_t{"class"}.sclass(3),
             }, 4);
 
         manager.add<tabular_dataset_t>(
@@ -84,7 +84,7 @@ dataset_factory_t& dataset_t::all()
             },
             features_t
             {
-                feature_t{"class"}.discrete(3),
+                feature_t{"class"}.sclass(3),
                 feature_t{"Alcohol"},
                 feature_t{"Malic acid"},
                 feature_t{"Ash"},
@@ -113,20 +113,20 @@ dataset_factory_t& dataset_t::all()
             features_t
             {
                 feature_t{"age"},
-                feature_t{"workclass"}.optional(true).discrete(8),
+                feature_t{"workclass"}.optional(true).sclass(8),
                 feature_t{"fnlwgt"},
-                feature_t{"education"}.discrete(16),
+                feature_t{"education"}.sclass(16),
                 feature_t{"education-num"},
-                feature_t{"marital-status"}.discrete(7),
-                feature_t{"occupation"}.optional(true).discrete(14),
-                feature_t{"relationship"}.discrete(6),
-                feature_t{"race"}.discrete(5),
-                feature_t{"sex"}.discrete({"Female", "Male"}),
+                feature_t{"marital-status"}.sclass(7),
+                feature_t{"occupation"}.optional(true).sclass(14),
+                feature_t{"relationship"}.sclass(6),
+                feature_t{"race"}.sclass(5),
+                feature_t{"sex"}.sclass({"Female", "Male"}),
                 feature_t{"capital-gain"},
                 feature_t{"capital-loss"},
                 feature_t{"hours-per-week"},
-                feature_t{"native-country"}.optional(true).discrete(41),
-                feature_t{"income"}.discrete(2),
+                feature_t{"native-country"}.optional(true).sclass(41),
+                feature_t{"income"}.sclass(2),
             }, 14);
 
         manager.add<tabular_dataset_t>(
@@ -138,7 +138,7 @@ dataset_factory_t& dataset_t::all()
             },
             features_t
             {
-                feature_t{"sex"}.discrete(3),
+                feature_t{"sex"}.sclass(3),
                 feature_t{"length"},
                 feature_t{"diameter"},
                 feature_t{"height"},
@@ -146,7 +146,7 @@ dataset_factory_t& dataset_t::all()
                 feature_t{"shucked_weight"},
                 feature_t{"viscera_weight"},
                 feature_t{"shell_weight"},
-                feature_t{"rings"}.discrete(29),
+                feature_t{"rings"}.sclass(29),
             }, 8);
 
         manager.add<tabular_dataset_t>(
@@ -158,10 +158,10 @@ dataset_factory_t& dataset_t::all()
             },
             features_t
             {
-                feature_t{"X"}.discrete(9),
-                feature_t{"Y"}.discrete(8),
-                feature_t{"month"}.discrete(12),
-                feature_t{"day"}.discrete(7),
+                feature_t{"X"}.sclass(9),
+                feature_t{"Y"}.sclass(8),
+                feature_t{"month"}.sclass(12),
+                feature_t{"day"}.sclass(7),
                 feature_t{"FFMC"},
                 feature_t{"DMC"},
                 feature_t{"DC"},
@@ -183,7 +183,7 @@ dataset_factory_t& dataset_t::all()
             features_t
             {
                 feature_t{"ID"},
-                feature_t{"Diagnosis"}.discrete(2),
+                feature_t{"Diagnosis"}.sclass(2),
 
                 feature_t{"radius1"},
                 feature_t{"texture1"},
@@ -229,26 +229,26 @@ dataset_factory_t& dataset_t::all()
             features_t
             {
                 feature_t{"age"},
-                feature_t{"job"}.discrete(12),
-                feature_t{"marital"}.discrete(4),
-                feature_t{"education"}.discrete(8),
-                feature_t{"default"}.discrete(3),
-                feature_t{"housing"}.discrete(3),
-                feature_t{"loan"}.discrete(3),
-                feature_t{"contact"}.discrete(2),
-                feature_t{"month"}.discrete(12),
-                feature_t{"day_of_week"}.discrete(5),
+                feature_t{"job"}.sclass(12),
+                feature_t{"marital"}.sclass(4),
+                feature_t{"education"}.sclass(8),
+                feature_t{"default"}.sclass(3),
+                feature_t{"housing"}.sclass(3),
+                feature_t{"loan"}.sclass(3),
+                feature_t{"contact"}.sclass(2),
+                feature_t{"month"}.sclass(12),
+                feature_t{"day_of_week"}.sclass(5),
                 feature_t{"duration"},
                 feature_t{"campaign"},
                 feature_t{"pdays"},
                 feature_t{"previous"},
-                feature_t{"poutcome"}.discrete(3),
+                feature_t{"poutcome"}.sclass(3),
                 feature_t{"emp.var.rate"},
                 feature_t{"cons.price.idx"},
                 feature_t{"cons.conf.idx"},
                 feature_t{"euribor3m"},
                 feature_t{"nr.employed"},
-                feature_t{"y"}.discrete(2),
+                feature_t{"y"}.sclass(2),
             }, 20);
 
         manager.add<mnist_dataset_t>("mnist",

@@ -287,39 +287,6 @@ void set(const feature_t& feature, tensor_mem_t<tscalar, 1>&,
 }
 
 template <typename tscalar, typename tvalue>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 1>& tensor,
-    const indices_cmap_t& samples, const tensor_cmap_t<tvalue, 1>& values)
-{
-    const auto labels = static_cast<tensor_size_t>(feature.labels().size());
-
-    critical(
-        samples.size() != values.size() ||
-        static_cast<tscalar>(values.min()) >= labels ||
-        static_cast<tscalar>(values.max()) >= labels ||
-        samples.min() < 0 || samples.max() >= tensor.size(),
-        "cannot set single-label feature <", feature.name(), ">!");
-
-    for (tensor_size_t i = 0; i < samples.size(); ++ i)
-    {
-        tensor(samples(i)) = static_cast<tscalar>(values(i));
-    }
-}
-
-template <typename tscalar, typename tvalue>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 1>&,
-    const indices_cmap_t&, const tensor_cmap_t<tvalue, 2>&)
-{
-    critical0("cannot set single-label feature <", feature.name(), ">!");
-}
-
-template <typename tscalar, typename tvalue>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 1>&,
-    const indices_cmap_t&, const tensor_cmap_t<tvalue, 4>&)
-{
-    critical0("cannot set single-label feature <", feature.name(), ">!");
-}
-
-template <typename tscalar, typename tvalue>
 void set(const feature_t& feature, tensor_mem_t<tscalar, 2>&, tensor_size_t, tvalue)
 {
     critical0("cannot set multi-label feature <", feature.name(), ">!");
@@ -342,37 +309,6 @@ void set(const feature_t& feature, tensor_mem_t<tscalar, 2>& tensor,
 template <typename tscalar, typename tvalue>
 void set(const feature_t& feature, tensor_mem_t<tscalar, 2>&,
     tensor_size_t, const tensor_cmap_t<tvalue, 3>&)
-{
-    critical0("cannot set multi-label feature <", feature.name(), ">!");
-}
-
-template <typename tscalar, typename tvalue>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 2>&,
-    const indices_cmap_t&, const tensor_cmap_t<tvalue, 1>&)
-{
-    critical0("cannot set multi-label feature <", feature.name(), ">!");
-}
-
-template <typename tscalar, typename tvalue>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 2>& tensor,
-    const indices_cmap_t& samples, const tensor_cmap_t<tvalue, 2>& values)
-{
-    const auto labels = static_cast<tensor_size_t>(feature.labels().size());
-
-    critical(
-        samples.min() < 0 || samples.max() >= tensor.size() ||
-        make_dims(samples.size(), labels) != values.dims(),
-        "cannot set multi-label feature <", feature.name(), ">!");
-
-    for (tensor_size_t i = 0; i < samples.size(); ++ i)
-    {
-        tensor.vector(samples(i)) = values.vector(i).template cast<tscalar>();
-    }
-}
-
-template <typename tscalar, typename tvalue>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 2>&,
-    const indices_cmap_t&, const tensor_cmap_t<tvalue, 4>&)
 {
     critical0("cannot set multi-label feature <", feature.name(), ">!");
 }
@@ -405,44 +341,6 @@ void set(const feature_t& feature, tensor_mem_t<tscalar, 4>& tensor,
         "cannot set scalar feature <", feature.name(), ">!");
 
     tensor.vector(sample) = values.vector().template cast<tscalar>();
-}
-
-template <typename tscalar, typename tvalue>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 4>& tensor,
-    const indices_cmap_t& samples, const tensor_cmap_t<tvalue, 1>& values)
-{
-    critical(
-        samples.size() != values.size() ||
-        ::nano::size(feature.dims()) != 1 ||
-        samples.min() < 0 || samples.max() >= tensor.size(),
-        "cannot set scalar feature <", feature.name(), ">!");
-
-    for (tensor_size_t i = 0; i < samples.size(); ++ i)
-    {
-        tensor(samples(i)) = static_cast<tscalar>(values(i));
-    }
-}
-
-template <typename tscalar, typename tvalue>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 4>&,
-    const indices_cmap_t&, const tensor_cmap_t<tvalue, 2>&)
-{
-    critical0("cannot set scalar feature <", feature.name(), ">!");
-}
-
-template <typename tscalar, typename tvalue>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 4>& tensor,
-    const indices_cmap_t& samples, const tensor_cmap_t<tvalue, 4>& values)
-{
-    critical(
-        cat_dims(samples.size(), feature.dims()) != values.dims() ||
-        samples.min() < 0 || samples.max() >= tensor.size(),
-        "cannot set scalar feature <", feature.name(), ">!");
-
-    for (tensor_size_t i = 0; i < samples.size(); ++ i)
-    {
-        tensor.vector(samples(i)) = values.vector(i).template cast<tscalar>();
-    }
 }
 
 template <typename tscalar>

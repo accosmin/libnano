@@ -11,47 +11,50 @@ static auto make_tensor(tvalue value, tensor_dims_t<trank> dims)
     return values;
 }
 
-
 template <typename tvalue>
-static void check_set_scalar(feature_storage_t& storage, tensor_size_t sample, tvalue value)
+static void check_set_scalar(feature_storage_t& storage, tensor_size_t sample, tvalue value, tensor3d_dims_t dims)
 {
-    UTEST_REQUIRE_NOTHROW(storage.set(sample, value));
-    /*
-    UTEST_REQUIRE_NOTHROW(storage.set(sample, make_tensor<tvalue, 3>(value, make_dims(1, 1, 1))));
-    UTEST_REQUIRE_NOTHROW(storage.set(samples, make_tensor<tvalue, 4>(value, make_dims(1, 1, 1, 1))));
-
-    UTEST_REQUIRE_THROW(storage.set(sample, make_tensor<tvalue, 1>(value, make_dims(1)), std::runtime_error));
-    UTEST_REQUIRE_THROW(storage.set(sample, make_tensor<tvalue, 2>(value, make_dims(1)), std::runtime_error));
-    UTEST_REQUIRE_THROW(storage.set(sample, make_tensor<tvalue, 3>(value, make_dims(2, 1, 1)), std::runtime_error));
-
-    UTEST_REQUIRE_THROW(storage.set(-1, value), std::runtime_error);
-    */
-
-    /*
-    const auto samples = make_tensor<tensor_size_t, 1>(sample);
-
-
-    // can set multiple samples at once
+    // cannot set multi-label indices
+    for (const auto& values_nok : {
+        make_tensor<tvalue, 1>(value, make_dims(1)),
+        make_tensor<tvalue, 1>(value, make_dims(10)),
+    })
     {
+        UTEST_REQUIRE_THROW(storage.set(sample, values_nok), std::runtime_error);
     }
 
-    // cannot set multi-label values
+    // check if possible to set with scalar
+    if (::nano::size(dims) == 1)
     {
-        tensor_mem_t<tvalue, 1> values(3);
-        values.zero();
-        UTEST_REQUIRE_THROW(storage.set(sample, values), std::runtime_error);
+        UTEST_REQUIRE_NOTHROW(storage.set(sample, value));
+    }
+    else
+    {
+        UTEST_REQUIRE_THROW(storage.set(sample, value), std::runtime_error);
     }
 
-    // cannot set high-dimensional scalar values
-    {
-        tensor_mem_t<tvalue, 3> values(1, 1, 1);
-        values.constant(value);
-        UTEST_REQUIRE_NOTHROW(storage.set(sample, values));
+    // should be possible to set with compatible tensor
+    const auto values = make_tensor<tvalue, 3>(value, dims);
+    UTEST_REQUIRE_NOTHROW(storage.set(sample, values));
 
-        values.resize(3, 1, 1);
-        values.constant(value);
-        UTEST_REQUIRE_THROW(storage.set(sample, values), std::runtime_error);
-    }*/
+    // cannot set with incompatible tensor
+    const auto values_nok = make_tensor<tvalue, 3>(
+        value,
+        make_dims(
+            std::get<0>(dims),
+            std::get<1>(dims) + 1,
+            std::get<2>(dims)));
+    UTEST_REQUIRE_THROW(storage.set(sample, values_nok), std::runtime_error);
+
+    // cannot set if the sample index is invalid
+    for (const auto invalid_sample : {-1, 100})
+    {
+        if (::nano::size(dims) == 1)
+        {
+            UTEST_REQUIRE_THROW(storage.set(invalid_sample, value), std::runtime_error);
+        }
+        UTEST_REQUIRE_THROW(storage.set(invalid_sample, values), std::runtime_error);
+    }
 }
 
 UTEST_BEGIN_MODULE(test_mlearn_feature)
@@ -333,55 +336,93 @@ UTEST_CASE(feature_storage_optional)
 
 UTEST_CASE(feature_storage_scalar)
 {
-    feature_t feature{"feature"};
+    for (const auto type : {
+        feature_type::int8,
+        feature_type::int16,
+        feature_type::int32,
+        feature_type::int64,
+        feature_type::uint8,
+        feature_type::uint16,
+        feature_type::uint32,
+        feature_type::uint64,
+        feature_type::float32,
+        feature_type::float64,
+    })
+    {
+        for (const auto dims : {
+            make_dims(1, 1, 1),
+            make_dims(4, 2, 3),
+        })
+        {
+            const auto is_scalar = ::nano::size(dims) == 1;
 
-    // TODO: make it work for all scalar feature types
-    // TODO: should fail with tensor_cmap_t of incompatible dimension and rank
-    // TODO: should fail with scalar if dims() > 1, 1, 1
+            feature_t feature{"scalar"};
+            feature.scalar(type, dims);
 
-    feature.scalar(feature_type::int16); //make_dims(1, 3, 2));
+            feature_storage_t storage(feature, 17);
+            UTEST_CHECK_EQUAL(storage.samples(), 17);
+            UTEST_CHECK_EQUAL(storage.feature(), feature);
+            UTEST_CHECK_EQUAL(storage.optional(), true);
 
-    feature_storage_t storage(feature, 17);
-    UTEST_CHECK_EQUAL(storage.samples(), 17);
-    UTEST_CHECK_EQUAL(storage.feature(), feature);
+            check_set_scalar<int8_t>(storage, 0, 11, dims);
+            check_set_scalar<int16_t>(storage, 1, 12, dims);
+            check_set_scalar<int32_t>(storage, 2, 13, dims);
+            check_set_scalar<int64_t>(storage, 5, 14, dims);
+            check_set_scalar<uint8_t>(storage, 7, 21, dims);
+            check_set_scalar<uint16_t>(storage, 9, 22, dims);
+            check_set_scalar<uint32_t>(storage, 10, 23, dims);
+            check_set_scalar<uint64_t>(storage, 11, 24, dims);
+            check_set_scalar<float>(storage, 12, 32.0f, dims);
+            check_set_scalar<double>(storage, 14, 42.0, dims);
+            UTEST_CHECK_EQUAL(storage.optional(), true);
 
-    check_set_scalar<int8_t>(storage, 0, 11);
-    check_set_scalar<int16_t>(storage, 1, 12);
-    check_set_scalar<int32_t>(storage, 2, 13);
-    check_set_scalar<int64_t>(storage, 5, 14);
-    check_set_scalar<uint8_t>(storage, 7, 21);
-    check_set_scalar<uint16_t>(storage, 9, 22);
-    check_set_scalar<uint32_t>(storage, 10, 23);
-    check_set_scalar<uint64_t>(storage, 11, 24);
-    check_set_scalar<float>(storage, 12, 32.0f);
-    check_set_scalar<double>(storage, 14, 42.0);
-    UTEST_REQUIRE_NOTHROW(storage.set(16, std::to_string(57)));
+            if (is_scalar)
+            {
+                UTEST_REQUIRE_NOTHROW(storage.set(16, "57"));
+            }
+            else
+            {
+                UTEST_REQUIRE_THROW(storage.set(16, "57"), std::runtime_error);
+            }
+            UTEST_REQUIRE_THROW(storage.set(-1, "57"), std::runtime_error);
+            UTEST_REQUIRE_THROW(storage.set(17, "57"), std::runtime_error);
+            UTEST_REQUIRE_THROW(storage.set(16, "WHAT"), std::runtime_error);
+            UTEST_CHECK_EQUAL(storage.optional(), true);
 
-    const auto samples = ::nano::arange(0, 17);
-    tensor_mem_t<scalar_t, 4> values;
-    UTEST_REQUIRE_NOTHROW(storage.get(samples, values));
-    UTEST_REQUIRE_EQUAL(values.dims(), make_dims(17, 1, 1, 1));
+            const auto samples = ::nano::arange(0, 17);
+            tensor_mem_t<scalar_t, 4> values;
+            UTEST_REQUIRE_NOTHROW(storage.get(samples, values));
+            UTEST_REQUIRE_EQUAL(values.dims(), cat_dims(17, dims));
 
-    UTEST_CHECK_CLOSE(values(0), 11.0, 1e-12);
-    UTEST_CHECK_CLOSE(values(1), 12.0, 1e-12);
-    UTEST_CHECK_CLOSE(values(2), 13.0, 1e-12);
-    UTEST_CHECK_CLOSE(values(5), 14.0, 1e-12);
-    UTEST_CHECK_CLOSE(values(7), 21.0, 1e-12);
-    UTEST_CHECK_CLOSE(values(9), 22.0, 1e-12);
-    UTEST_CHECK_CLOSE(values(10), 23.0, 1e-12);
-    UTEST_CHECK_CLOSE(values(11), 24.0, 1e-12);
-    UTEST_CHECK_CLOSE(values(12), 32.0, 1e-12);
-    UTEST_CHECK_CLOSE(values(14), 42.0, 1e-12);
-    UTEST_CHECK_CLOSE(values(16), 57.0, 1e-12);
+            UTEST_CHECK_CLOSE(values(0, 0, 0, 0), 11.0, 1e-12);
+            UTEST_CHECK_CLOSE(values(1, 0, 0, 0), 12.0, 1e-12);
+            UTEST_CHECK_CLOSE(values(2, 0, 0, 0), 13.0, 1e-12);
+            UTEST_CHECK_CLOSE(values(5, 0, 0, 0), 14.0, 1e-12);
+            UTEST_CHECK_CLOSE(values(7, 0, 0, 0), 21.0, 1e-12);
+            UTEST_CHECK_CLOSE(values(9, 0, 0, 0), 22.0, 1e-12);
+            UTEST_CHECK_CLOSE(values(10, 0, 0, 0), 23.0, 1e-12);
+            UTEST_CHECK_CLOSE(values(11, 0, 0, 0), 24.0, 1e-12);
+            UTEST_CHECK_CLOSE(values(12, 0, 0, 0), 32.0, 1e-12);
+            UTEST_CHECK_CLOSE(values(14, 0, 0, 0), 42.0, 1e-12);
+            if (is_scalar)
+            {
+                UTEST_CHECK_CLOSE(values(16, 0, 0, 0), 57.0, 1e-12);
+            }
 
-    UTEST_CHECK(feature_storage_t::missing(values(3)));
-    UTEST_CHECK(feature_storage_t::missing(values(4)));
-    UTEST_CHECK(feature_storage_t::missing(values(6)));
-    UTEST_CHECK(feature_storage_t::missing(values(8)));
-    UTEST_CHECK(feature_storage_t::missing(values(13)));
-    UTEST_CHECK(feature_storage_t::missing(values(15)));
-    // TODO:
-    //
+            UTEST_CHECK(feature_storage_t::missing(values(3, 0, 0, 0)));
+            UTEST_CHECK(feature_storage_t::missing(values(4, 0, 0, 0)));
+            UTEST_CHECK(feature_storage_t::missing(values(6, 0, 0, 0)));
+            UTEST_CHECK(feature_storage_t::missing(values(8, 0, 0, 0)));
+            UTEST_CHECK(feature_storage_t::missing(values(13, 0, 0, 0)));
+            UTEST_CHECK(feature_storage_t::missing(values(15, 0, 0, 0)));
+            if (!is_scalar)
+            {
+                UTEST_CHECK(feature_storage_t::missing(values(16, 0, 0, 0)));
+            }
+        }
+    }
 }
+
+// TODO: check single-label and multi-label storage
 
 UTEST_END_MODULE()

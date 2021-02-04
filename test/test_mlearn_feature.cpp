@@ -57,6 +57,76 @@ static void check_set_scalar(feature_storage_t& storage, tensor_size_t sample, t
     }
 }
 
+template <typename tvalue>
+static void check_set_sclass(feature_storage_t& storage, tensor_size_t sample, tvalue value)
+{
+    // cannot set multi-label indices
+    for (const auto& values_nok : {
+        make_tensor<tvalue, 1>(value, make_dims(1)),
+        make_tensor<tvalue, 1>(value, make_dims(10)),
+    })
+    {
+        UTEST_REQUIRE_THROW(storage.set(sample, values_nok), std::runtime_error);
+    }
+
+    // cannot set multivariate scalars
+    for (const auto& values_nok : {
+        make_tensor<tvalue, 3>(value, make_dims(1, 1, 1)),
+        make_tensor<tvalue, 3>(value, make_dims(2, 1, 3)),
+    })
+    {
+        UTEST_REQUIRE_THROW(storage.set(sample, values_nok), std::runtime_error);
+    }
+
+    // cannot set with out-of-bounds class indices
+    UTEST_REQUIRE_THROW(storage.set(sample, static_cast<tvalue>(-1)), std::runtime_error);
+    UTEST_REQUIRE_THROW(storage.set(sample, static_cast<tvalue>(71)), std::runtime_error);
+
+    // check if possible to set with valid class index
+    UTEST_REQUIRE_NOTHROW(storage.set(sample, value));
+
+    // cannot set if the sample index is invalid
+    for (const auto invalid_sample : {-1, 100})
+    {
+        UTEST_REQUIRE_THROW(storage.set(invalid_sample, value), std::runtime_error);
+    }
+}
+
+template <typename tvalue>
+static void check_set_mclass(feature_storage_t& storage, tensor_size_t sample, tvalue hit0, tvalue hit1, tvalue hit2)
+{
+    // cannot set multi-label indices of invalid size
+    for (const auto& values_nok : {
+        make_tensor<tvalue, 1>(hit0, make_dims(1)),
+        make_tensor<tvalue, 1>(hit0, make_dims(4)),
+    })
+    {
+        UTEST_REQUIRE_THROW(storage.set(sample, values_nok), std::runtime_error);
+    }
+
+    // cannot set scalars
+    UTEST_REQUIRE_THROW(storage.set(sample, hit0), std::runtime_error);
+
+    // cannot set multivariate scalars
+    for (const auto& values_nok : {
+        make_tensor<tvalue, 3>(hit0, make_dims(1, 1, 1)),
+        make_tensor<tvalue, 3>(hit0, make_dims(2, 1, 3)),
+    })
+    {
+        UTEST_REQUIRE_THROW(storage.set(sample, values_nok), std::runtime_error);
+    }
+
+    // check if possible to set with valid class hits
+    tensor_mem_t<tvalue, 1> values(make_dims(3), {hit0, hit1, hit2});
+    UTEST_REQUIRE_NOTHROW(storage.set(sample, values));
+
+    // cannot set if the sample index is invalid
+    for (const auto invalid_sample : {-1, 100})
+    {
+        UTEST_REQUIRE_THROW(storage.set(invalid_sample, values), std::runtime_error);
+    }
+}
+
 UTEST_BEGIN_MODULE(test_mlearn_feature)
 
 UTEST_CASE(_default)
@@ -309,13 +379,15 @@ UTEST_CASE(feature_storage_missing)
     UTEST_CHECK(!feature_storage_t::missing(+123.0));
 }
 
+UTEST_CASE(feature_storage)
+{
+    const auto storage = feature_storage_t{};
+    UTEST_CHECK_EQUAL(storage.samples(), 0);
+    UTEST_CHECK_EQUAL(storage.optional(), false);
+}
+
 UTEST_CASE(feature_storage_optional)
 {
-    {
-        const auto storage = feature_storage_t{};
-        UTEST_CHECK_EQUAL(storage.samples(), 0);
-        UTEST_CHECK_EQUAL(storage.optional(), false);
-    }
     for (tensor_size_t samples = 1; samples < 32; ++ samples)
     {
         auto storage = feature_storage_t{feature_t{"feature"}.scalar(feature_type::int32), samples};
@@ -336,7 +408,8 @@ UTEST_CASE(feature_storage_optional)
 
 UTEST_CASE(feature_storage_scalar)
 {
-    for (const auto type : {
+    for (const auto type :
+    {
         feature_type::int8,
         feature_type::int16,
         feature_type::int32,
@@ -349,10 +422,7 @@ UTEST_CASE(feature_storage_scalar)
         feature_type::float64,
     })
     {
-        for (const auto dims : {
-            make_dims(1, 1, 1),
-            make_dims(4, 2, 3),
-        })
+        for (const auto dims : {make_dims(1, 1, 1), make_dims(4, 2, 3)})
         {
             const auto is_scalar = ::nano::size(dims) == 1;
 
@@ -389,11 +459,16 @@ UTEST_CASE(feature_storage_scalar)
             UTEST_REQUIRE_THROW(storage.set(16, "WHAT"), std::runtime_error);
             UTEST_CHECK_EQUAL(storage.optional(), true);
 
-            const auto samples = ::nano::arange(0, 17);
             tensor_mem_t<scalar_t, 4> values;
-            UTEST_REQUIRE_NOTHROW(storage.get(samples, values));
-            UTEST_REQUIRE_EQUAL(values.dims(), cat_dims(17, dims));
+            tensor_mem_t<tensor_size_t, 1> labels;
+            tensor_mem_t<tensor_size_t, 2> mlabels;
 
+            const auto samples = ::nano::arange(0, 17);
+            UTEST_REQUIRE_NOTHROW(storage.get(samples, values));
+            UTEST_REQUIRE_THROW(storage.get(samples, labels), std::runtime_error);
+            UTEST_REQUIRE_THROW(storage.get(samples, mlabels), std::runtime_error);
+
+            UTEST_REQUIRE_EQUAL(values.dims(), cat_dims(17, dims));
             UTEST_CHECK_CLOSE(values(0, 0, 0, 0), 11.0, 1e-12);
             UTEST_CHECK_CLOSE(values(1, 0, 0, 0), 12.0, 1e-12);
             UTEST_CHECK_CLOSE(values(2, 0, 0, 0), 13.0, 1e-12);
@@ -423,6 +498,118 @@ UTEST_CASE(feature_storage_scalar)
     }
 }
 
-// TODO: check single-label and multi-label storage
+UTEST_CASE(feature_storage_sclass)
+{
+    feature_t feature("sclass");
+    feature.sclass(4);
+
+    feature_storage_t storage(feature, 17);
+    UTEST_CHECK_EQUAL(storage.samples(), 17);
+    UTEST_CHECK_EQUAL(storage.feature(), feature);
+    UTEST_CHECK_EQUAL(storage.optional(), true);
+
+    check_set_sclass<int8_t>(storage, 0, 0);
+    check_set_sclass<int16_t>(storage, 1, 1);
+    check_set_sclass<int32_t>(storage, 2, 2);
+    check_set_sclass<int64_t>(storage, 5, 3);
+    check_set_sclass<uint8_t>(storage, 7, 2);
+    check_set_sclass<uint16_t>(storage, 9, 1);
+    check_set_sclass<uint32_t>(storage, 10, 0);
+    check_set_sclass<uint64_t>(storage, 11, 1);
+    check_set_sclass<float>(storage, 12, 2);
+    check_set_sclass<double>(storage, 14, 3);
+    UTEST_CHECK_EQUAL(storage.optional(), true);
+
+    UTEST_REQUIRE_NOTHROW(storage.set(16, "3"));
+    UTEST_REQUIRE_THROW(storage.set(16, "4"), std::runtime_error);
+    UTEST_REQUIRE_THROW(storage.set(17, "3"), std::runtime_error);
+    UTEST_REQUIRE_THROW(storage.set(16, "WHAT"), std::runtime_error);
+    UTEST_CHECK_EQUAL(storage.optional(), true);
+
+    tensor_mem_t<scalar_t, 4> values;
+    tensor_mem_t<tensor_size_t, 1> labels;
+    tensor_mem_t<tensor_size_t, 2> mlabels;
+
+    const auto samples = ::nano::arange(0, 17);
+    UTEST_REQUIRE_THROW(storage.get(samples, values), std::runtime_error);
+    UTEST_REQUIRE_NOTHROW(storage.get(samples, labels));
+    UTEST_REQUIRE_THROW(storage.get(samples, mlabels), std::runtime_error);
+
+    UTEST_REQUIRE_EQUAL(labels.size(), 17);
+    UTEST_CHECK_EQUAL(labels(0), 0);
+    UTEST_CHECK_EQUAL(labels(1), 1);
+    UTEST_CHECK_EQUAL(labels(2), 2);
+    UTEST_CHECK_EQUAL(labels(5), 3);
+    UTEST_CHECK_EQUAL(labels(7), 2);
+    UTEST_CHECK_EQUAL(labels(9), 1);
+    UTEST_CHECK_EQUAL(labels(10), 0);
+    UTEST_CHECK_EQUAL(labels(11), 1);
+    UTEST_CHECK_EQUAL(labels(12), 2);
+    UTEST_CHECK_EQUAL(labels(14), 3);
+    UTEST_CHECK_EQUAL(labels(16), 3);
+
+    UTEST_CHECK(feature_storage_t::missing(labels(3)));
+    UTEST_CHECK(feature_storage_t::missing(labels(4)));
+    UTEST_CHECK(feature_storage_t::missing(labels(6)));
+    UTEST_CHECK(feature_storage_t::missing(labels(8)));
+    UTEST_CHECK(feature_storage_t::missing(labels(13)));
+    UTEST_CHECK(feature_storage_t::missing(labels(15)));
+}
+
+UTEST_CASE(feature_storage_mclass)
+{
+    feature_t feature("mclass");
+    feature.mclass(3);
+
+    feature_storage_t storage(feature, 17);
+    UTEST_CHECK_EQUAL(storage.samples(), 17);
+    UTEST_CHECK_EQUAL(storage.feature(), feature);
+    UTEST_CHECK_EQUAL(storage.optional(), true);
+
+    check_set_mclass<int8_t>(storage, 0, 0, 0, 0);
+    check_set_mclass<int16_t>(storage, 1, 0, 0, 1);
+    check_set_mclass<int32_t>(storage, 2, 1, 1, 0);
+    check_set_mclass<int64_t>(storage, 5, 1, 1, 1);
+    check_set_mclass<uint8_t>(storage, 7, 0, 1, 0);
+    check_set_mclass<uint16_t>(storage, 9, 1, 0, 0);
+    check_set_mclass<uint32_t>(storage, 10, 0, 0, 0);
+    check_set_mclass<uint64_t>(storage, 11, 1, 1, 1);
+    check_set_mclass<float>(storage, 12, 1, 0, 0);
+    check_set_mclass<double>(storage, 14, 0, 1, 1);
+    UTEST_CHECK_EQUAL(storage.optional(), true);
+
+    UTEST_REQUIRE_THROW(storage.set(16, "4"), std::runtime_error);
+    UTEST_REQUIRE_THROW(storage.set(17, "3"), std::runtime_error);
+    UTEST_REQUIRE_THROW(storage.set(16, "WHAT"), std::runtime_error);
+    UTEST_CHECK_EQUAL(storage.optional(), true);
+
+    tensor_mem_t<scalar_t, 4> values;
+    tensor_mem_t<tensor_size_t, 1> labels;
+    tensor_mem_t<tensor_size_t, 2> mlabels;
+
+    const auto samples = ::nano::arange(0, 17);
+    UTEST_REQUIRE_THROW(storage.get(samples, values), std::runtime_error);
+    UTEST_REQUIRE_THROW(storage.get(samples, labels), std::runtime_error);
+    UTEST_REQUIRE_NOTHROW(storage.get(samples, mlabels));
+
+    UTEST_REQUIRE_EQUAL(mlabels.dims(), make_dims(17, 3));
+    UTEST_CHECK_EQUAL(mlabels(0, 0), 0); UTEST_CHECK_EQUAL(mlabels(0, 1), 0); UTEST_CHECK_EQUAL(mlabels(0, 2), 0);
+    UTEST_CHECK_EQUAL(mlabels(1, 0), 0); UTEST_CHECK_EQUAL(mlabels(1, 1), 0); UTEST_CHECK_EQUAL(mlabels(1, 2), 1);
+    UTEST_CHECK_EQUAL(mlabels(2, 0), 1); UTEST_CHECK_EQUAL(mlabels(2, 1), 1); UTEST_CHECK_EQUAL(mlabels(2, 2), 0);
+    UTEST_CHECK_EQUAL(mlabels(5, 0), 1); UTEST_CHECK_EQUAL(mlabels(5, 1), 1); UTEST_CHECK_EQUAL(mlabels(5, 2), 1);
+    UTEST_CHECK_EQUAL(mlabels(7, 0), 0); UTEST_CHECK_EQUAL(mlabels(7, 1), 1); UTEST_CHECK_EQUAL(mlabels(7, 2), 0);
+    UTEST_CHECK_EQUAL(mlabels(9, 0), 1); UTEST_CHECK_EQUAL(mlabels(9, 1), 0); UTEST_CHECK_EQUAL(mlabels(9, 2), 0);
+    UTEST_CHECK_EQUAL(mlabels(10, 0), 0); UTEST_CHECK_EQUAL(mlabels(10, 1), 0); UTEST_CHECK_EQUAL(mlabels(10, 2), 0);
+    UTEST_CHECK_EQUAL(mlabels(11, 0), 1); UTEST_CHECK_EQUAL(mlabels(11, 1), 1); UTEST_CHECK_EQUAL(mlabels(11, 2), 1);
+    UTEST_CHECK_EQUAL(mlabels(12, 0), 1); UTEST_CHECK_EQUAL(mlabels(12, 1), 0); UTEST_CHECK_EQUAL(mlabels(12, 2), 0);
+    UTEST_CHECK_EQUAL(mlabels(14, 0), 0); UTEST_CHECK_EQUAL(mlabels(14, 1), 1); UTEST_CHECK_EQUAL(mlabels(14, 2), 1);
+
+    for (const auto sample : {3, 4, 6, 8, 13, 15})
+    {
+        UTEST_CHECK(feature_storage_t::missing(mlabels(sample, 0)));
+        UTEST_CHECK(feature_storage_t::missing(mlabels(sample, 1)));
+        UTEST_CHECK(feature_storage_t::missing(mlabels(sample, 2)));
+    }
+}
 
 UTEST_END_MODULE()

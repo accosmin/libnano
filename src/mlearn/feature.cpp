@@ -379,7 +379,7 @@ void set(const feature_t& feature, tensor_mem_t<tscalar, 1>& tensor, tensor_size
     }
     catch (std::exception& e)
     {
-        critical0("cannot set single-label feature <", feature.name(), ">, caught exception <", e.what(), ">!");
+        critical0("cannot set single-label feature <", feature.name(), ">: caught exception <", e.what(), ">!");
     }
     set(feature, tensor, sample, label);
 }
@@ -394,9 +394,9 @@ void set(const feature_t& feature, tensor_mem_t<tscalar, 2>& tensor, tensor_size
     }
     catch (std::exception& e)
     {
-        critical0("cannot set multi-label feature <", feature.name(), ">, caught exception <", e.what(), ">!");
+        critical0("cannot set multi-label feature <", feature.name(), ">: caught exception <", e.what(), ">!");
     }
-        set(feature, tensor, sample, scalar);
+    set(feature, tensor, sample, scalar);
 }
 
 template <typename tscalar>
@@ -409,7 +409,7 @@ void set(const feature_t& feature, tensor_mem_t<tscalar, 4>& tensor, tensor_size
     }
     catch (std::exception& e)
     {
-        critical0("cannot set scalar feature <", feature.name(), ">, caught exception <", e.what(), ">!");
+        critical0("cannot set scalar feature <", feature.name(), ">: caught exception <", e.what(), ">!");
     }
     set(feature, tensor, sample, scalar);
 }

@@ -288,6 +288,8 @@ namespace nano
         void set(tensor_size_t sample, tensor_cmap_t<uint32_t, 3> values);
         void set(tensor_size_t sample, tensor_cmap_t<uint64_t, 3> values);
 
+        // TODO: overload to set multiple samples at once.
+
         ///
         /// \brief access the feature as scalar values for the given set of samples.
         ///

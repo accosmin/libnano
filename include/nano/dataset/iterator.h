@@ -28,23 +28,15 @@ namespace nano
     {
     public:
 
-        dataset_iterator_t(indices_t samples);
-
         virtual ~dataset_iterator_t() = default;
 
+        virtual const indices_t& samples() const = 0;
         virtual bool cache_inputs(int64_t bytes, execution) = 0;
         virtual bool cache_targets(int64_t bytes, execution) = 0;
 
         virtual feature_t target() const = 0;
         virtual tensor3d_dims_t target_dims() const = 0;
         virtual tensor4d_cmap_t targets(tensor_range_t samples, tensor4d_t& buffer) const = 0;
-
-        const indices_t& samples() const;
-
-    private:
-
-        // attributes
-        indices_t   m_samples;      ///< samples
     };
 
     ///
@@ -58,8 +50,6 @@ namespace nano
     class feature_dataset_iterator_t : public dataset_iterator_t
     {
     public:
-
-        feature_dataset_iterator_t(indices_t samples);
 
         virtual tensor_size_t features() const = 0;
         virtual indices_t scalar_features() const = 0;
@@ -85,8 +75,6 @@ namespace nano
     {
     public:
 
-        flatten_dataset_iterator_t(indices_t samples);
-
         virtual tensor1d_dims_t inputs_dims() const = 0;
         virtual tensor2d_cmap_t inputs(tensor_range_t samples, tensor2d_t& buffer) const = 0;
     };
@@ -102,8 +90,6 @@ namespace nano
     class structured_dataset_iterator_t : public dataset_iterator_t
     {
     public:
-
-        structured_dataset_iterator_t(indices_t samples);
 
         virtual tensor3d_dims_t inputs_dims() const = 0;
         virtual tensor4d_cmap_t inputs(tensor_range_t samples, tensor4d_t& buffer) const = 0;

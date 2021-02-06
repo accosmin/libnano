@@ -1,13 +1,12 @@
-#include <nano/logger.h>
 #include <nano/dataset/memory.h>
 
 using namespace nano;
 
 memory_dataset_t::memory_dataset_t() = default;
 
-feature_t memory_dataset_t::target() const
+task_type memory_dataset_t::type() const
 {
-    return m_target.feature();
+    return static_cast<task_type>(m_target.feature());
 }
 
 tensor_size_t memory_dataset_t::samples() const
@@ -19,24 +18,6 @@ tensor_size_t memory_dataset_t::samples() const
     else
     {
         return m_inputs.begin()->samples();
-    }
-}
-
-tensor3d_dims_t memory_dataset_t::tdims() const
-{
-    const auto& feature = m_target.feature();
-
-    if (!static_cast<bool>(feature))
-    {
-        return make_dims(0, 0, 0);
-    }
-    else if (feature.discrete())
-    {
-        return make_dims(static_cast<tensor_size_t>(feature.labels().size()), 1, 1);
-    }
-    else
-    {
-        return feature.dims();
     }
 }
 
@@ -67,4 +48,26 @@ rfeature_dataset_iterator_t memory_dataset_t::feature_iterator(indices_t samples
 rflatten_dataset_iterator_t memory_dataset_t::flatten_iterator(indices_t samples) const
 {
     return std::make_unique<memory_flatten_dataset_iterator_t>(*this, std::move(samples));
+}
+
+memory_feature_dataset_iterator_t::memory_feature_dataset_iterator_t(const memory_dataset_t& dataset, indices_t samples) :
+    m_dataset(dataset),
+    m_samples(std::move(samples))
+{
+}
+
+const indices_t& memory_feature_dataset_iterator_t::samples() const
+{
+    return m_samples;
+}
+
+memory_flatten_dataset_iterator_t::memory_flatten_dataset_iterator_t(const memory_dataset_t& dataset, indices_t samples) :
+    m_dataset(dataset),
+    m_samples(std::move(samples))
+{
+}
+
+const indices_t& memory_flatten_dataset_iterator_t::samples() const
+{
+    return m_samples;
 }

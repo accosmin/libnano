@@ -1,5 +1,6 @@
 #pragma once
 
+#include <nano/logger.h>
 #include <nano/dataset/dataset.h>
 
 namespace nano
@@ -17,7 +18,8 @@ namespace nano
 
         memory_dataset_t();
 
-        void resize(tensor_size_t samples, const features_t& features, size_t target);
+        task_type type() const override;
+        tensor_size_t samples() const override;
 
         const auto& istorage() const { return m_inputs; }
         const auto& tstorage() const { return m_target; }
@@ -25,12 +27,9 @@ namespace nano
         rfeature_dataset_iterator_t feature_iterator(indices_t samples) const override;
         rflatten_dataset_iterator_t flatten_iterator(indices_t samples) const override;
 
-
-        task_type type() const override;
-
-        tensor_size_t samples() const override;
-
     protected:
+
+        void resize(tensor_size_t samples, const features_t& features, size_t target);
 
         template <typename tvalue>
         void set(tensor_size_t sample, const tvalue& value)
@@ -41,7 +40,9 @@ namespace nano
         template <typename tvalue>
         void set(tensor_size_t sample, tensor_size_t feature, const tvalue& value)
         {
-            assert(feature >= 0 && feature < static_cast<tensor_size_t>(m_inputs.size()));
+            critical(
+                feature < 0 || feature >= static_cast<tensor_size_t>(m_inputs.size()),
+                "failed to access input feature: index ", feature, " not in [0, ", m_inputs.size());
 
             m_inputs[static_cast<size_t>(feature)].set(sample, value);
         }
@@ -56,12 +57,16 @@ namespace nano
         inputs_t        m_inputs;   ///<
     };
 
+    ///
+    /// \brief
+    ///
     class NANO_PUBLIC memory_feature_dataset_iterator_t final : public feature_dataset_iterator_t
     {
     public:
 
         memory_feature_dataset_iterator_t(const memory_dataset_t&, indices_t samples);
 
+        const indices_t& samples() const override;
         bool cache_inputs(int64_t bytes, execution) override;
         bool cache_targets(int64_t bytes, execution) override;
         bool cache_inputs(int64_t bytes, indices_cmap_t features, execution) override;
@@ -79,14 +84,24 @@ namespace nano
         sindices_cmap_t input(tensor_size_t feature, sindices_t& buffer) const override;
         mindices_cmap_t input(tensor_size_t feature, mindices_t& buffer) const override;
         tensor1d_cmap_t input(tensor_size_t feature, tensor1d_t& buffer) const override;
+
+    private:
+
+        // attributes
+        const memory_dataset_t& m_dataset;  ///<
+        indices_t               m_samples;  ///<
     };
 
-    class NANO_PUBLIC flatten_feature_dataset_iterator_t final : public flatten_dataset_iterator_t
+    ///
+    /// \brief
+    ///
+    class NANO_PUBLIC memory_flatten_dataset_iterator_t final : public flatten_dataset_iterator_t
     {
     public:
 
-        flatten_feature_dataset_iterator_t(const memory_dataset_t&, indices_t samples);
+        memory_flatten_dataset_iterator_t(const memory_dataset_t&, indices_t samples);
 
+        const indices_t& samples() const override;
         bool cache_inputs(int64_t bytes, execution) override;
         bool cache_targets(int64_t bytes, execution) override;
 
@@ -96,5 +111,11 @@ namespace nano
 
         tensor1d_dims_t inputs_dims() const override;
         tensor2d_cmap_t inputs(tensor_range_t samples, tensor2d_t& buffer) const override;
+
+    private:
+
+        // attributes
+        const memory_dataset_t& m_dataset;  ///<
+        indices_t               m_samples;  ///<
     };
 }

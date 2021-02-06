@@ -2,6 +2,7 @@
 
 #include <nano/arch.h>
 #include <nano/factory.h>
+#include <nano/dataset/iterator.h>
 
 namespace nano
 {
@@ -55,7 +56,7 @@ namespace nano
         virtual void load() = 0;
 
         ///
-        /// \brief returns the appropriate machine learning task (by inspecting the target feature).
+        /// \brief returns the appropriate mathine learning task (by inspecting the target feature).
         ///
         virtual task_type type() const = 0;
 
@@ -67,14 +68,20 @@ namespace nano
         ///
         /// \brief returns the samples that can be used for training.
         ///
-        indices_t train_samples() const { return make_train_samples(); }
+        indices_t train_samples() const
+        {
+            return make_train_samples();
+        }
 
         ///
         /// \brief returns the samples that should only be used for testing.
         ///
         /// NB: assumes a fixed set of test samples.
         ///
-        indices_t test_samples() const { return make_test_samples(); }
+        indices_t test_samples() const
+        {
+            return make_test_samples();
+        }
 
         ///
         /// \brief returns an iterator over the given samples.

@@ -337,8 +337,8 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.process(argc, argv);
 
     // check arguments and options
-    const auto min_dims = clamp(cmdline.get<tensor_size_t>("min-dims"), tensor_size_t(1), tensor_size_t(1024));
-    const auto max_dims = clamp(cmdline.get<tensor_size_t>("max-dims"), min_dims, tensor_size_t(4096));
+    const auto min_dims = std::clamp(cmdline.get<tensor_size_t>("min-dims"), tensor_size_t(1), tensor_size_t(1024));
+    const auto max_dims = std::clamp(cmdline.get<tensor_size_t>("max-dims"), min_dims, tensor_size_t(4096));
     const auto copy = cmdline.has("copy");
     const auto blas1 = cmdline.has("blas1");
     const auto blas2 = cmdline.has("blas2");

@@ -48,7 +48,7 @@ bool lsearchk_lemarechal_t::get(const solver_state_t& state0, solver_state_t& st
 
         // next trial
         const auto next = lsearch_step_t::interpolate(L, R, m_interpolation);
-        const auto ok = state.update(state0, clamp(next, tmin, tmax));
+        const auto ok = state.update(state0, std::clamp(next, tmin, tmax));
         log(state0, state);
 
         if (!ok)

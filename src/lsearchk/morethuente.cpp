@@ -226,7 +226,7 @@ bool lsearchk_morethuente_t::get(const solver_state_t& state0, solver_state_t& s
         }
 
         // Force the step to be within the bounds stpmax and stpmin
-        stp = nano::clamp(stp, stpmin(), stpmax());
+        stp = std::clamp(stp, stpmin(), stpmax());
 
         // If further progress is not possible, let stp be the best point obtained during the search
         if ((brackt && (stp <= stmin || stp >= stmax)) ||

@@ -44,7 +44,7 @@ bool lsearchk_t::get(solver_state_t& state, scalar_t t)
     const auto state0 = make_state0(state);
     assert(state0.t < epsilon0<scalar_t>());
 
-    t = std::isfinite(t) ? nano::clamp(t, stpmin(), scalar_t(1)) : scalar_t(1);
+    t = std::isfinite(t) ? std::clamp(t, stpmin(), scalar_t(1)) : scalar_t(1);
     for (int64_t i = 0; i < max_iterations(); ++ i)
     {
         const auto ok = state.update(state0, t);

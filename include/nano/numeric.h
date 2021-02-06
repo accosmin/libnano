@@ -88,17 +88,6 @@ namespace nano
     }
 
     ///
-    /// \brief clamp value in the [min_value, max_value] range
-    /// \todo replace this with std::clamp when moving to C++17
-    ///
-    template <typename tscalar, typename tscalar_min, typename tscalar_max>
-    tscalar clamp(const tscalar value, const tscalar_min min_value, const tscalar_max max_value)
-    {
-        return  value < static_cast<tscalar>(min_value) ? static_cast<tscalar>(min_value) :
-                (value > static_cast<tscalar>(max_value) ? static_cast<tscalar>(max_value) : value);
-    }
-
-    ///
     /// \brief round to the closest power of 10
     ///
     template <typename tscalar>

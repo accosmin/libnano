@@ -46,17 +46,10 @@ void memory_dataset_t::resize(tensor_size_t samples, const features_t& features,
     m_inputs.shrink_to_fit();
     m_target = feature_storage_t{};
 
-    m_missing.resize(samples, static_cast<tensor_size_t>(features.size()));
-    m_missing.constant(0xFF);
-
     for (size_t i = 0; i < features.size(); ++ i)
     {
         if (i == target)
         {
-            critical(
-                features[i].optional(),
-                "optional target features are not supported!");
-
             m_target = feature_storage_t{features[i], samples};
         }
         else
@@ -64,4 +57,14 @@ void memory_dataset_t::resize(tensor_size_t samples, const features_t& features,
             m_inputs.emplace_back(features[i], samples);
         }
     }
+}
+
+rfeature_dataset_iterator_t memory_dataset_t::feature_iterator(indices_t samples) const
+{
+    return std::make_unique<memory_feature_dataset_iterator_t>(*this, std::move(samples));
+}
+
+rflatten_dataset_iterator_t memory_dataset_t::flatten_iterator(indices_t samples) const
+{
+    return std::make_unique<memory_flatten_dataset_iterator_t>(*this, std::move(samples));
 }

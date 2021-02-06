@@ -1,57 +1,100 @@
 #pragma once
 
-#include <nano/dataset.h>
+#include <nano/dataset/dataset.h>
 
 namespace nano
 {
     ///
-    /// \brief in-memory tabular datasets mixes features of different types:
-    ///     - discrete features stored using either 8-bit or 16-bit integers
-    ///     - continuous features stored as single or double precision floating points
+    /// \brief in-memory dataset that efficiently stores a mixture of different features.
     ///
-    /// NB: the input features can be optional.
-    /// NB: the discrete input features can be both single-label or multi-label.
+    /// NB: the features can be optional.
+    /// NB: the categorical input features can be single-label or multi-label.
     /// NB: the continuous input features cannot be multi-dimensional (::dims() == (1, 1, 1)).
     ///
-    class memory_dataset_t : public dataset_t
+    class NANO_PUBLIC memory_dataset_t : public dataset_t
     {
     public:
 
         memory_dataset_t();
 
-        feature_t target() const override;
-        tensor_size_t samples() const override;
-        tensor3d_dims_t tdims() const override;
-
-        auto& istorage() { return m_inputs; }
-        auto& tstorage() { return m_target; }
+        void resize(tensor_size_t samples, const features_t& features, size_t target);
 
         const auto& istorage() const { return m_inputs; }
         const auto& tstorage() const { return m_target; }
 
-        void resize(tensor_size_t samples, const features_t& features, size_t target);
+        rfeature_dataset_iterator_t feature_iterator(indices_t samples) const override;
+        rflatten_dataset_iterator_t flatten_iterator(indices_t samples) const override;
+
+
+        task_type type() const override;
+
+        tensor_size_t samples() const override;
+
+    protected:
 
         template <typename tvalue>
-        void set(tensor_size_t sample, tensor_size_t feature, const tvalue& value);
-
-        template <typename tvalue>
-        void set(tensor_size_t sample, const tvalue& value);
-
-        bool missing(tensor_size_t sample, tensor_size_t feature) const
+        void set(tensor_size_t sample, const tvalue& value)
         {
-            const auto mask = 0x01 << (7 - (feature % 8));
-            return (m_missing(sample, feature / 8) & (0x01 << (7 - feature % 8))) != 0x00;
+            m_target.set(sample, value);
+        }
+
+        template <typename tvalue>
+        void set(tensor_size_t sample, tensor_size_t feature, const tvalue& value)
+        {
+            assert(feature >= 0 && feature < static_cast<tensor_size_t>(m_inputs.size()));
+
+            m_inputs[static_cast<size_t>(feature)].set(sample, value);
         }
 
     private:
 
         using target_t = feature_storage_t;
         using inputs_t = std::vector<feature_storage_t>;
-        using missing_t = tensor_mem_t<uint8_t, 2>;
 
         // attributes
         target_t        m_target;   ///<
         inputs_t        m_inputs;   ///<
-        missing_t       m_missing;  ///< bitwise indication of missing features (samples, inputs/8)
+    };
+
+    class NANO_PUBLIC memory_feature_dataset_iterator_t final : public feature_dataset_iterator_t
+    {
+    public:
+
+        memory_feature_dataset_iterator_t(const memory_dataset_t&, indices_t samples);
+
+        bool cache_inputs(int64_t bytes, execution) override;
+        bool cache_targets(int64_t bytes, execution) override;
+        bool cache_inputs(int64_t bytes, indices_cmap_t features, execution) override;
+
+        feature_t target() const override;
+        tensor3d_dims_t target_dims() const override;
+        tensor4d_cmap_t targets(tensor_range_t samples, tensor4d_t& buffer) const override;
+
+        tensor_size_t features() const override;
+        indices_t scalar_features() const override;
+        indices_t sclass_features() const override;
+        indices_t mclass_features() const override;
+        feature_t feature(tensor_size_t feature) const override;
+
+        sindices_cmap_t input(tensor_size_t feature, sindices_t& buffer) const override;
+        mindices_cmap_t input(tensor_size_t feature, mindices_t& buffer) const override;
+        tensor1d_cmap_t input(tensor_size_t feature, tensor1d_t& buffer) const override;
+    };
+
+    class NANO_PUBLIC flatten_feature_dataset_iterator_t final : public flatten_dataset_iterator_t
+    {
+    public:
+
+        flatten_feature_dataset_iterator_t(const memory_dataset_t&, indices_t samples);
+
+        bool cache_inputs(int64_t bytes, execution) override;
+        bool cache_targets(int64_t bytes, execution) override;
+
+        feature_t target() const override;
+        tensor3d_dims_t target_dims() const override;
+        tensor4d_cmap_t targets(tensor_range_t samples, tensor4d_t& buffer) const override;
+
+        tensor1d_dims_t inputs_dims() const override;
+        tensor2d_cmap_t inputs(tensor_range_t samples, tensor2d_t& buffer) const override;
     };
 }

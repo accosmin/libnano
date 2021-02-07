@@ -10,7 +10,7 @@ namespace nano
     ///
     /// NB: the features can be optional.
     /// NB: the categorical input features can be single-label or multi-label.
-    /// NB: the continuous input features cannot be multi-dimensional (::dims() == (1, 1, 1)).
+    /// NB: the continuous input features be multi-dimensional as well (::dims() != (1, 1, 1)).
     ///
     class NANO_PUBLIC memory_dataset_t : public dataset_t
     {
@@ -23,6 +23,7 @@ namespace nano
 
         const auto& istorage() const { return m_inputs; }
         const auto& tstorage() const { return m_target; }
+        const feature_storage_t& istorage(tensor_size_t feature) const;
 
         rfeature_dataset_iterator_t feature_iterator(indices_t samples) const override;
         rflatten_dataset_iterator_t flatten_iterator(indices_t samples) const override;
@@ -53,8 +54,8 @@ namespace nano
         using inputs_t = std::vector<feature_storage_t>;
 
         // attributes
-        target_t        m_target;   ///<
-        inputs_t        m_inputs;   ///<
+        target_t                m_target;   ///<
+        inputs_t                m_inputs;   ///<
     };
 
     ///

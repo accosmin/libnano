@@ -75,6 +75,9 @@ namespace nano
     {
     public:
 
+        // TODO: support for pre-processing missing values.
+        // TODO: support for normalizing scalar features
+
         virtual tensor1d_dims_t inputs_dims() const = 0;
         virtual tensor2d_cmap_t inputs(tensor_range_t samples, tensor2d_t& buffer) const = 0;
     };

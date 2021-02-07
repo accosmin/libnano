@@ -641,17 +641,17 @@ void get(
 
 }
 
-void feature_storage_t::get(indices_cmap_t samples, tensor_mem_t<scalar_t, 4>& values)
+void feature_storage_t::get(indices_cmap_t samples, tensor_mem_t<scalar_t, 4>& values) const
 {
     ::get(m_feature, m_storage, m_mask, samples, values);
 }
 
-void feature_storage_t::get(indices_cmap_t samples, tensor_mem_t<tensor_size_t, 1>& labels)
+void feature_storage_t::get(indices_cmap_t samples, tensor_mem_t<tensor_size_t, 1>& labels) const
 {
     ::get(m_feature, m_storage, m_mask, samples, labels);
 }
 
-void feature_storage_t::get(indices_cmap_t samples, tensor_mem_t<tensor_size_t, 2>& labels)
+void feature_storage_t::get(indices_cmap_t samples, tensor_mem_t<tensor_size_t, 2>& labels) const
 {
     ::get(m_feature, m_storage, m_mask, samples, labels);
 }

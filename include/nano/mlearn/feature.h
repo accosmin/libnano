@@ -293,17 +293,17 @@ namespace nano
         ///
         /// \brief access the feature as scalar values for the given set of samples.
         ///
-        void get(indices_cmap_t samples, tensor_mem_t<scalar_t, 4>& values);
+        void get(indices_cmap_t samples, tensor_mem_t<scalar_t, 4>& values) const;
 
         ///
         /// \brief access the feature as single-label indices for the given set of samples.
         ///
-        void get(indices_cmap_t samples, tensor_mem_t<tensor_size_t, 1>& labels);
+        void get(indices_cmap_t samples, tensor_mem_t<tensor_size_t, 1>& labels) const;
 
         ///
         /// \brief access the feature as multi-label indicator values for the given set of samples.
         ///
-        void get(indices_cmap_t samples, tensor_mem_t<tensor_size_t, 2>& labels);
+        void get(indices_cmap_t samples, tensor_mem_t<tensor_size_t, 2>& labels) const;
 
         ///
         /// \brief returns true if the feature is optional (aka some samples haven't been set).
@@ -327,6 +327,8 @@ namespace nano
         {
             return label < 0;
         }
+
+        // TODO: compute the fillmissing and the normalization part here!
 
     private:
 

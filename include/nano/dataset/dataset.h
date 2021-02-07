@@ -11,7 +11,7 @@ namespace nano
     using rdataset_t = dataset_factory_t::trobject;
 
     ///
-    /// \brief machine learning dataset consisting of a collection of samples.
+    /// \brief machine learning dataset consisting of a collection of iid samples.
     ///
     /// NB: each sample consists of:
     ///     - a fixed number of (input) feature values and

@@ -221,7 +221,7 @@ feature_t memory_flatten_dataset_iterator_t::target() const
     return m_dataset.tstorage().feature();
 }
 
-tensor3d_dims_t memory_flatten_dataset_iterator_t::target_dims() const\
+tensor3d_dims_t memory_flatten_dataset_iterator_t::target_dims() const
 {
     return m_dataset.tstorage().feature().dims();
 }
@@ -231,4 +231,3 @@ tensor4d_cmap_t memory_flatten_dataset_iterator_t::targets(tensor_range_t sample
     m_dataset.tstorage().get(m_samples.slice(samples), buffer);
     return buffer.tensor();
 }
-

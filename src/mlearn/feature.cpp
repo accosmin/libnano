@@ -617,6 +617,70 @@ void get(
     }
 }
 
+template <typename tscalar>
+feature_stats_t get(
+    const feature_t& feature,
+    const scalar_storage_t<tscalar>& tensor,
+    const feature_mask_t& mask,
+    const indices_cmap_t& samples)
+{
+    feature_stats_t stats;
+    stats.m_min.resize(feature.dims());
+    stats.m_max.resize(feature.dims());
+    stats.m_mean.resize(feature.dims());
+    stats.m_stdev.resize(feature.dims());
+
+    stats.m_mean.zero();
+    stats.m_stdev.zero();
+    stats.m_min.constant(std::numeric_limits<scalar_t>::max());
+    stats.m_max.constant(std::numeric_limits<scalar_t>::lowest());
+
+    for (const auto sample : samples)
+    {
+        if (::get(mask, sample))
+        {
+            const auto values = tensor.vector(sample).template cast<scalar_t>();
+
+            ++ stats.m_count;
+            stats.m_mean.array() += values.array();
+            stats.m_stdev.array() += values.array().square();
+            stats.m_min.array() = stats.m_min.array().min(values.array());
+            stats.m_max.array() = stats.m_max.array().max(values.array());
+        }
+    }
+
+    if (stats.m_count > 1)
+    {
+        const auto N = stats.m_count;
+        stats.m_stdev.array() = ((stats.m_stdev.array() - stats.m_mean.array().square() / N) / (N - 1)).sqrt();
+        stats.m_mean.array() /= N;
+    }
+
+    return stats;
+}
+
+template <typename tscalar>
+feature_stats_t get(
+    const feature_t& feature,
+    [[maybe_unused]] const sclass_storage_t<tscalar>& tensor,
+    [[maybe_unused]] const feature_mask_t& mask,
+    [[maybe_unused]] const indices_cmap_t& samples)
+{
+    critical0("cannot access single-label feature <", feature.name(), ">!");
+    return {};
+}
+
+template <typename tscalar>
+feature_stats_t get(
+    const feature_t& feature,
+    [[maybe_unused]] const mclass_storage_t<tscalar>& tensor,
+    [[maybe_unused]] const feature_mask_t& mask,
+    [[maybe_unused]] const indices_cmap_t& samples)
+{
+    critical0("cannot access multi-label feature <", feature.name(), ">!");
+    return {};
+}
+
 template <typename tvalue, size_t trank>
 void get(
     const feature_t& feature, const feature_storage_t::storage_t& storage, const feature_mask_t& mask,
@@ -678,4 +742,23 @@ bool feature_storage_t::optional() const
     }
 
     return false;
+}
+
+feature_stats_t feature_storage_t::stats(indices_cmap_t samples) const
+{
+    return std::visit(overloaded{
+        [&] (const scalar_storage_t<float>& tensor) { return ::get(m_feature, tensor, m_mask, samples); },
+        [&] (const scalar_storage_t<double>& tensor) { return ::get(m_feature, tensor, m_mask, samples); },
+        [&] (const scalar_storage_t<int8_t>& tensor) { return ::get(m_feature, tensor, m_mask, samples); },
+        [&] (const scalar_storage_t<int16_t>& tensor) { return ::get(m_feature, tensor, m_mask, samples); },
+        [&] (const scalar_storage_t<int32_t>& tensor) { return ::get(m_feature, tensor, m_mask, samples); },
+        [&] (const scalar_storage_t<int64_t>& tensor) { return ::get(m_feature, tensor, m_mask, samples); },
+        [&] (const scalar_storage_t<uint8_t>& tensor) { return ::get(m_feature, tensor, m_mask, samples); },
+        [&] (const scalar_storage_t<uint16_t>& tensor) { return ::get(m_feature, tensor, m_mask, samples); },
+        [&] (const scalar_storage_t<uint32_t>& tensor) { return ::get(m_feature, tensor, m_mask, samples); },
+        [&] (const scalar_storage_t<uint64_t>& tensor) { return ::get(m_feature, tensor, m_mask, samples); },
+        [&] (const sclass_storage_t<uint8_t>& tensor) { return ::get(m_feature, tensor, m_mask, samples); },
+        [&] (const sclass_storage_t<uint16_t>& tensor) { return ::get(m_feature, tensor, m_mask, samples); },
+        [&] (const mclass_storage_t<uint8_t>& tensor) { return ::get(m_feature, tensor, m_mask, samples); },
+    }, m_storage);
 }

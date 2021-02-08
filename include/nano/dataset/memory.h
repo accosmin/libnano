@@ -86,6 +86,8 @@ namespace nano
         mindices_cmap_t input(tensor_size_t feature, mindices_t& buffer) const override;
         tensor1d_cmap_t input(tensor_size_t feature, tensor1d_t& buffer) const override;
 
+        // TODO: need to flatten structured scalar features - one scalar feature per component
+
     private:
 
         // attributes

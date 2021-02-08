@@ -68,8 +68,9 @@ namespace nano
     /// \brief dataset iterator adapted to training and evaluating machine learning models
     ///     that map densely continuous inputs to targets (e.g. linear models, MLPs).
     ///
-    /// NB: optional inputs are supported by pre-processing the missing values accordingly.
+    /// NB: optional inputs are supported wby filling the missing values .
     /// NB: mixing continuous and discrete features is supported.
+    /// NB: structured continuous features are flatten so that a scalar feature is associated to each component.
     ///
     class flatten_dataset_iterator_t : public dataset_iterator_t
     {

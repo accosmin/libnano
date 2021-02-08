@@ -210,6 +210,18 @@ namespace nano
     using feature_mask_t = tensor_mem_t<uint8_t, 1>;
 
     ///
+    /// \brief per-feature statistics useful for the normalization of the input continuous feature values.
+    ///
+    /// NB: missing feature values are ignored when computing these statistics.
+    ///
+    struct feature_stats_t
+    {
+        tensor_size_t   m_count{0};         ///<
+        tensor3d_t      m_min, m_max;       ///<
+        tensor3d_t      m_mean, m_stdev;    ///<
+    };
+
+    ///
     /// \brief store the feature values of a collection of samples as compact as possible.
     ///
     class NANO_PUBLIC feature_storage_t
@@ -328,7 +340,12 @@ namespace nano
             return label < 0;
         }
 
-        // TODO: compute the fillmissing and the normalization part here!
+        ///
+        /// \brief returns the feature-wise statistics of the given samples.
+        ///
+        /// NB: this works only for scalar features.
+        ///
+        feature_stats_t stats(indices_cmap_t samples) const;
 
     private:
 

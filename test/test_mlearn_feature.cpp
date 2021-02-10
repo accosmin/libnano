@@ -459,40 +459,40 @@ UTEST_CASE(feature_storage_scalar)
             UTEST_REQUIRE_THROW(storage.set(16, "WHAT"), std::runtime_error);
             UTEST_CHECK_EQUAL(storage.optional(), true);
 
-            tensor_mem_t<scalar_t, 4> values;
-            tensor_mem_t<tensor_size_t, 1> labels;
+            tensor_mem_t<scalar_t, 4> scalars;
+            tensor_mem_t<tensor_size_t, 1> slabels;
             tensor_mem_t<tensor_size_t, 2> mlabels;
 
             const auto samples = ::nano::arange(0, 17);
-            UTEST_REQUIRE_NOTHROW(storage.get(samples, values));
-            UTEST_REQUIRE_THROW(storage.get(samples, labels), std::runtime_error);
+            UTEST_REQUIRE_NOTHROW(storage.get(samples, scalars));
+            UTEST_REQUIRE_THROW(storage.get(samples, slabels), std::runtime_error);
             UTEST_REQUIRE_THROW(storage.get(samples, mlabels), std::runtime_error);
 
-            UTEST_REQUIRE_EQUAL(values.dims(), cat_dims(17, dims));
-            UTEST_CHECK_CLOSE(values(0, 0, 0, 0), 11.0, 1e-12);
-            UTEST_CHECK_CLOSE(values(1, 0, 0, 0), 12.0, 1e-12);
-            UTEST_CHECK_CLOSE(values(2, 0, 0, 0), 13.0, 1e-12);
-            UTEST_CHECK_CLOSE(values(5, 0, 0, 0), 14.0, 1e-12);
-            UTEST_CHECK_CLOSE(values(7, 0, 0, 0), 21.0, 1e-12);
-            UTEST_CHECK_CLOSE(values(9, 0, 0, 0), 22.0, 1e-12);
-            UTEST_CHECK_CLOSE(values(10, 0, 0, 0), 23.0, 1e-12);
-            UTEST_CHECK_CLOSE(values(11, 0, 0, 0), 24.0, 1e-12);
-            UTEST_CHECK_CLOSE(values(12, 0, 0, 0), 32.0, 1e-12);
-            UTEST_CHECK_CLOSE(values(14, 0, 0, 0), 42.0, 1e-12);
+            UTEST_REQUIRE_EQUAL(scalars.dims(), cat_dims(17, dims));
+            UTEST_CHECK_CLOSE(scalars(0, 0, 0, 0), 11.0, 1e-12);
+            UTEST_CHECK_CLOSE(scalars(1, 0, 0, 0), 12.0, 1e-12);
+            UTEST_CHECK_CLOSE(scalars(2, 0, 0, 0), 13.0, 1e-12);
+            UTEST_CHECK_CLOSE(scalars(5, 0, 0, 0), 14.0, 1e-12);
+            UTEST_CHECK_CLOSE(scalars(7, 0, 0, 0), 21.0, 1e-12);
+            UTEST_CHECK_CLOSE(scalars(9, 0, 0, 0), 22.0, 1e-12);
+            UTEST_CHECK_CLOSE(scalars(10, 0, 0, 0), 23.0, 1e-12);
+            UTEST_CHECK_CLOSE(scalars(11, 0, 0, 0), 24.0, 1e-12);
+            UTEST_CHECK_CLOSE(scalars(12, 0, 0, 0), 32.0, 1e-12);
+            UTEST_CHECK_CLOSE(scalars(14, 0, 0, 0), 42.0, 1e-12);
             if (is_scalar)
             {
-                UTEST_CHECK_CLOSE(values(16, 0, 0, 0), 57.0, 1e-12);
+                UTEST_CHECK_CLOSE(scalars(16, 0, 0, 0), 57.0, 1e-12);
             }
 
-            UTEST_CHECK(feature_storage_t::missing(values(3, 0, 0, 0)));
-            UTEST_CHECK(feature_storage_t::missing(values(4, 0, 0, 0)));
-            UTEST_CHECK(feature_storage_t::missing(values(6, 0, 0, 0)));
-            UTEST_CHECK(feature_storage_t::missing(values(8, 0, 0, 0)));
-            UTEST_CHECK(feature_storage_t::missing(values(13, 0, 0, 0)));
-            UTEST_CHECK(feature_storage_t::missing(values(15, 0, 0, 0)));
+            UTEST_CHECK(feature_storage_t::missing(scalars(3, 0, 0, 0)));
+            UTEST_CHECK(feature_storage_t::missing(scalars(4, 0, 0, 0)));
+            UTEST_CHECK(feature_storage_t::missing(scalars(6, 0, 0, 0)));
+            UTEST_CHECK(feature_storage_t::missing(scalars(8, 0, 0, 0)));
+            UTEST_CHECK(feature_storage_t::missing(scalars(13, 0, 0, 0)));
+            UTEST_CHECK(feature_storage_t::missing(scalars(15, 0, 0, 0)));
             if (!is_scalar)
             {
-                UTEST_CHECK(feature_storage_t::missing(values(16, 0, 0, 0)));
+                UTEST_CHECK(feature_storage_t::missing(scalars(16, 0, 0, 0)));
             }
 
             feature_scalar_stats_t stats;
@@ -548,34 +548,21 @@ UTEST_CASE(feature_storage_sclass)
     UTEST_REQUIRE_THROW(storage.set(16, "WHAT"), std::runtime_error);
     UTEST_CHECK_EQUAL(storage.optional(), true);
 
-    tensor_mem_t<scalar_t, 4> values;
-    tensor_mem_t<tensor_size_t, 1> labels;
+    tensor_mem_t<scalar_t, 4> scalars;
+    tensor_mem_t<tensor_size_t, 1> slabels;
     tensor_mem_t<tensor_size_t, 2> mlabels;
 
     const auto samples = ::nano::arange(0, 17);
-    UTEST_REQUIRE_THROW(storage.get(samples, values), std::runtime_error);
-    UTEST_REQUIRE_NOTHROW(storage.get(samples, labels));
+    UTEST_REQUIRE_NOTHROW(storage.get(samples, slabels));
+    UTEST_REQUIRE_THROW(storage.get(samples, scalars), std::runtime_error);
     UTEST_REQUIRE_THROW(storage.get(samples, mlabels), std::runtime_error);
 
-    UTEST_REQUIRE_EQUAL(labels.size(), 17);
-    UTEST_CHECK_EQUAL(labels(0), 0);
-    UTEST_CHECK_EQUAL(labels(1), 1);
-    UTEST_CHECK_EQUAL(labels(2), 2);
-    UTEST_CHECK_EQUAL(labels(5), 3);
-    UTEST_CHECK_EQUAL(labels(7), 2);
-    UTEST_CHECK_EQUAL(labels(9), 1);
-    UTEST_CHECK_EQUAL(labels(10), 0);
-    UTEST_CHECK_EQUAL(labels(11), 1);
-    UTEST_CHECK_EQUAL(labels(12), 2);
-    UTEST_CHECK_EQUAL(labels(14), 3);
-    UTEST_CHECK_EQUAL(labels(16), 3);
-
-    UTEST_CHECK(feature_storage_t::missing(labels(3)));
-    UTEST_CHECK(feature_storage_t::missing(labels(4)));
-    UTEST_CHECK(feature_storage_t::missing(labels(6)));
-    UTEST_CHECK(feature_storage_t::missing(labels(8)));
-    UTEST_CHECK(feature_storage_t::missing(labels(13)));
-    UTEST_CHECK(feature_storage_t::missing(labels(15)));
+    const auto expected_slabels = tensor_mem_t<int, 1>{
+        make_dims(17),
+        {0, 1, 2, -1, -1, 3, -1, 2, -1, 1, 0, 1, 2, -1, 3, -1, 3}
+    };
+    UTEST_CHECK_EQUAL(slabels.dims(), make_dims(17));
+    UTEST_CHECK_EIGEN_CLOSE(slabels.vector().cast<int>(), expected_slabels.vector(), 1e-12);
 
     feature_sclass_stats_t stats;
     UTEST_REQUIRE_NOTHROW(stats = storage.sclass_stats(samples));
@@ -616,33 +603,39 @@ UTEST_CASE(feature_storage_mclass)
     UTEST_REQUIRE_THROW(storage.set(16, "WHAT"), std::runtime_error);
     UTEST_CHECK_EQUAL(storage.optional(), true);
 
-    tensor_mem_t<scalar_t, 4> values;
-    tensor_mem_t<tensor_size_t, 1> labels;
+    tensor_mem_t<scalar_t, 4> scalars;
+    tensor_mem_t<tensor_size_t, 1> slabels;
     tensor_mem_t<tensor_size_t, 2> mlabels;
 
     const auto samples = ::nano::arange(0, 17);
-    UTEST_REQUIRE_THROW(storage.get(samples, values), std::runtime_error);
-    UTEST_REQUIRE_THROW(storage.get(samples, labels), std::runtime_error);
     UTEST_REQUIRE_NOTHROW(storage.get(samples, mlabels));
+    UTEST_REQUIRE_THROW(storage.get(samples, scalars), std::runtime_error);
+    UTEST_REQUIRE_THROW(storage.get(samples, slabels), std::runtime_error);
 
-    UTEST_REQUIRE_EQUAL(mlabels.dims(), make_dims(17, 3));
-    UTEST_CHECK_EQUAL(mlabels(0, 0), 0); UTEST_CHECK_EQUAL(mlabels(0, 1), 0); UTEST_CHECK_EQUAL(mlabels(0, 2), 0);
-    UTEST_CHECK_EQUAL(mlabels(1, 0), 0); UTEST_CHECK_EQUAL(mlabels(1, 1), 0); UTEST_CHECK_EQUAL(mlabels(1, 2), 1);
-    UTEST_CHECK_EQUAL(mlabels(2, 0), 1); UTEST_CHECK_EQUAL(mlabels(2, 1), 1); UTEST_CHECK_EQUAL(mlabels(2, 2), 0);
-    UTEST_CHECK_EQUAL(mlabels(5, 0), 1); UTEST_CHECK_EQUAL(mlabels(5, 1), 1); UTEST_CHECK_EQUAL(mlabels(5, 2), 1);
-    UTEST_CHECK_EQUAL(mlabels(7, 0), 0); UTEST_CHECK_EQUAL(mlabels(7, 1), 1); UTEST_CHECK_EQUAL(mlabels(7, 2), 0);
-    UTEST_CHECK_EQUAL(mlabels(9, 0), 1); UTEST_CHECK_EQUAL(mlabels(9, 1), 0); UTEST_CHECK_EQUAL(mlabels(9, 2), 0);
-    UTEST_CHECK_EQUAL(mlabels(10, 0), 0); UTEST_CHECK_EQUAL(mlabels(10, 1), 0); UTEST_CHECK_EQUAL(mlabels(10, 2), 0);
-    UTEST_CHECK_EQUAL(mlabels(11, 0), 1); UTEST_CHECK_EQUAL(mlabels(11, 1), 1); UTEST_CHECK_EQUAL(mlabels(11, 2), 1);
-    UTEST_CHECK_EQUAL(mlabels(12, 0), 1); UTEST_CHECK_EQUAL(mlabels(12, 1), 0); UTEST_CHECK_EQUAL(mlabels(12, 2), 0);
-    UTEST_CHECK_EQUAL(mlabels(14, 0), 0); UTEST_CHECK_EQUAL(mlabels(14, 1), 1); UTEST_CHECK_EQUAL(mlabels(14, 2), 1);
-
-    for (const auto sample : {3, 4, 6, 8, 13, 15})
-    {
-        UTEST_CHECK(feature_storage_t::missing(mlabels(sample, 0)));
-        UTEST_CHECK(feature_storage_t::missing(mlabels(sample, 1)));
-        UTEST_CHECK(feature_storage_t::missing(mlabels(sample, 2)));
-    }
+    const auto expected_mlabels = tensor_mem_t<int, 2>{
+        make_dims(17, 3),
+        {
+            +0, +0, +0,
+            +0, +0, +1,
+            +1, +1, +0,
+            -1, -1, -1,
+            -1, -1, -1,
+            +1, +1, +1,
+            -1, -1, -1,
+            +0, +1, +0,
+            -1, -1, -1,
+            +1, +0, +0,
+            +0, +0, +0,
+            +1, +1, +1,
+            +1, +0, +0,
+            -1, -1, -1,
+            +0, +1, +1,
+            -1, -1, -1,
+            -1, -1, -1
+        }
+    };
+    UTEST_CHECK_EQUAL(mlabels.dims(), make_dims(17, 3));
+    UTEST_CHECK_EIGEN_CLOSE(mlabels.vector().cast<int>(), expected_mlabels.vector(), 1e-12);
 
     feature_mclass_stats_t stats;
     UTEST_REQUIRE_NOTHROW(stats = storage.mclass_stats(samples));
@@ -650,8 +643,6 @@ UTEST_CASE(feature_storage_mclass)
     UTEST_CHECK_EQUAL(stats.m_class_counts(0), 5);
     UTEST_CHECK_EQUAL(stats.m_class_counts(1), 5);
     UTEST_CHECK_EQUAL(stats.m_class_counts(2), 4);
-
-    UTEST_CHECK_THROW(storage.scalar_stats(samples), std::runtime_error);
 
     UTEST_CHECK_THROW(storage.scalar_stats(samples), std::runtime_error);
     UTEST_CHECK_THROW(storage.sclass_stats(samples), std::runtime_error);

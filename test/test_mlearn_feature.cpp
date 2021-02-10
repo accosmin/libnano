@@ -495,8 +495,8 @@ UTEST_CASE(feature_storage_scalar)
                 UTEST_CHECK(feature_storage_t::missing(values(16, 0, 0, 0)));
             }
 
-            feature_stats_t stats;
-            UTEST_REQUIRE_NOTHROW(stats = storage.stats(samples));
+            feature_scalar_stats_t stats;
+            UTEST_REQUIRE_NOTHROW(stats = storage.scalar_stats(samples));
             UTEST_CHECK_EQUAL(stats.m_min.dims(), dims);
             UTEST_CHECK_EQUAL(stats.m_max.dims(), dims);
             UTEST_CHECK_EQUAL(stats.m_mean.dims(), dims);
@@ -511,8 +511,11 @@ UTEST_CASE(feature_storage_scalar)
             UTEST_CHECK_CLOSE(stats.m_mean.min(), is_scalar ? (271.0/11.0) : 21.4, 1e-12);
             UTEST_CHECK_CLOSE(stats.m_mean.max(), is_scalar ? (271.0/11.0) : 21.4, 1e-12);
 
-            UTEST_CHECK_CLOSE(stats.m_stdev.min(), is_scalar ? 14.214589176425 : 9.822875795249, 1e-7);
-            UTEST_CHECK_CLOSE(stats.m_stdev.max(), is_scalar ? 14.214589176425 : 9.822875795249, 1e-7);
+            UTEST_CHECK_CLOSE(stats.m_stdev.min(), is_scalar ? 14.214589176425 : 9.822875795249, 1e-12);
+            UTEST_CHECK_CLOSE(stats.m_stdev.max(), is_scalar ? 14.214589176425 : 9.822875795249, 1e-12);
+
+            UTEST_CHECK_THROW(storage.sclass_stats(samples), std::runtime_error);
+            UTEST_CHECK_THROW(storage.mclass_stats(samples), std::runtime_error);
         }
     }
 }
@@ -574,7 +577,16 @@ UTEST_CASE(feature_storage_sclass)
     UTEST_CHECK(feature_storage_t::missing(labels(13)));
     UTEST_CHECK(feature_storage_t::missing(labels(15)));
 
-    UTEST_CHECK_THROW(storage.stats(samples), std::runtime_error);
+    feature_sclass_stats_t stats;
+    UTEST_REQUIRE_NOTHROW(stats = storage.sclass_stats(samples));
+    UTEST_REQUIRE_EQUAL(stats.m_class_counts.dims(), make_dims(4));
+    UTEST_CHECK_EQUAL(stats.m_class_counts(0), 2);
+    UTEST_CHECK_EQUAL(stats.m_class_counts(1), 3);
+    UTEST_CHECK_EQUAL(stats.m_class_counts(2), 3);
+    UTEST_CHECK_EQUAL(stats.m_class_counts(3), 3);
+
+    UTEST_CHECK_THROW(storage.scalar_stats(samples), std::runtime_error);
+    UTEST_CHECK_THROW(storage.mclass_stats(samples), std::runtime_error);
 }
 
 UTEST_CASE(feature_storage_mclass)
@@ -632,7 +644,17 @@ UTEST_CASE(feature_storage_mclass)
         UTEST_CHECK(feature_storage_t::missing(mlabels(sample, 2)));
     }
 
-    UTEST_CHECK_THROW(storage.stats(samples), std::runtime_error);
+    feature_mclass_stats_t stats;
+    UTEST_REQUIRE_NOTHROW(stats = storage.mclass_stats(samples));
+    UTEST_REQUIRE_EQUAL(stats.m_class_counts.dims(), make_dims(3));
+    UTEST_CHECK_EQUAL(stats.m_class_counts(0), 5);
+    UTEST_CHECK_EQUAL(stats.m_class_counts(1), 5);
+    UTEST_CHECK_EQUAL(stats.m_class_counts(2), 4);
+
+    UTEST_CHECK_THROW(storage.scalar_stats(samples), std::runtime_error);
+
+    UTEST_CHECK_THROW(storage.scalar_stats(samples), std::runtime_error);
+    UTEST_CHECK_THROW(storage.sclass_stats(samples), std::runtime_error);
 }
 
 UTEST_END_MODULE()

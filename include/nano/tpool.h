@@ -187,11 +187,19 @@ namespace nano
         }
 
         ///
-        /// \brief number of available worker threads
+        /// \brief returns the number of available worker threads.
         ///
         static size_t size()
         {
             return std::max(size_t(1), static_cast<size_t>(std::thread::hardware_concurrency()));
+        }
+
+        ///
+        /// \brief returns the underlying threads.
+        ///
+        const auto& threads() const
+        {
+            return m_threads;
         }
 
     private:

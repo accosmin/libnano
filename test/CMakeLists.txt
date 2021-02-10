@@ -32,6 +32,7 @@ make_test(test_mlearn_cluster NANO::nano)
 make_test(test_mlearn_feature NANO::nano)
 make_test(test_mlearn_elemwise NANO::nano)
 
+make_test(test_dataset_memory NANO::nano)
 make_test(test_dataset_dropcol NANO::nano)
 make_test(test_dataset_shuffle NANO::nano)
 make_test(test_dataset_tabular NANO::nano)

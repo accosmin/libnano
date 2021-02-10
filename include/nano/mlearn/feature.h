@@ -210,15 +210,31 @@ namespace nano
     using feature_mask_t = tensor_mem_t<uint8_t, 1>;
 
     ///
-    /// \brief per-feature statistics useful for the normalization of the input continuous feature values.
+    /// \brief per-feature statistics for continuous feature values
+    ///     (e.g. useful for normalizing inputs).
     ///
     /// NB: missing feature values are ignored when computing these statistics.
     ///
-    struct feature_stats_t
+    struct feature_scalar_stats_t
     {
-        tensor_size_t   m_count{0};         ///<
+        tensor_size_t   m_count{0};         ///< total number of samples
         tensor3d_t      m_min, m_max;       ///<
         tensor3d_t      m_mean, m_stdev;    ///<
+    };
+
+    ///
+    /// \brief per-feature statistics for single-label and multi-label discrete feature values
+    ///     (e.g. useful for fixing unbalanced classification problems).
+    ///
+    /// NB: missing feature values are ignored when computing these statistics.
+    ///
+    struct feature_sclass_stats_t
+    {
+        indices_t       m_class_counts{0};  ///< number of samples per class (label)
+    };
+    struct feature_mclass_stats_t
+    {
+        indices_t       m_class_counts{0};  ///< number of samples per class (label)
     };
 
     ///
@@ -343,9 +359,9 @@ namespace nano
         ///
         /// \brief returns the feature-wise statistics of the given samples.
         ///
-        /// NB: this works only for scalar features.
-        ///
-        feature_stats_t stats(indices_cmap_t samples) const;
+        feature_scalar_stats_t scalar_stats(indices_cmap_t samples) const;
+        feature_sclass_stats_t sclass_stats(indices_cmap_t samples) const;
+        feature_mclass_stats_t mclass_stats(indices_cmap_t samples) const;
 
     private:
 

@@ -89,27 +89,6 @@ namespace nano
     }
 
     ///
-    /// \brief method to fill missing input values.
-    ///
-    enum class fillmissing : int32_t
-    {
-        none = 0,       ///< missing inputs used as is, the model should handle this case explicitly
-        mean,           ///< mean for scalar inputs,
-        median
-    };
-
-    template <>
-    inline enum_map_t<fillmissing> enum_string<fillmissing>()
-    {
-        return
-        {
-            { fillmissing::none,        "none" },
-            { fillmissing::mean,        "mean" },
-            { fillmissing::median,      "median" }
-        };
-    }
-
-    ///
     /// \brief input normalization (feature scaling) methods.
     ///
     enum class normalization : int32_t

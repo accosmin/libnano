@@ -59,6 +59,9 @@ namespace nano
 
         virtual bool cache_inputs(int64_t bytes, indices_cmap_t features, execution) = 0;
 
+        // TODO: keep the structure for scalar structured features
+        // TODO: return structured features as element-wise scalar features as well
+
         virtual sindices_cmap_t input(tensor_size_t feature, sindices_t& buffer) const = 0;
         virtual mindices_cmap_t input(tensor_size_t feature, mindices_t& buffer) const = 0;
         virtual tensor1d_cmap_t input(tensor_size_t feature, tensor1d_t& buffer) const = 0;
@@ -68,7 +71,6 @@ namespace nano
     /// \brief dataset iterator adapted to training and evaluating machine learning models
     ///     that map densely continuous inputs to targets (e.g. linear models, MLPs).
     ///
-    /// NB: optional inputs are supported wby filling the missing values .
     /// NB: mixing continuous and discrete features is supported.
     /// NB: structured continuous features are flatten so that a scalar feature is associated to each component.
     ///
@@ -76,8 +78,9 @@ namespace nano
     {
     public:
 
-        // TODO: support for pre-processing missing values.
-        // TODO: support for normalizing scalar features
+        virtual void normalize(normalization) = 0;
+
+        // TODO: labels are expanded {-1, +1} with zero indicating a missing value
 
         virtual tensor1d_dims_t inputs_dims() const = 0;
         virtual tensor2d_cmap_t inputs(tensor_range_t samples, tensor2d_t& buffer) const = 0;
@@ -87,13 +90,14 @@ namespace nano
     /// \brief dataset iterator adapted to training and evaluating machine learning models
     ///     that map densely continuous structured inputs to targets (e.g. convolution neural networks).
     ///
-    /// NB: optional inputs are not supported.
     /// NB: discrete inputs are not supported.
     /// NB: the structure of the inputs (e.g. images) is preserved if possible.
     ///
     class structured_dataset_iterator_t : public dataset_iterator_t
     {
     public:
+
+        virtual void normalize(normalization) = 0;
 
         virtual tensor3d_dims_t inputs_dims() const = 0;
         virtual tensor4d_cmap_t inputs(tensor_range_t samples, tensor4d_t& buffer) const = 0;

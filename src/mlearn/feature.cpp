@@ -96,11 +96,6 @@ scalar_t feature_t::placeholder_value()
     return std::numeric_limits<scalar_t>::quiet_NaN();
 }
 
-bool feature_t::missing(scalar_t value)
-{
-    return !std::isfinite(value);
-}
-
 string_t feature_t::label(scalar_t value) const
 {
     if (!discrete())
@@ -231,29 +226,6 @@ feature_storage_t::feature_storage_t(feature_t feature, tensor_size_t samples) :
 
     m_mask.resize((samples + 7) / 8);
     m_mask.zero();
-}
-
-// see https://en.cppreference.com/w/cpp/utility/variant/visit
-template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
-template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
-
-tensor_size_t feature_storage_t::samples() const
-{
-    return std::visit(overloaded{
-        [] (const scalar_storage_t<float>& tensor) { return tensor.size<0>(); },
-        [] (const scalar_storage_t<double>& tensor) { return tensor.size<0>(); },
-        [] (const scalar_storage_t<int8_t>& tensor) { return tensor.size<0>(); },
-        [] (const scalar_storage_t<int16_t>& tensor) { return tensor.size<0>(); },
-        [] (const scalar_storage_t<int32_t>& tensor) { return tensor.size<0>(); },
-        [] (const scalar_storage_t<int64_t>& tensor) { return tensor.size<0>(); },
-        [] (const scalar_storage_t<uint8_t>& tensor) { return tensor.size<0>(); },
-        [] (const scalar_storage_t<uint16_t>& tensor) { return tensor.size<0>(); },
-        [] (const scalar_storage_t<uint32_t>& tensor) { return tensor.size<0>(); },
-        [] (const scalar_storage_t<uint64_t>& tensor) { return tensor.size<0>(); },
-        [] (const sclass_storage_t<uint8_t>& tensor) { return tensor.size<0>(); },
-        [] (const sclass_storage_t<uint16_t>& tensor) { return tensor.size<0>(); },
-        [] (const mclass_storage_t<uint8_t>& tensor) { return tensor.size<0>(); },
-    }, m_storage);
 }
 
 namespace {
@@ -417,6 +389,7 @@ void set(const feature_t& feature, tensor_mem_t<tscalar, 4>& tensor, tensor_size
 template <typename tvalue, typename tsample>
 void set(const feature_t& feature, feature_storage_t::storage_t& storage, const tsample& sample, const tvalue& value)
 {
+
     std::visit(overloaded{
         [&] (scalar_storage_t<float>& tensor) { ::set(feature, tensor, sample, value); },
         [&] (scalar_storage_t<double>& tensor) { ::set(feature, tensor, sample, value); },

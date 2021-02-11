@@ -140,9 +140,23 @@ UTEST_CASE(_default)
     UTEST_CHECK_EQUAL(feature.dims(), make_dims(1, 1, 1));
     UTEST_CHECK_EQUAL(feature.type(), feature_type::float32);
     UTEST_CHECK_EQUAL(static_cast<task_type>(feature), task_type::regression);
+}
+
+UTEST_CASE(missing)
+{
+    UTEST_CHECK(feature_t::missing(tensor_size_t(-1)));
+    UTEST_CHECK(!feature_t::missing(tensor_size_t(+0)));
+    UTEST_CHECK(!feature_t::missing(tensor_size_t(+1)));
+    UTEST_CHECK(!feature_t::missing(tensor_size_t(+123)));
 
     UTEST_CHECK(feature_t::missing(feature_t::placeholder_value()));
-    UTEST_CHECK(!feature_t::missing(0));
+    UTEST_CHECK(feature_t::missing(std::numeric_limits<scalar_t>::infinity()));
+    UTEST_CHECK(feature_t::missing(std::numeric_limits<scalar_t>::quiet_NaN()));
+
+    UTEST_CHECK(!feature_t::missing(-1.0));
+    UTEST_CHECK(!feature_t::missing(+0.0));
+    UTEST_CHECK(!feature_t::missing(+1.0));
+    UTEST_CHECK(!feature_t::missing(+123.0));
 }
 
 UTEST_CASE(task_type)
@@ -363,22 +377,6 @@ UTEST_CASE(feature_info)
     }
 }
 
-UTEST_CASE(feature_storage_missing)
-{
-    UTEST_CHECK(feature_storage_t::missing(tensor_size_t(-1)));
-    UTEST_CHECK(!feature_storage_t::missing(tensor_size_t(+0)));
-    UTEST_CHECK(!feature_storage_t::missing(tensor_size_t(+1)));
-    UTEST_CHECK(!feature_storage_t::missing(tensor_size_t(+123)));
-
-    UTEST_CHECK(feature_storage_t::missing(std::numeric_limits<scalar_t>::infinity()));
-    UTEST_CHECK(feature_storage_t::missing(std::numeric_limits<scalar_t>::quiet_NaN()));
-
-    UTEST_CHECK(!feature_storage_t::missing(-1.0));
-    UTEST_CHECK(!feature_storage_t::missing(+0.0));
-    UTEST_CHECK(!feature_storage_t::missing(+1.0));
-    UTEST_CHECK(!feature_storage_t::missing(+123.0));
-}
-
 UTEST_CASE(feature_storage)
 {
     const auto storage = feature_storage_t{};
@@ -484,15 +482,15 @@ UTEST_CASE(feature_storage_scalar)
                 UTEST_CHECK_CLOSE(scalars(16, 0, 0, 0), 57.0, 1e-12);
             }
 
-            UTEST_CHECK(feature_storage_t::missing(scalars(3, 0, 0, 0)));
-            UTEST_CHECK(feature_storage_t::missing(scalars(4, 0, 0, 0)));
-            UTEST_CHECK(feature_storage_t::missing(scalars(6, 0, 0, 0)));
-            UTEST_CHECK(feature_storage_t::missing(scalars(8, 0, 0, 0)));
-            UTEST_CHECK(feature_storage_t::missing(scalars(13, 0, 0, 0)));
-            UTEST_CHECK(feature_storage_t::missing(scalars(15, 0, 0, 0)));
+            UTEST_CHECK(feature_t::missing(scalars(3, 0, 0, 0)));
+            UTEST_CHECK(feature_t::missing(scalars(4, 0, 0, 0)));
+            UTEST_CHECK(feature_t::missing(scalars(6, 0, 0, 0)));
+            UTEST_CHECK(feature_t::missing(scalars(8, 0, 0, 0)));
+            UTEST_CHECK(feature_t::missing(scalars(13, 0, 0, 0)));
+            UTEST_CHECK(feature_t::missing(scalars(15, 0, 0, 0)));
             if (!is_scalar)
             {
-                UTEST_CHECK(feature_storage_t::missing(scalars(16, 0, 0, 0)));
+                UTEST_CHECK(feature_t::missing(scalars(16, 0, 0, 0)));
             }
 
             feature_scalar_stats_t stats;

@@ -3,6 +3,7 @@
 #include <cmath>
 #include <variant>
 #include <nano/arch.h>
+#include <nano/util.h>
 #include <nano/tensor.h>
 #include <nano/mlearn/enums.h>
 
@@ -71,9 +72,22 @@ namespace nano
         static scalar_t placeholder_value();
 
         ///
-        /// \brief returns true if the given stored value indicates that the feature value is missing.
+        /// \brief returns true if the given scalar value is valid,
+        ///     otherwise it indicates a missing feature value for some sample.
         ///
-        static bool missing(const scalar_t value);
+        static bool missing(scalar_t value)
+        {
+            return !std::isfinite(value);
+        }
+
+        ///
+        /// \brief returns true if the given label index  is valid,
+        ///     otherwise it indicates a missing feature value for some sample.
+        ///
+        static bool missing(tensor_size_t label)
+        {
+            return label < 0;
+        }
 
         ///
         /// \brief returns the label associated to the given feature value (if possible).
@@ -273,9 +287,58 @@ namespace nano
         const storage_t& storage() const { return m_storage; }
 
         ///
+        /// \brief mutable access to the internal storage.
+        ///
+        template <typename toperator>
+        auto visit(const toperator& op)
+        {
+            return std::visit(overloaded{
+                [&] (scalar_storage_t<float>& buffer) { return op(buffer.tensor()); },
+                [&] (scalar_storage_t<double>& buffer) { return op(buffer.tensor()); },
+                [&] (scalar_storage_t<int8_t>& buffer) { return op(buffer.tensor()); },
+                [&] (scalar_storage_t<int16_t>& buffer) { return op(buffer.tensor()); },
+                [&] (scalar_storage_t<int32_t>& buffer) { return op(buffer.tensor()); },
+                [&] (scalar_storage_t<int64_t>& buffer) { return op(buffer.tensor()); },
+                [&] (scalar_storage_t<uint8_t>& buffer) { return op(buffer.tensor()); },
+                [&] (scalar_storage_t<uint16_t>& buffer) { return op(buffer.tensor()); },
+                [&] (scalar_storage_t<uint32_t>& buffer) { return op(buffer.tensor()); },
+                [&] (scalar_storage_t<uint64_t>& buffer) { return op(buffer.tensor()); },
+                [&] (sclass_storage_t<uint8_t>& buffer) { return op(buffer.tensor()); },
+                [&] (sclass_storage_t<uint16_t>& buffer) { return op(buffer.tensor()); },
+                [&] (mclass_storage_t<uint8_t>& buffer) { return op(buffer.tensor()); },
+            }, m_storage);
+        }
+
+        ///
+        /// \brief constant access to the internal storage.
+        ///
+        template <typename toperator>
+        auto visit(const toperator& op) const
+        {
+            return std::visit(overloaded{
+                [&] (const scalar_storage_t<float>& buffer) { return op(buffer.tensor()); },
+                [&] (const scalar_storage_t<double>& buffer) { return op(buffer.tensor()); },
+                [&] (const scalar_storage_t<int8_t>& buffer) { return op(buffer.tensor()); },
+                [&] (const scalar_storage_t<int16_t>& buffer) { return op(buffer.tensor()); },
+                [&] (const scalar_storage_t<int32_t>& buffer) { return op(buffer.tensor()); },
+                [&] (const scalar_storage_t<int64_t>& buffer) { return op(buffer.tensor()); },
+                [&] (const scalar_storage_t<uint8_t>& buffer) { return op(buffer.tensor()); },
+                [&] (const scalar_storage_t<uint16_t>& buffer) { return op(buffer.tensor()); },
+                [&] (const scalar_storage_t<uint32_t>& buffer) { return op(buffer.tensor()); },
+                [&] (const scalar_storage_t<uint64_t>& buffer) { return op(buffer.tensor()); },
+                [&] (const sclass_storage_t<uint8_t>& buffer) { return op(buffer.tensor()); },
+                [&] (const sclass_storage_t<uint16_t>& buffer) { return op(buffer.tensor()); },
+                [&] (const mclass_storage_t<uint8_t>& buffer) { return op(buffer.tensor()); },
+            }, m_storage);
+        }
+
+        ///
         /// \brief returns the number of stored samples.
         ///
-        tensor_size_t samples() const;
+        tensor_size_t samples() const
+        {
+            return visit([] (const auto& tensor) { return tensor.template size<0>(); });
+        }
 
         ///
         /// \brief set the feature value(s) of a sample.
@@ -337,24 +400,6 @@ namespace nano
         /// \brief returns true if the feature is optional (aka some samples haven't been set).
         ///
         bool optional() const;
-
-        ///
-        /// \brief returns true if the given scalar value is valid,
-        ///     otherwise it indicates a missing feature value for some sample.
-        ///
-        static bool missing(scalar_t value)
-        {
-            return !std::isfinite(value);
-        }
-
-        ///
-        /// \brief returns true if the given label index  is valid,
-        ///     otherwise it indicates a missing feature value for some sample.
-        ///
-        static bool missing(tensor_size_t label)
-        {
-            return label < 0;
-        }
 
         ///
         /// \brief returns the feature-wise statistics of the given samples.

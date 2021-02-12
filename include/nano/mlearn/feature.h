@@ -24,7 +24,7 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        feature_t();
+        feature_t() = default;
 
         ///
         /// \brief constructor
@@ -171,7 +171,7 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        feature_info_t();
+        feature_info_t() = default;
 
         ///
         /// \brief constructor
@@ -277,7 +277,7 @@ namespace nano
             mclass_storage_t<uint8_t>
         >;
 
-        feature_storage_t();
+        feature_storage_t() = default;
         feature_storage_t(feature_t, tensor_size_t samples);
 
         ///
@@ -287,48 +287,25 @@ namespace nano
         const storage_t& storage() const { return m_storage; }
 
         ///
-        /// \brief mutable access to the internal storage.
-        ///
-        template <typename toperator>
-        auto visit(const toperator& op)
-        {
-            return std::visit(overloaded{
-                [&] (scalar_storage_t<float>& buffer) { return op(buffer.tensor()); },
-                [&] (scalar_storage_t<double>& buffer) { return op(buffer.tensor()); },
-                [&] (scalar_storage_t<int8_t>& buffer) { return op(buffer.tensor()); },
-                [&] (scalar_storage_t<int16_t>& buffer) { return op(buffer.tensor()); },
-                [&] (scalar_storage_t<int32_t>& buffer) { return op(buffer.tensor()); },
-                [&] (scalar_storage_t<int64_t>& buffer) { return op(buffer.tensor()); },
-                [&] (scalar_storage_t<uint8_t>& buffer) { return op(buffer.tensor()); },
-                [&] (scalar_storage_t<uint16_t>& buffer) { return op(buffer.tensor()); },
-                [&] (scalar_storage_t<uint32_t>& buffer) { return op(buffer.tensor()); },
-                [&] (scalar_storage_t<uint64_t>& buffer) { return op(buffer.tensor()); },
-                [&] (sclass_storage_t<uint8_t>& buffer) { return op(buffer.tensor()); },
-                [&] (sclass_storage_t<uint16_t>& buffer) { return op(buffer.tensor()); },
-                [&] (mclass_storage_t<uint8_t>& buffer) { return op(buffer.tensor()); },
-            }, m_storage);
-        }
-
-        ///
         /// \brief constant access to the internal storage.
         ///
         template <typename toperator>
         auto visit(const toperator& op) const
         {
             return std::visit(overloaded{
-                [&] (const scalar_storage_t<float>& buffer) { return op(buffer.tensor()); },
-                [&] (const scalar_storage_t<double>& buffer) { return op(buffer.tensor()); },
-                [&] (const scalar_storage_t<int8_t>& buffer) { return op(buffer.tensor()); },
-                [&] (const scalar_storage_t<int16_t>& buffer) { return op(buffer.tensor()); },
-                [&] (const scalar_storage_t<int32_t>& buffer) { return op(buffer.tensor()); },
-                [&] (const scalar_storage_t<int64_t>& buffer) { return op(buffer.tensor()); },
-                [&] (const scalar_storage_t<uint8_t>& buffer) { return op(buffer.tensor()); },
-                [&] (const scalar_storage_t<uint16_t>& buffer) { return op(buffer.tensor()); },
-                [&] (const scalar_storage_t<uint32_t>& buffer) { return op(buffer.tensor()); },
-                [&] (const scalar_storage_t<uint64_t>& buffer) { return op(buffer.tensor()); },
-                [&] (const sclass_storage_t<uint8_t>& buffer) { return op(buffer.tensor()); },
-                [&] (const sclass_storage_t<uint16_t>& buffer) { return op(buffer.tensor()); },
-                [&] (const mclass_storage_t<uint8_t>& buffer) { return op(buffer.tensor()); },
+                [&] (const scalar_storage_t<float>& tensor) { return op(tensor); },
+                [&] (const scalar_storage_t<double>& tensor) { return op(tensor); },
+                [&] (const scalar_storage_t<int8_t>& tensor) { return op(tensor); },
+                [&] (const scalar_storage_t<int16_t>& tensor) { return op(tensor); },
+                [&] (const scalar_storage_t<int32_t>& tensor) { return op(tensor); },
+                [&] (const scalar_storage_t<int64_t>& tensor) { return op(tensor); },
+                [&] (const scalar_storage_t<uint8_t>& tensor) { return op(tensor); },
+                [&] (const scalar_storage_t<uint16_t>& tensor) { return op(tensor); },
+                [&] (const scalar_storage_t<uint32_t>& tensor) { return op(tensor); },
+                [&] (const scalar_storage_t<uint64_t>& tensor) { return op(tensor); },
+                [&] (const sclass_storage_t<uint8_t>& tensor) { return op(tensor); },
+                [&] (const sclass_storage_t<uint16_t>& tensor) { return op(tensor); },
+                [&] (const mclass_storage_t<uint8_t>& tensor) { return op(tensor); },
             }, m_storage);
         }
 
@@ -412,6 +389,26 @@ namespace nano
 
         void set(tensor_size_t sample);
         void set(indices_cmap_t samples);
+
+        template <typename toperator>
+        auto visit(const toperator& op)
+        {
+            return std::visit(overloaded{
+                [&] (scalar_storage_t<float>& tensor) { return op(tensor); },
+                [&] (scalar_storage_t<double>& tensor) { return op(tensor); },
+                [&] (scalar_storage_t<int8_t>& tensor) { return op(tensor); },
+                [&] (scalar_storage_t<int16_t>& tensor) { return op(tensor); },
+                [&] (scalar_storage_t<int32_t>& tensor) { return op(tensor); },
+                [&] (scalar_storage_t<int64_t>& tensor) { return op(tensor); },
+                [&] (scalar_storage_t<uint8_t>& tensor) { return op(tensor); },
+                [&] (scalar_storage_t<uint16_t>& tensor) { return op(tensor); },
+                [&] (scalar_storage_t<uint32_t>& tensor) { return op(tensor); },
+                [&] (scalar_storage_t<uint64_t>& tensor) { return op(tensor); },
+                [&] (sclass_storage_t<uint8_t>& tensor) { return op(tensor); },
+                [&] (sclass_storage_t<uint16_t>& tensor) { return op(tensor); },
+                [&] (mclass_storage_t<uint8_t>& tensor) { return op(tensor); },
+            }, m_storage);
+        }
 
         // attributes
         feature_t       m_feature;  ///<

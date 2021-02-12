@@ -14,15 +14,6 @@ static auto make_tensor(tvalue value, tensor_dims_t<trank> dims)
 template <typename tvalue>
 static void check_set_scalar(feature_storage_t& storage, tensor_size_t sample, tvalue value, tensor3d_dims_t dims)
 {
-    // cannot set multi-label indices
-    for (const auto& values_nok : {
-        make_tensor<tvalue, 1>(value, make_dims(1)),
-        make_tensor<tvalue, 1>(value, make_dims(10)),
-    })
-    {
-        UTEST_REQUIRE_THROW(storage.set(sample, values_nok), std::runtime_error);
-    }
-
     // check if possible to set with scalar
     if (::nano::size(dims) == 1)
     {
@@ -37,14 +28,18 @@ static void check_set_scalar(feature_storage_t& storage, tensor_size_t sample, t
     const auto values = make_tensor<tvalue, 3>(value, dims);
     UTEST_REQUIRE_NOTHROW(storage.set(sample, values));
 
+    const auto values1d = make_tensor<tvalue, 1>(value, make_dims(::nano::size(dims)));
+    UTEST_REQUIRE_NOTHROW(storage.set(sample, values1d));
+
     // cannot set with incompatible tensor
-    const auto values_nok = make_tensor<tvalue, 3>(
-        value,
-        make_dims(
-            std::get<0>(dims),
-            std::get<1>(dims) + 1,
-            std::get<2>(dims)));
-    UTEST_REQUIRE_THROW(storage.set(sample, values_nok), std::runtime_error);
+    {
+        const auto values_nok = make_tensor<tvalue, 1>(value, make_dims(10));
+        UTEST_REQUIRE_THROW(storage.set(sample, values_nok), std::runtime_error);
+    }
+    {
+        const auto values_nok = make_tensor<tvalue, 3>(value, make_dims(std::get<0>(dims), std::get<1>(dims) + 1, std::get<2>(dims)));
+        UTEST_REQUIRE_THROW(storage.set(sample, values_nok), std::runtime_error);
+    }
 
     // cannot set if the sample index is invalid
     for (const auto invalid_sample : {-1, 100})

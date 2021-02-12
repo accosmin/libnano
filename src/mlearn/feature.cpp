@@ -3,8 +3,6 @@
 
 using namespace nano;
 
-feature_t::feature_t() = default;
-
 feature_t::feature_t(string_t name) :
     m_name(std::move(name))
 {
@@ -138,8 +136,6 @@ std::ostream& ::nano::operator<<(std::ostream& stream, const feature_t& feature)
     return stream << "]," << (feature.optional() ? "optional" : "mandatory");
 }
 
-feature_info_t::feature_info_t() = default;
-
 feature_info_t::feature_info_t(tensor_size_t feature, tensor_size_t count, scalar_t importance) :
     m_feature(feature),
     m_count(count),
@@ -167,8 +163,6 @@ void feature_info_t::importance(scalar_t importance)
 {
     m_importance = importance;
 }
-
-feature_storage_t::feature_storage_t() = default;
 
 feature_storage_t::feature_storage_t(feature_t feature, tensor_size_t samples) :
     m_feature(std::move(feature))
@@ -231,114 +225,109 @@ feature_storage_t::feature_storage_t(feature_t feature, tensor_size_t samples) :
 namespace {
 
 template <typename tscalar, typename tvalue>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 1>& tensor, tensor_size_t sample, tvalue value)
+void set(const feature_t& feature, tensor_mem_t<tscalar, 1>& tensor, tensor_size_t sample, const tvalue& value)
 {
-    const auto label = static_cast<tensor_size_t>(value);
-    const auto labels = static_cast<tensor_size_t>(feature.labels().size());
     const auto samples = tensor.template size<0>();
-
-    critical(
-        label < 0 || label >= labels,
-        "cannot set single-label feature <", feature.name(),
-        ">: invalid label ", label, " not in [0, ", labels, ")!");
 
     critical(
         sample < 0 || sample >= samples,
         "cannot set single-label feature <", feature.name(),
         ">: invalid sample ", sample, " not in [0, ", samples, ")!");
 
-    tensor(sample) = static_cast<tscalar>(value);
+    if constexpr (std::is_arithmetic<tvalue>::value)
+    {
+        const auto label = static_cast<tensor_size_t>(value);
+        const auto labels = static_cast<tensor_size_t>(feature.labels().size());
+
+        critical(
+            label < 0 || label >= labels,
+            "cannot set single-label feature <", feature.name(),
+            ">: invalid label ", label, " not in [0, ", labels, ")!");
+
+        tensor(sample) = static_cast<tscalar>(value);
+    }
+
+    else
+    {
+        critical0("cannot set single-label feature <", feature.name(), ">!");
+    }
 }
 
 template <typename tscalar, typename tvalue>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 1>&,
-    tensor_size_t, const tensor_cmap_t<tvalue, 1>&)
+void set(const feature_t& feature, tensor_mem_t<tscalar, 2>& tensor, tensor_size_t sample, const tvalue& value)
 {
-    critical0("cannot set single-label feature <", feature.name(), ">!");
-}
-
-template <typename tscalar, typename tvalue>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 1>&,
-    tensor_size_t, const tensor_cmap_t<tvalue, 3>&)
-{
-    critical0("cannot set single-label feature <", feature.name(), ">!");
-}
-
-template <typename tscalar, typename tvalue>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 2>&, tensor_size_t, tvalue)
-{
-    critical0("cannot set multi-label feature <", feature.name(), ">!");
-}
-
-template <typename tscalar, typename tvalue>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 2>& tensor,
-    tensor_size_t sample, const tensor_cmap_t<tvalue, 1>& values)
-{
-    const auto labels = static_cast<tensor_size_t>(feature.labels().size());
     const auto samples = tensor.template size<0>();
-
-    critical(
-        values.size() != labels,
-        "cannot set multi-label feature <", feature.name(),
-        ">: invalid number of labels ", values.size(), " vs. ", labels, "!");
 
     critical(
         sample < 0 || sample >= samples,
         "cannot set multi-label feature <", feature.name(),
         ">: invalid sample ", sample, " not in [0, ", samples, ")!");
 
-    tensor.vector(sample) = values.vector().template cast<tscalar>();
+    if constexpr (::nano::is_tensor<tvalue>::value)
+    {
+        if constexpr (tvalue::rank() == 1)
+        {
+            const auto labels = static_cast<tensor_size_t>(feature.labels().size());
+
+            critical(
+                value.size() != labels,
+                "cannot set multi-label feature <", feature.name(),
+                ">: invalid number of labels ", value.size(), " vs. ", labels, "!");
+
+            tensor.vector(sample) = value.vector().template cast<tscalar>();
+        }
+        else
+        {
+            critical0("cannot set multi-label feature <", feature.name(), ">!");
+        }
+    }
+    else
+    {
+        critical0("cannot set multi-label feature <", feature.name(), ">!");
+    }
 }
 
 template <typename tscalar, typename tvalue>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 2>&,
-    tensor_size_t, const tensor_cmap_t<tvalue, 3>&)
-{
-    critical0("cannot set multi-label feature <", feature.name(), ">!");
-}
-
-template <typename tscalar, typename tvalue>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 4>& tensor, tensor_size_t sample, tvalue value)
+void set(const feature_t& feature, tensor_mem_t<tscalar, 4>& tensor, tensor_size_t sample, const tvalue& value)
 {
     const auto samples = tensor.template size<0>();
-
-    critical(
-        ::nano::size(feature.dims()) != 1,
-        "cannot set scalar feature <", feature.name(),
-        ">: invalid tensor dimensions ", feature.dims(), "!");
 
     critical(
         sample < 0 || sample >= samples,
         "cannot set scalar feature <", feature.name(),
         ">: invalid sample ", sample, " not in [0, ", samples, ")!");
 
-    tensor(sample) = static_cast<tscalar>(value);
-}
+    if constexpr (std::is_arithmetic<tvalue>::value)
+    {
+        critical(
+            ::nano::size(feature.dims()) != 1,
+            "cannot set scalar feature <", feature.name(),
+            ">: invalid tensor dimensions ", feature.dims(), "!");
 
-template <typename tscalar, typename tvalue>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 4>&,
-    tensor_size_t, const tensor_cmap_t<tvalue, 1>&)
-{
-    critical0("cannot set scalar feature <", feature.name(), ">!");
-}
+        tensor(sample) = static_cast<tscalar>(value);
+    }
+    else if constexpr (tvalue::rank() == 1)
+    {
+        critical(
+            ::nano::size(feature.dims()) != value.size(),
+            "cannot set scalar feature <", feature.name(),
+            ">: invalid tensor dimensions ", feature.dims(), " vs. ", value.dims(), "!");
 
-template <typename tscalar, typename tvalue>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 4>& tensor,
-    tensor_size_t sample, const tensor_cmap_t<tvalue, 3>& values)
-{
-    const auto samples = tensor.template size<0>();
+        tensor.vector(sample) = value.vector().template cast<tscalar>();
+    }
+    else if constexpr (tvalue::rank() == 3)
+    {
+        critical(
+            feature.dims() != value.dims(),
+            "cannot set scalar feature <", feature.name(),
+            ">: invalid tensor dimensions ", feature.dims(), " vs. ", value.dims(), "!");
 
-    critical(
-        feature.dims() != values.dims(),
-        "cannot set scalar feature <", feature.name(),
-        ">: invalid tensor dimensions ", feature.dims(), " vs. ", values.dims(), "!");
-
-    critical(
-        sample < 0 || sample >= samples,
-        "cannot set scalar feature <", feature.name(),
-        ">: invalid sample ", sample, " not in [0, ", samples, ")!");
-
-    tensor.vector(sample) = values.vector().template cast<tscalar>();
+        tensor.vector(sample) = value.vector().template cast<tscalar>();
+    }
+    else
+    {
+        critical0("cannot set scalar feature <", feature.name(), ">!");
+    }
 }
 
 template <typename tscalar>
@@ -386,27 +375,6 @@ void set(const feature_t& feature, tensor_mem_t<tscalar, 4>& tensor, tensor_size
     set(feature, tensor, sample, scalar);
 }
 
-template <typename tvalue, typename tsample>
-void set(const feature_t& feature, feature_storage_t::storage_t& storage, const tsample& sample, const tvalue& value)
-{
-
-    std::visit(overloaded{
-        [&] (scalar_storage_t<float>& tensor) { ::set(feature, tensor, sample, value); },
-        [&] (scalar_storage_t<double>& tensor) { ::set(feature, tensor, sample, value); },
-        [&] (scalar_storage_t<int8_t>& tensor) { ::set(feature, tensor, sample, value); },
-        [&] (scalar_storage_t<int16_t>& tensor) { ::set(feature, tensor, sample, value); },
-        [&] (scalar_storage_t<int32_t>& tensor) { ::set(feature, tensor, sample, value); },
-        [&] (scalar_storage_t<int64_t>& tensor) { ::set(feature, tensor, sample, value); },
-        [&] (scalar_storage_t<uint8_t>& tensor) { ::set(feature, tensor, sample, value); },
-        [&] (scalar_storage_t<uint16_t>& tensor) { ::set(feature, tensor, sample, value); },
-        [&] (scalar_storage_t<uint32_t>& tensor) { ::set(feature, tensor, sample, value); },
-        [&] (scalar_storage_t<uint64_t>& tensor) { ::set(feature, tensor, sample, value); },
-        [&] (sclass_storage_t<uint8_t>& tensor) { ::set(feature, tensor, sample, value); },
-        [&] (sclass_storage_t<uint16_t>& tensor) { ::set(feature, tensor, sample, value); },
-        [&] (mclass_storage_t<uint8_t>& tensor) { ::set(feature, tensor, sample, value); },
-    }, storage);
-}
-
 void set(feature_mask_t& mask, tensor_size_t sample)
 {
     assert(sample >= 0 && sample < (8 * mask.size()));
@@ -418,19 +386,19 @@ void set(feature_mask_t& mask, tensor_size_t sample)
 #define FEATURE_STORAGE_SET_SCALAR(SCALAR) \
 void feature_storage_t::set(tensor_size_t sample, SCALAR value) \
 { \
-    ::set(m_feature, m_storage, sample, value); \
+    visit([&] (auto& tensor) { ::set(m_feature, tensor, sample, value); }); \
     ::set(m_mask, sample); \
 } \
 \
 void feature_storage_t::set(tensor_size_t sample, tensor_cmap_t<SCALAR, 1> values) \
 { \
-    ::set(m_feature, m_storage, sample, values); \
+    visit([&] (auto& tensor) { ::set(m_feature, tensor, sample, values); }); \
     ::set(m_mask, sample); \
 } \
 \
 void feature_storage_t::set(tensor_size_t sample, tensor_cmap_t<SCALAR, 3> values) \
 { \
-    ::set(m_feature, m_storage, sample, values); \
+    visit([&] (auto& tensor) { ::set(m_feature, tensor, sample, values); }); \
     ::set(m_mask, sample); \
 }
 
@@ -449,7 +417,7 @@ FEATURE_STORAGE_SET_SCALAR(uint64_t)
 
 void feature_storage_t::set(tensor_size_t sample, const string_t& value)
 {
-    ::set(m_feature, m_storage, sample, value);
+    visit([&] (auto& tensor) { ::set(m_feature, tensor, sample, value); });
     ::set(m_mask, sample);
 }
 
@@ -462,154 +430,87 @@ bool get(const feature_mask_t& mask, tensor_size_t sample)
     return (mask(sample / 8) & (0x01 << (7 - (sample % 8)))) != 0x00;
 }
 
-template <typename tscalar>
+template <typename tscalar, typename tvalue, size_t trank>
 void get(
     const feature_t& feature,
     const scalar_storage_t<tscalar>& tensor,
     const feature_mask_t& mask,
     const indices_cmap_t& samples,
-    tensor_mem_t<scalar_t, 4>& values)
+    tensor_mem_t<tvalue, trank>& values)
 {
-    values.resize(cat_dims(samples.size(), feature.dims()));
-    values.constant(std::numeric_limits<scalar_t>::quiet_NaN());
-
-    for (tensor_size_t i = 0; i < samples.size(); ++ i)
+    if constexpr (trank == 4)
     {
-        if (::get(mask, samples(i)))
+        values.resize(cat_dims(samples.size(), feature.dims()));
+        values.constant(std::numeric_limits<scalar_t>::quiet_NaN());
+
+        for (tensor_size_t i = 0; i < samples.size(); ++ i)
         {
-            values.vector(i) = tensor.vector(samples(i)).template cast<scalar_t>();
+            if (::get(mask, samples(i)))
+            {
+                values.vector(i) = tensor.vector(samples(i)).template cast<scalar_t>();
+            }
         }
+    }
+    else
+    {
+        critical0("cannot access scalar feature <", feature.name(), ">!");
     }
 }
 
-template <typename tscalar>
+template <typename tscalar, typename tvalue, size_t trank>
 void get(
     const feature_t& feature,
-    [[maybe_unused]] const sclass_storage_t<tscalar>& tensor,
-    [[maybe_unused]] const feature_mask_t& mask,
-    [[maybe_unused]] const indices_cmap_t& samples,
-    [[maybe_unused]] tensor_mem_t<scalar_t, 4>& values)
-{
-    critical0("cannot access single-label feature <", feature.name(), ">!");
-}
-
-template <typename tscalar>
-void get(
-    const feature_t& feature,
-    [[maybe_unused]] const mclass_storage_t<tscalar>& tensor,
-    [[maybe_unused]] const feature_mask_t& mask,
-    [[maybe_unused]] const indices_cmap_t& samples,
-    [[maybe_unused]] tensor_mem_t<scalar_t, 4>& values)
-{
-    critical0("cannot access multi-label feature <", feature.name(), ">!");
-}
-
-template <typename tscalar>
-void get(
-    const feature_t& feature,
-    [[maybe_unused]] const scalar_storage_t<tscalar>& tensor,
-    [[maybe_unused]] const feature_mask_t& mask,
-    [[maybe_unused]] const indices_cmap_t& samples,
-    [[maybe_unused]] tensor_mem_t<tensor_size_t, 1>& values)
-{
-    critical0("cannot access scalar feature <", feature.name(), ">!");
-}
-
-template <typename tscalar>
-void get(
-    [[maybe_unused]] const feature_t& feature,
     const sclass_storage_t<tscalar>& tensor,
     const feature_mask_t& mask,
     const indices_cmap_t& samples,
-    tensor_mem_t<tensor_size_t, 1>& values)
+    tensor_mem_t<tvalue, trank>& values)
 {
-    values.resize(samples.size());
-    values.constant(-1);
-
-    for (tensor_size_t i = 0; i < samples.size(); ++ i)
+    if constexpr (trank == 1)
     {
-        if (::get(mask, samples(i)))
+        values.resize(samples.size());
+        values.constant(-1);
+
+        for (tensor_size_t i = 0; i < samples.size(); ++ i)
         {
-            values(i) = static_cast<tensor_size_t>(tensor(samples(i)));
+            if (::get(mask, samples(i)))
+            {
+                values(i) = static_cast<tensor_size_t>(tensor(samples(i)));
+            }
         }
+    }
+    else
+    {
+        critical0("cannot access single-label feature <", feature.name(), ">!");
     }
 }
 
-template <typename tscalar>
-void get(
-    const feature_t& feature,
-    [[maybe_unused]] const mclass_storage_t<tscalar>& tensor,
-    [[maybe_unused]] const feature_mask_t& mask,
-    [[maybe_unused]] const indices_cmap_t& samples,
-    [[maybe_unused]] tensor_mem_t<tensor_size_t, 1>& values)
-{
-    critical0("cannot access multi-label feature <", feature.name(), ">!");
-}
-
-template <typename tscalar>
-void get(
-    const feature_t& feature,
-    [[maybe_unused]] const scalar_storage_t<tscalar>& tensor,
-    [[maybe_unused]] const feature_mask_t& mask,
-    [[maybe_unused]] const indices_cmap_t& samples,
-    [[maybe_unused]] tensor_mem_t<tensor_size_t, 2>& values)
-{
-    critical0("cannot access scalar feature <", feature.name(), ">!");
-}
-
-template <typename tscalar>
-void get(
-    const feature_t& feature,
-    [[maybe_unused]] const sclass_storage_t<tscalar>& tensor,
-    [[maybe_unused]] const feature_mask_t& mask,
-    [[maybe_unused]] const indices_cmap_t& samples,
-    [[maybe_unused]] tensor_mem_t<tensor_size_t, 2>& values)
-{
-    critical0("cannot access single-label feature <", feature.name(), ">!");
-}
-
-template <typename tscalar>
+template <typename tscalar, typename tvalue, size_t trank>
 void get(
     const feature_t& feature,
     const mclass_storage_t<tscalar>& tensor,
     const feature_mask_t& mask,
     const indices_cmap_t& samples,
-    tensor_mem_t<tensor_size_t, 2>& values)
+    tensor_mem_t<tvalue, trank>& values)
 {
-    const auto labels = static_cast<tensor_size_t>(feature.labels().size());
-
-    values.resize(make_dims(samples.size(), labels));
-    values.constant(-1);
-
-    for (tensor_size_t i = 0; i < samples.size(); ++ i)
+    if constexpr (trank == 2)
     {
-        if (::get(mask, samples(i)))
+        const auto labels = static_cast<tensor_size_t>(feature.labels().size());
+
+        values.resize(make_dims(samples.size(), labels));
+        values.constant(-1);
+
+        for (tensor_size_t i = 0; i < samples.size(); ++ i)
         {
-            values.vector(i) = tensor.vector(samples(i)).template cast<tensor_size_t>();
+            if (::get(mask, samples(i)))
+            {
+                values.vector(i) = tensor.vector(samples(i)).template cast<tensor_size_t>();
+            }
         }
     }
-}
-
-template <typename tvalue, size_t trank>
-void get(
-    const feature_t& feature, const feature_storage_t::storage_t& storage, const feature_mask_t& mask,
-    const indices_cmap_t& samples, tensor_mem_t<tvalue, trank>& values)
-{
-    std::visit(overloaded{
-        [&] (const scalar_storage_t<float>& tensor) { ::get(feature, tensor, mask, samples, values); },
-        [&] (const scalar_storage_t<double>& tensor) { ::get(feature, tensor, mask, samples, values); },
-        [&] (const scalar_storage_t<int8_t>& tensor) { ::get(feature, tensor, mask, samples, values); },
-        [&] (const scalar_storage_t<int16_t>& tensor) { ::get(feature, tensor, mask, samples, values); },
-        [&] (const scalar_storage_t<int32_t>& tensor) { ::get(feature, tensor, mask, samples, values); },
-        [&] (const scalar_storage_t<int64_t>& tensor) { ::get(feature, tensor, mask, samples, values); },
-        [&] (const scalar_storage_t<uint8_t>& tensor) { ::get(feature, tensor, mask, samples, values); },
-        [&] (const scalar_storage_t<uint16_t>& tensor) { ::get(feature, tensor, mask, samples, values); },
-        [&] (const scalar_storage_t<uint32_t>& tensor) { ::get(feature, tensor, mask, samples, values); },
-        [&] (const scalar_storage_t<uint64_t>& tensor) { ::get(feature, tensor, mask, samples, values); },
-        [&] (const sclass_storage_t<uint8_t>& tensor) { ::get(feature, tensor, mask, samples, values); },
-        [&] (const sclass_storage_t<uint16_t>& tensor) { ::get(feature, tensor, mask, samples, values); },
-        [&] (const mclass_storage_t<uint8_t>& tensor) { ::get(feature, tensor, mask, samples, values); },
-    }, storage);
+    else
+    {
+        critical0("cannot access multi-label feature <", feature.name(), ">!");
+    }
 }
 
 template <typename tstats, typename tscalar>
@@ -688,7 +589,6 @@ tstats stats(
             }
         }
     }
-
     else
     {
         critical0("cannot access single-label feature <", feature.name(), ">!");
@@ -719,7 +619,6 @@ tstats stats(
             }
         }
     }
-
     else
     {
         critical0("cannot access multi-label feature <", feature.name(), ">!");
@@ -728,43 +627,21 @@ tstats stats(
     return stats;
 }
 
-template <typename tstats>
-tstats stats(
-    const feature_t& feature, const feature_storage_t::storage_t& storage, const feature_mask_t& mask,
-    const indices_cmap_t& samples)
-{
-    return std::visit(overloaded{
-        [&] (const scalar_storage_t<float>& tensor) { return ::stats<tstats>(feature, tensor, mask, samples); },
-        [&] (const scalar_storage_t<double>& tensor) { return ::stats<tstats>(feature, tensor, mask, samples); },
-        [&] (const scalar_storage_t<int8_t>& tensor) { return ::stats<tstats>(feature, tensor, mask, samples); },
-        [&] (const scalar_storage_t<int16_t>& tensor) { return ::stats<tstats>(feature, tensor, mask, samples); },
-        [&] (const scalar_storage_t<int32_t>& tensor) { return ::stats<tstats>(feature, tensor, mask, samples); },
-        [&] (const scalar_storage_t<int64_t>& tensor) { return ::stats<tstats>(feature, tensor, mask, samples); },
-        [&] (const scalar_storage_t<uint8_t>& tensor) { return ::stats<tstats>(feature, tensor, mask, samples); },
-        [&] (const scalar_storage_t<uint16_t>& tensor) { return ::stats<tstats>(feature, tensor, mask, samples); },
-        [&] (const scalar_storage_t<uint32_t>& tensor) { return ::stats<tstats>(feature, tensor, mask, samples); },
-        [&] (const scalar_storage_t<uint64_t>& tensor) { return ::stats<tstats>(feature, tensor, mask, samples); },
-        [&] (const sclass_storage_t<uint8_t>& tensor) { return ::stats<tstats>(feature, tensor, mask, samples); },
-        [&] (const sclass_storage_t<uint16_t>& tensor) { return ::stats<tstats>(feature, tensor, mask, samples); },
-        [&] (const mclass_storage_t<uint8_t>& tensor) { return ::stats<tstats>(feature, tensor, mask, samples); },
-    }, storage);
-}
-
 }
 
 void feature_storage_t::get(indices_cmap_t samples, tensor_mem_t<scalar_t, 4>& values) const
 {
-    ::get(m_feature, m_storage, m_mask, samples, values);
+    visit([&] (const auto& tensor) { ::get(m_feature, tensor, m_mask, samples, values); });
 }
 
 void feature_storage_t::get(indices_cmap_t samples, tensor_mem_t<tensor_size_t, 1>& labels) const
 {
-    ::get(m_feature, m_storage, m_mask, samples, labels);
+    visit([&] (const auto& tensor) { ::get(m_feature, tensor, m_mask, samples, labels); });
 }
 
 void feature_storage_t::get(indices_cmap_t samples, tensor_mem_t<tensor_size_t, 2>& labels) const
 {
-    ::get(m_feature, m_storage, m_mask, samples, labels);
+    visit([&] (const auto& tensor) { ::get(m_feature, tensor, m_mask, samples, labels); });
 }
 
 bool feature_storage_t::optional() const
@@ -793,15 +670,24 @@ bool feature_storage_t::optional() const
 
 feature_scalar_stats_t feature_storage_t::scalar_stats(indices_cmap_t samples) const
 {
-    return ::stats<feature_scalar_stats_t>(m_feature, m_storage, m_mask, samples);
+    return visit([&] (const auto& tensor)
+    {
+        return ::stats<feature_scalar_stats_t>(m_feature, tensor, m_mask, samples);
+    });
 }
 
 feature_sclass_stats_t feature_storage_t::sclass_stats(indices_cmap_t samples) const
 {
-    return ::stats<feature_sclass_stats_t>(m_feature, m_storage, m_mask, samples);
+    return visit([&] (const auto& tensor)
+    {
+        return ::stats<feature_sclass_stats_t>(m_feature, tensor, m_mask, samples);
+    });
 }
 
 feature_mclass_stats_t feature_storage_t::mclass_stats(indices_cmap_t samples) const
 {
-    return ::stats<feature_mclass_stats_t>(m_feature, m_storage, m_mask, samples);
+    return visit([&] (const auto& tensor)
+    {
+        return ::stats<feature_mclass_stats_t>(m_feature, tensor, m_mask, samples);
+    });
 }

@@ -375,31 +375,25 @@ void set(const feature_t& feature, tensor_mem_t<tscalar, 4>& tensor, tensor_size
     set(feature, tensor, sample, scalar);
 }
 
-void set(feature_mask_t& mask, tensor_size_t sample)
-{
-    assert(sample >= 0 && sample < (8 * mask.size()));
-    mask(sample / 8) |= 0x01 << (7 - (sample % 8));
-}
-
 }
 
 #define FEATURE_STORAGE_SET_SCALAR(SCALAR) \
 void feature_storage_t::set(tensor_size_t sample, SCALAR value) \
 { \
     visit([&] (auto& tensor) { ::set(m_feature, tensor, sample, value); }); \
-    ::set(m_mask, sample); \
+    ::nano::setbit(m_mask, sample); \
 } \
 \
 void feature_storage_t::set(tensor_size_t sample, tensor_cmap_t<SCALAR, 1> values) \
 { \
     visit([&] (auto& tensor) { ::set(m_feature, tensor, sample, values); }); \
-    ::set(m_mask, sample); \
+    ::nano::setbit(m_mask, sample); \
 } \
 \
 void feature_storage_t::set(tensor_size_t sample, tensor_cmap_t<SCALAR, 3> values) \
 { \
     visit([&] (auto& tensor) { ::set(m_feature, tensor, sample, values); }); \
-    ::set(m_mask, sample); \
+    ::nano::setbit(m_mask, sample); \
 }
 
 FEATURE_STORAGE_SET_SCALAR(float)
@@ -418,17 +412,11 @@ FEATURE_STORAGE_SET_SCALAR(uint64_t)
 void feature_storage_t::set(tensor_size_t sample, const string_t& value)
 {
     visit([&] (auto& tensor) { ::set(m_feature, tensor, sample, value); });
-    ::set(m_mask, sample);
+    ::nano::setbit(m_mask, sample);
 }
 
 namespace
 {
-
-bool get(const feature_mask_t& mask, tensor_size_t sample)
-{
-    assert(sample >= 0 && sample < (8 * mask.size()));
-    return (mask(sample / 8) & (0x01 << (7 - (sample % 8)))) != 0x00;
-}
 
 template <typename tscalar, typename tvalue, size_t trank>
 void get(
@@ -445,7 +433,7 @@ void get(
 
         for (tensor_size_t i = 0; i < samples.size(); ++ i)
         {
-            if (::get(mask, samples(i)))
+            if (::nano::getbit(mask, samples(i)))
             {
                 values.vector(i) = tensor.vector(samples(i)).template cast<scalar_t>();
             }
@@ -472,7 +460,7 @@ void get(
 
         for (tensor_size_t i = 0; i < samples.size(); ++ i)
         {
-            if (::get(mask, samples(i)))
+            if (::nano::getbit(mask, samples(i)))
             {
                 values(i) = static_cast<tensor_size_t>(tensor(samples(i)));
             }
@@ -501,7 +489,7 @@ void get(
 
         for (tensor_size_t i = 0; i < samples.size(); ++ i)
         {
-            if (::get(mask, samples(i)))
+            if (::nano::getbit(mask, samples(i)))
             {
                 values.vector(i) = tensor.vector(samples(i)).template cast<tensor_size_t>();
             }
@@ -537,7 +525,7 @@ tstats stats(
 
         for (const auto sample : samples)
         {
-            if (::get(mask, sample))
+            if (::nano::getbit(mask, sample))
             {
                 const auto values = tensor.vector(sample).template cast<scalar_t>();
 
@@ -581,7 +569,7 @@ tstats stats(
 
         for (const auto sample : samples)
         {
-            if (::get(mask, sample))
+            if (::nano::getbit(mask, sample))
             {
                 const auto label = static_cast<tensor_size_t>(tensor(sample));
 
@@ -613,7 +601,7 @@ tstats stats(
 
         for (const auto sample : samples)
         {
-            if (::get(mask, sample))
+            if (::nano::getbit(mask, sample))
             {
                 stats.m_class_counts.array() += tensor.array(sample).template cast<tensor_size_t>();
             }
@@ -659,7 +647,7 @@ bool feature_storage_t::optional() const
 
     for (tensor_size_t sample = 8 * bytes; sample < samples; ++ sample)
     {
-        if (!::get(m_mask, sample))
+        if (!::nano::getbit(m_mask, sample))
         {
             return true;
         }

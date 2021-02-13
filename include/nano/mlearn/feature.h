@@ -224,6 +224,24 @@ namespace nano
     using feature_mask_t = tensor_mem_t<uint8_t, 1>;
 
     ///
+    /// \brief mark a feature value as set for a particular sample.
+    ///
+    inline void setbit(feature_mask_t& mask, tensor_size_t sample)
+    {
+        assert(sample >= 0 && sample < (8 * mask.size()));
+        mask(sample / 8) |= 0x01 << (7 - (sample % 8));
+    }
+
+    ///
+    /// \brief check if a feature value exists for a particular sample.
+    ///
+    inline bool getbit(const feature_mask_t& mask, tensor_size_t sample)
+    {
+        assert(sample >= 0 && sample < (8 * mask.size()));
+        return (mask(sample / 8) & (0x01 << (7 - (sample % 8)))) != 0x00;
+    }
+
+    ///
     /// \brief per-feature statistics for continuous feature values
     ///     (e.g. useful for normalizing inputs).
     ///

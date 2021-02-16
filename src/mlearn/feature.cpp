@@ -366,7 +366,7 @@ void set(const feature_t& feature, tensor_mem_t<tscalar, 4>& tensor, tensor_size
     tscalar scalar;
     try
     {
-        scalar = ::nano::from_string<tensor_size_t>(value);
+        scalar = ::nano::from_string<tscalar>(value);
     }
     catch (std::exception& e)
     {
@@ -541,7 +541,7 @@ tstats stats(
         {
             const auto N = stats.m_count;
             stats.m_stdev.array() = ((stats.m_stdev.array() - stats.m_mean.array().square() / N) / (N - 1)).sqrt();
-            stats.m_mean.array() /= N;
+            stats.m_mean.array() /= static_cast<scalar_t>(N);
         }
     }
 

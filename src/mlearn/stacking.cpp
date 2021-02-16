@@ -108,5 +108,5 @@ scalar_t stacking_function_t::vgrad(const vector_t& x, vector_t* gx) const
     {
         *gx = caches[0].m_gx / samples;
     }
-    return caches[0].m_fx / samples;
+    return caches[0].m_fx / static_cast<scalar_t>(samples);
 }

@@ -84,8 +84,8 @@ UTEST_CASE(check_inputs_targets)
         UTEST_CHECK_EQUAL(inputsX(s, 1), fixture_dataset_t::value(row, 17));
         UTEST_CHECK_EQUAL(inputsX(s, 2), fixture_dataset_t::value(row, 201));
 
-        UTEST_CHECK_CLOSE(targets.vector(s).minCoeff(), -row, 1e-8);
-        UTEST_CHECK_CLOSE(targets.vector(s).maxCoeff(), -row, 1e-8);
+        UTEST_CHECK_CLOSE(targets.vector(s).minCoeff(), static_cast<scalar_t>(-row), 1e-8);
+        UTEST_CHECK_CLOSE(targets.vector(s).maxCoeff(), static_cast<scalar_t>(-row), 1e-8);
     }
 }
 

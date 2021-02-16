@@ -19,7 +19,7 @@ public:
             {
                 input(f) = value(s, f);
             }
-            target(s).constant(-s);
+            target(s).constant(static_cast<scalar_t>(-s));
         }
     }
 
@@ -40,7 +40,7 @@ inline void check_targets(const tensor4d_t& targets, tensor_range_t range)
     for (tensor_size_t s = range.begin(); s < range.end(); ++ s)
     {
         const auto row = s - range.begin();
-        UTEST_CHECK_CLOSE(targets.vector(row).minCoeff(), -s, 1e-8);
-        UTEST_CHECK_CLOSE(targets.vector(row).maxCoeff(), -s, 1e-8);
+        UTEST_CHECK_CLOSE(targets.vector(row).minCoeff(), static_cast<scalar_t>(-s), 1e-8);
+        UTEST_CHECK_CLOSE(targets.vector(row).maxCoeff(), static_cast<scalar_t>(-s), 1e-8);
     }
 }

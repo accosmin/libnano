@@ -224,7 +224,7 @@ static int unsafe_main(int argc, const char* argv[])
     const auto min_dims = cmdline.get<tensor_size_t>("min-dims");
     const auto max_dims = cmdline.get<tensor_size_t>("max-dims");
     const auto trials = cmdline.get<size_t>("trials");
-    const auto max_iterations = cmdline.get<size_t>("max-iterations");
+    const auto max_iterations = cmdline.get<int>("max-iterations");
     const auto epsilon = cmdline.get<scalar_t>("epsilon");
     const auto convex = cmdline.has("convex") ? convexity::yes : convexity::unknown;
     const auto log_failures = cmdline.has("log-failures");

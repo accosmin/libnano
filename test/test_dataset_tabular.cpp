@@ -31,12 +31,12 @@ public:
     static auto data_path() { return "test_dataset_tabular_data.csv"; }
     static auto test_path() { return "test_dataset_tabular_test.csv"; }
 
-    static auto csvs(tensor_size_t data_expected = 20, tensor_size_t test_expected = 10)
+    static auto csvs(int data_size = 20, int test_size = 10)
     {
         return csvs_t(
         {
-            csv_t{data_path()}.delim(",").header(false).expected(data_expected).skip('@').placeholder("?"),
-            csv_t{test_path()}.delim(",").header(true).expected(test_expected).skip('@').testing(0, test_expected).placeholder("?")
+            csv_t{data_path()}.delim(",").header(false).expected(data_size).skip('@').placeholder("?"),
+            csv_t{test_path()}.delim(",").header(true).expected(test_size).skip('@').testing(0, test_size).placeholder("?")
         });
     }
 
@@ -326,7 +326,7 @@ UTEST_CASE(load_with_cate_target)
         fixture_dataset_t::check(inputs(index, 1, 0, 0), index + 10, 1);
         tensor_size_t category = 0;
         targets.vector(index).maxCoeff(&category);
-        fixture_dataset_t::check(category, index + 10, 2);
+        fixture_dataset_t::check(static_cast<scalar_t>(category), index + 10, 2);
         fixture_dataset_t::check(inputs(index, 2, 0, 0), index + 10, 3);
     }
 }

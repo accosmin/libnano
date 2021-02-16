@@ -21,7 +21,7 @@ struct cache_t
 
     cache_t& operator/=(tensor_size_t samples)
     {
-        m_score /= samples;
+        m_score /= static_cast<scalar_t>(samples);
         return *this;
     }
 

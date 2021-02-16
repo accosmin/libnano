@@ -201,7 +201,7 @@ scalar_t gboost_grads_function_t::vgrad(const vector_t& x, vector_t* gx) const
     if (gx != nullptr)
     {
         *gx = grads.vector();
-        *gx /= m_samples.size();
+        *gx /= static_cast<scalar_t>(m_samples.size());
     }
 
     // OK

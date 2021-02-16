@@ -229,7 +229,7 @@ namespace nano
     inline void setbit(feature_mask_t& mask, tensor_size_t sample)
     {
         assert(sample >= 0 && sample < (8 * mask.size()));
-        mask(sample / 8) |= 0x01 << (7 - (sample % 8));
+        mask(sample / 8) |= static_cast<uint8_t>(0x01 << (7 - (sample % 8)));
     }
 
     ///

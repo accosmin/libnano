@@ -191,7 +191,7 @@ bool gboost_model_t::done(
 
 indices_t gboost_model_t::make_indices(const indices_t& samples) const
 {
-    const auto count = static_cast<tensor_size_t>(llround(subsample() * samples.size()));
+    const auto count = static_cast<tensor_size_t>(llround(subsample() * static_cast<scalar_t>(samples.size())));
     if (count >= samples.size())
     {
         return arange(0, samples.size());
@@ -354,7 +354,7 @@ feature_infos_t gboost_model_t::features(
             for (tensor_size_t trial = 0; trial < trials; ++ trial)
             {
                 const auto fdataset = shuffle_dataset_t{dataset, info.feature()};
-                feature_error += evaluate(*this, fdataset) / trials;
+                feature_error += evaluate(*this, fdataset) / static_cast<scalar_t>(trials);
             }
             break;
 
@@ -364,7 +364,7 @@ feature_infos_t gboost_model_t::features(
                 const auto fdataset = dropcol_dataset_t{dataset, info.feature()};
                 auto model = *this;
                 model.fit(loss, fdataset, samples, solver);
-                feature_error += evaluate(model, fdataset) / trials;
+                feature_error += evaluate(model, fdataset) / static_cast<scalar_t>(trials);
             }
             break;
 

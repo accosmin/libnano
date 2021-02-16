@@ -137,7 +137,7 @@ UTEST_CASE(tensor3d_map)
 
     std::vector<int> v;
     v.reserve(dims * rows * cols);
-    for (tensor_size_t i = 0; i < dims * rows * cols; ++ i)
+    for (int i = 0; i < dims * rows * cols; ++ i)
     {
         v.push_back(-35 + i);
     }
@@ -262,7 +262,7 @@ UTEST_CASE(tensor4d_map)
 
     std::vector<int> v;
     v.reserve(dim1 * dim2 * rows * cols);
-    for (tensor_size_t i = 0; i < dim1 * dim2 * rows * cols; ++ i)
+    for (int i = 0; i < dim1 * dim2 * rows * cols; ++ i)
     {
         v.push_back(-35 + i);
     }

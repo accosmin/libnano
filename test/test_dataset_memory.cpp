@@ -8,6 +8,54 @@ using namespace nano;
 // TODO: check that feature normalization works
 // TODO: check that feature extraction works (e.g sign(x), sign(x)*log(1+x^2), polynomial expansion)
 
+class fixture_dataset_t final : public memory_dataset_t
+{
+public:
+
+    fixture_dataset_t(tensor_size_t samples, features_t features, size_t target) :
+        m_samples(samples),
+        m_features(std::move(features)),
+        m_target(target)
+    {
+    }
+
+    void load() override
+    {
+        resize(m_samples, m_features, m_target);
+
+        // TODO
+    }
+
+private:
+
+    tensor_size_t   m_samples{0};
+    features_t      m_features;
+    size_t          m_target;
+};
+
+static auto make_features()
+{
+    return features_t
+    {
+        feature_t{"i8"}.scalar(feature_type::int8),
+        feature_t{"i16"}.scalar(feature_type::int16),
+        feature_t{"i32"}.scalar(feature_type::int32),
+        feature_t{"i64"}.scalar(feature_type::int64),
+        feature_t{"f32"}.scalar(feature_type::float32),
+        feature_t{"f64"}.scalar(feature_type::float64),
+
+        feature_t{"ui8_struct"}.scalar(feature_type::uint8, make_dims(3, 8, 8)),
+        feature_t{"ui16_struct"}.scalar(feature_type::uint16, make_dims(3, 8, 8)),
+        feature_t{"ui32_struct"}.scalar(feature_type::uint32, make_dims(3, 8, 8)),
+        feature_t{"ui64_struct"}.scalar(feature_type::uint64, make_dims(3, 8, 8)),
+
+        feature_t{"sclass2"}.sclass(2),
+        feature_t{"sclass10"}.sclass(10),
+
+        feature_t{"mclass10"}.mclass(10),
+    };
+}
+
 UTEST_BEGIN_MODULE(test_dataset_memory)
 
 UTEST_CASE(mask)
@@ -50,7 +98,17 @@ UTEST_CASE(mask)
 
 UTEST_CASE(resize)
 {
-
+    const auto features = make_features();
+    {
+        auto dataset = fixture_dataset_t{100, features, string_t::npos};
+        UTEST_CHECK_NOTHROW(dataset.load());
+        UTEST_CHECK_EQUAL(dataset.samples(), 100);
+    }
+    {
+        auto dataset = fixture_dataset_t{100, features, 0U};
+        UTEST_CHECK_NOTHROW(dataset.load());
+        UTEST_CHECK_EQUAL(dataset.samples(), 100);
+    }
 }
 
 UTEST_END_MODULE()

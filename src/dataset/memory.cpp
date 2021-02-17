@@ -126,7 +126,8 @@ indices_t memory_feature_dataset_iterator_t::scalar_features() const
     const auto op = [] (const feature_storage_t& fs)
     {
         return  fs.feature().type() != feature_type::sclass &&
-                fs.feature().type() != feature_type::mclass;
+                fs.feature().type() != feature_type::mclass &&
+                ::nano::size(fs.feature().dims()) == 1;
     };
 
     return ::filter(m_dataset.istorage(), op);
@@ -134,8 +135,14 @@ indices_t memory_feature_dataset_iterator_t::scalar_features() const
 
 indices_t memory_feature_dataset_iterator_t::struct_features() const
 {
-    // TODO:
-    return scalar_features();
+    const auto op = [] (const feature_storage_t& fs)
+    {
+        return  fs.feature().type() != feature_type::sclass &&
+                fs.feature().type() != feature_type::mclass &&
+                ::nano::size(fs.feature().dims()) > 1;
+    };
+
+    return ::filter(m_dataset.istorage(), op);
 }
 
 indices_t memory_feature_dataset_iterator_t::sclass_features() const

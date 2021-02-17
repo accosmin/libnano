@@ -78,6 +78,7 @@ namespace nano
 
         tensor_size_t features() const override;
         indices_t scalar_features() const override;
+        indices_t struct_features() const override;
         indices_t sclass_features() const override;
         indices_t mclass_features() const override;
         feature_t feature(tensor_size_t feature) const override;
@@ -85,6 +86,7 @@ namespace nano
         sindices_cmap_t input(tensor_size_t feature, sindices_t& buffer) const override;
         mindices_cmap_t input(tensor_size_t feature, mindices_t& buffer) const override;
         tensor1d_cmap_t input(tensor_size_t feature, tensor1d_t& buffer) const override;
+        tensor4d_cmap_t input(tensor_size_t feature, tensor4d_t& buffer) const override;
 
         // TODO: need to flatten structured scalar features - one scalar feature per component
 
@@ -98,7 +100,7 @@ namespace nano
     ///
     /// \brief
     ///
-    class NANO_PUBLIC memory_flatten_dataset_iterator_t final : public flatten_dataset_iterator_t
+    /*class NANO_PUBLIC memory_flatten_dataset_iterator_t final : public flatten_dataset_iterator_t
     {
     public:
 
@@ -120,5 +122,5 @@ namespace nano
         // attributes
         const memory_dataset_t& m_dataset;  ///<
         indices_t               m_samples;  ///<
-    };
+    };*/
 }

@@ -225,7 +225,7 @@ feature_storage_t::feature_storage_t(feature_t feature, tensor_size_t samples) :
 namespace {
 
 template <typename tscalar, typename tvalue>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 1>& tensor, tensor_size_t sample, const tvalue& value)
+void set(const feature_t& feature, tensor_map_t<tscalar, 1>&& tensor, tensor_size_t sample, const tvalue& value)
 {
     const auto samples = tensor.template size<0>();
 
@@ -254,7 +254,7 @@ void set(const feature_t& feature, tensor_mem_t<tscalar, 1>& tensor, tensor_size
 }
 
 template <typename tscalar, typename tvalue>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 2>& tensor, tensor_size_t sample, const tvalue& value)
+void set(const feature_t& feature, tensor_map_t<tscalar, 2>&& tensor, tensor_size_t sample, const tvalue& value)
 {
     const auto samples = tensor.template size<0>();
 
@@ -288,7 +288,7 @@ void set(const feature_t& feature, tensor_mem_t<tscalar, 2>& tensor, tensor_size
 }
 
 template <typename tscalar, typename tvalue>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 4>& tensor, tensor_size_t sample, const tvalue& value)
+void set(const feature_t& feature, tensor_map_t<tscalar, 4>&& tensor, tensor_size_t sample, const tvalue& value)
 {
     const auto samples = tensor.template size<0>();
 
@@ -331,7 +331,7 @@ void set(const feature_t& feature, tensor_mem_t<tscalar, 4>& tensor, tensor_size
 }
 
 template <typename tscalar>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 1>& tensor, tensor_size_t sample, const string_t& value)
+void set(const feature_t& feature, tensor_map_t<tscalar, 1>&& tensor, tensor_size_t sample, const string_t& value)
 {
     tensor_size_t label;
     try
@@ -342,11 +342,11 @@ void set(const feature_t& feature, tensor_mem_t<tscalar, 1>& tensor, tensor_size
     {
         critical0("cannot set single-label feature <", feature.name(), ">: caught exception <", e.what(), ">!");
     }
-    set(feature, tensor, sample, label);
+    set(feature, std::move(tensor), sample, label);
 }
 
 template <typename tscalar>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 2>& tensor, tensor_size_t sample, const string_t& value)
+void set(const feature_t& feature, tensor_map_t<tscalar, 2>&& tensor, tensor_size_t sample, const string_t& value)
 {
     tensor_size_t scalar;
     try
@@ -357,11 +357,11 @@ void set(const feature_t& feature, tensor_mem_t<tscalar, 2>& tensor, tensor_size
     {
         critical0("cannot set multi-label feature <", feature.name(), ">: caught exception <", e.what(), ">!");
     }
-    set(feature, tensor, sample, scalar);
+    set(feature, std::move(tensor), sample, scalar);
 }
 
 template <typename tscalar>
-void set(const feature_t& feature, tensor_mem_t<tscalar, 4>& tensor, tensor_size_t sample, const string_t& value)
+void set(const feature_t& feature, tensor_map_t<tscalar, 4>&& tensor, tensor_size_t sample, const string_t& value)
 {
     tscalar scalar;
     try
@@ -372,7 +372,7 @@ void set(const feature_t& feature, tensor_mem_t<tscalar, 4>& tensor, tensor_size
     {
         critical0("cannot set scalar feature <", feature.name(), ">: caught exception <", e.what(), ">!");
     }
-    set(feature, tensor, sample, scalar);
+    set(feature, std::move(tensor), sample, scalar);
 }
 
 }
@@ -380,19 +380,19 @@ void set(const feature_t& feature, tensor_mem_t<tscalar, 4>& tensor, tensor_size
 #define FEATURE_STORAGE_SET_SCALAR(SCALAR) \
 void feature_storage_t::set(tensor_size_t sample, SCALAR value) \
 { \
-    visit([&] (auto& tensor) { ::set(m_feature, tensor, sample, value); }); \
+    visit([&] (auto&& tensor) { ::set(m_feature, std::move(tensor), sample, value); }); \
     ::nano::setbit(m_mask, sample); \
 } \
 \
 void feature_storage_t::set(tensor_size_t sample, tensor_cmap_t<SCALAR, 1> values) \
 { \
-    visit([&] (auto& tensor) { ::set(m_feature, tensor, sample, values); }); \
+    visit([&] (auto&& tensor) { ::set(m_feature, std::move(tensor), sample, values); }); \
     ::nano::setbit(m_mask, sample); \
 } \
 \
 void feature_storage_t::set(tensor_size_t sample, tensor_cmap_t<SCALAR, 3> values) \
 { \
-    visit([&] (auto& tensor) { ::set(m_feature, tensor, sample, values); }); \
+    visit([&] (auto&& tensor) { ::set(m_feature, std::move(tensor), sample, values); }); \
     ::nano::setbit(m_mask, sample); \
 }
 
@@ -411,7 +411,7 @@ FEATURE_STORAGE_SET_SCALAR(uint64_t)
 
 void feature_storage_t::set(tensor_size_t sample, const string_t& value)
 {
-    visit([&] (auto& tensor) { ::set(m_feature, tensor, sample, value); });
+    visit([&] (auto&& tensor) { ::set(m_feature, std::move(tensor), sample, value); });
     ::nano::setbit(m_mask, sample);
 }
 

@@ -54,9 +54,10 @@ rfeature_dataset_iterator_t memory_dataset_t::feature_iterator(indices_t samples
     return std::make_unique<memory_feature_dataset_iterator_t>(*this, std::move(samples));
 }
 
-rflatten_dataset_iterator_t memory_dataset_t::flatten_iterator(indices_t samples) const
+rflatten_dataset_iterator_t memory_dataset_t::flatten_iterator(indices_t) const
 {
-    return std::make_unique<memory_flatten_dataset_iterator_t>(*this, std::move(samples));
+    // TODO: return std::make_unique<memory_flatten_dataset_iterator_t>(*this, std::move(samples));
+    return nullptr;
 }
 
 memory_feature_dataset_iterator_t::memory_feature_dataset_iterator_t(const memory_dataset_t& dataset, indices_t samples) :
@@ -70,30 +71,12 @@ const indices_t& memory_feature_dataset_iterator_t::samples() const
     return m_samples;
 }
 
-bool memory_feature_dataset_iterator_t::cache_inputs(int64_t, execution)
-{
-    // TODO
-    return false;
-}
-
-bool memory_feature_dataset_iterator_t::cache_targets(int64_t, execution)
-{
-    // TODO
-    return false;
-}
-
-bool memory_feature_dataset_iterator_t::cache_inputs(int64_t, indices_cmap_t, execution)
-{
-    // TODO
-    return false;
-}
-
 feature_t memory_feature_dataset_iterator_t::target() const
 {
     return m_dataset.tstorage().feature();
 }
 
-tensor3d_dims_t memory_feature_dataset_iterator_t::target_dims() const\
+tensor3d_dims_t memory_feature_dataset_iterator_t::target_dims() const
 {
     return m_dataset.tstorage().feature().dims();
 }
@@ -193,41 +176,20 @@ tensor1d_cmap_t memory_feature_dataset_iterator_t::input(tensor_size_t feature, 
     return buffer.tensor();
 }
 
-memory_flatten_dataset_iterator_t::memory_flatten_dataset_iterator_t(const memory_dataset_t& dataset, indices_t samples) :
-    m_dataset(dataset),
-    m_samples(std::move(samples))
-{
-}
-
-const indices_t& memory_flatten_dataset_iterator_t::samples() const
-{
-    return m_samples;
-}
-
-bool memory_flatten_dataset_iterator_t::cache_inputs(int64_t, execution)
+bool memory_feature_dataset_iterator_t::cache_inputs(int64_t, execution)
 {
     // TODO
     return false;
 }
 
-bool memory_flatten_dataset_iterator_t::cache_targets(int64_t, execution)
+bool memory_feature_dataset_iterator_t::cache_targets(int64_t, execution)
 {
     // TODO
     return false;
 }
 
-feature_t memory_flatten_dataset_iterator_t::target() const
+bool memory_feature_dataset_iterator_t::cache_inputs(int64_t, indices_cmap_t, execution)
 {
-    return m_dataset.tstorage().feature();
-}
-
-tensor3d_dims_t memory_flatten_dataset_iterator_t::target_dims() const
-{
-    return m_dataset.tstorage().feature().dims();
-}
-
-tensor4d_cmap_t memory_flatten_dataset_iterator_t::targets(tensor_range_t samples, tensor4d_t& buffer) const
-{
-    m_dataset.tstorage().get(m_samples.slice(samples), buffer);
-    return buffer.tensor();
+    // TODO
+    return false;
 }

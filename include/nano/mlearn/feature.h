@@ -305,6 +305,29 @@ namespace nano
         const storage_t& storage() const { return m_storage; }
 
         ///
+        /// \brief mutable access to the internal storage.
+        ///
+        template <typename toperator>
+        auto visit(const toperator& op)
+        {
+            return std::visit(overloaded{
+                [&] (scalar_storage_t<float>& tensor) { return op(tensor.tensor()); },
+                [&] (scalar_storage_t<double>& tensor) { return op(tensor.tensor()); },
+                [&] (scalar_storage_t<int8_t>& tensor) { return op(tensor.tensor()); },
+                [&] (scalar_storage_t<int16_t>& tensor) { return op(tensor.tensor()); },
+                [&] (scalar_storage_t<int32_t>& tensor) { return op(tensor.tensor()); },
+                [&] (scalar_storage_t<int64_t>& tensor) { return op(tensor.tensor()); },
+                [&] (scalar_storage_t<uint8_t>& tensor) { return op(tensor.tensor()); },
+                [&] (scalar_storage_t<uint16_t>& tensor) { return op(tensor.tensor()); },
+                [&] (scalar_storage_t<uint32_t>& tensor) { return op(tensor.tensor()); },
+                [&] (scalar_storage_t<uint64_t>& tensor) { return op(tensor.tensor()); },
+                [&] (sclass_storage_t<uint8_t>& tensor) { return op(tensor.tensor()); },
+                [&] (sclass_storage_t<uint16_t>& tensor) { return op(tensor.tensor()); },
+                [&] (mclass_storage_t<uint8_t>& tensor) { return op(tensor.tensor()); },
+            }, m_storage);
+        }
+
+        ///
         /// \brief constant access to the internal storage.
         ///
         template <typename toperator>
@@ -397,6 +420,22 @@ namespace nano
         bool optional() const;
 
         ///
+        /// \brief mark the feature value for the given sample as given.
+        ///
+        void given(tensor_size_t sample)
+        {
+            ::nano::setbit(m_mask, sample);
+        }
+
+        ///
+        /// \brief check if the feature value for the given sample is missing.
+        ///
+        bool missing(tensor_size_t sample) const
+        {
+            return !::nano::getbit(m_mask, sample);
+        }
+
+        ///
         /// \brief returns the feature-wise statistics of the given samples.
         ///
         feature_scalar_stats_t scalar_stats(indices_cmap_t samples) const;
@@ -407,26 +446,6 @@ namespace nano
 
         void set(tensor_size_t sample);
         void set(indices_cmap_t samples);
-
-        template <typename toperator>
-        auto visit(const toperator& op)
-        {
-            return std::visit(overloaded{
-                [&] (scalar_storage_t<float>& tensor) { return op(tensor); },
-                [&] (scalar_storage_t<double>& tensor) { return op(tensor); },
-                [&] (scalar_storage_t<int8_t>& tensor) { return op(tensor); },
-                [&] (scalar_storage_t<int16_t>& tensor) { return op(tensor); },
-                [&] (scalar_storage_t<int32_t>& tensor) { return op(tensor); },
-                [&] (scalar_storage_t<int64_t>& tensor) { return op(tensor); },
-                [&] (scalar_storage_t<uint8_t>& tensor) { return op(tensor); },
-                [&] (scalar_storage_t<uint16_t>& tensor) { return op(tensor); },
-                [&] (scalar_storage_t<uint32_t>& tensor) { return op(tensor); },
-                [&] (scalar_storage_t<uint64_t>& tensor) { return op(tensor); },
-                [&] (sclass_storage_t<uint8_t>& tensor) { return op(tensor); },
-                [&] (sclass_storage_t<uint16_t>& tensor) { return op(tensor); },
-                [&] (mclass_storage_t<uint8_t>& tensor) { return op(tensor); },
-            }, m_storage);
-        }
 
         // attributes
         feature_t       m_feature;  ///<

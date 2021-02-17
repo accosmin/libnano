@@ -5,8 +5,8 @@ function(target_compile_configure target)
         PRIVATE $<$<CXX_COMPILER_ID:Clang>:-Wall -Wextra -pedantic -Wconversion>
         PRIVATE $<$<CXX_COMPILER_ID:AppleClang>:-Wall -Wextra -pedantic -Wconversion>)
     target_compile_features(${target}
-        PUBLIC cxx_std_14
-        PRIVATE cxx_std_14)
+        PUBLIC cxx_std_17
+        PRIVATE cxx_std_17)
 endfunction()
 
 # function to create a unit test application

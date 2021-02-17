@@ -47,6 +47,12 @@ void memory_dataset_t::resize(tensor_size_t samples, const features_t& features,
             m_inputs.emplace_back(features[i], samples);
         }
     }
+
+    m_inputs_mask.resize(static_cast<tensor_size_t>(features.size()), (samples + 7) / 8);
+    m_inputs_mask.zero();
+
+    m_target_mask.resize((samples + 7) / 8);
+    m_target_mask.zero();
 }
 
 rfeature_dataset_iterator_t memory_dataset_t::feature_iterator(indices_t samples) const
@@ -126,6 +132,12 @@ indices_t memory_feature_dataset_iterator_t::scalar_features() const
     return ::filter(m_dataset.istorage(), op);
 }
 
+indices_t memory_feature_dataset_iterator_t::struct_features() const
+{
+    // TODO:
+    return scalar_features();
+}
+
 indices_t memory_feature_dataset_iterator_t::sclass_features() const
 {
     const auto op = [] (const feature_storage_t& fs)
@@ -173,6 +185,13 @@ tensor1d_cmap_t memory_feature_dataset_iterator_t::input(tensor_size_t feature, 
     tensor4d_t buffer2;
     fs.get(m_samples, buffer2);
     buffer = buffer2.reshape(-1);
+    return buffer.tensor();
+}
+
+tensor4d_cmap_t memory_feature_dataset_iterator_t::input(tensor_size_t feature, tensor4d_t& buffer) const
+{
+    const auto& fs = m_dataset.istorage(feature);
+    (void)fs;
     return buffer.tensor();
 }
 

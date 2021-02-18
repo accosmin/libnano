@@ -62,21 +62,17 @@ namespace nano
 
         tensor_vector_storage_t& operator=(const tensor_carray_storage_t<tscalar, trank>& other)
         {
-            if (data() != other.data())
-            {
-                resize(other.dims());
-                map_vector(data(), size()) = map_vector(other.data(), other.size());
-            }
+            tensor_vector_t<tscalar> data = map_vector(other.data(), other.size());
+            resize(other.dims());
+            std::swap(data, m_data);
             return *this;
         }
 
         tensor_vector_storage_t& operator=(const tensor_marray_storage_t<tscalar, trank>& other)
         {
-            if (data() != other.data())
-            {
-                resize(other.dims());
-                map_vector(data(), size()) = map_vector(other.data(), other.size());
-            }
+            tensor_vector_t<tscalar> data = map_vector(other.data(), other.size());
+            resize(other.dims());
+            std::swap(data, m_data);
             return *this;
         }
 
@@ -229,10 +225,7 @@ namespace nano
 
         tensor_marray_storage_t& operator=(const tensor_marray_storage_t<tscalar, trank>& other) // NOLINT(cert-oop54-cpp,bugprone-unhandled-self-assignment)
         {
-            if (this != &other)
-            {
-                copy(other);
-            }
+            copy(other);
             return *this;
         }
 
@@ -251,10 +244,7 @@ namespace nano
         void copy(const tstorage& other)
         {
             assert(size() == other.size());
-            if (data() != other.data())
-            {
-                map_vector(data(), size()) = map_vector(other.data(), other.size());
-            }
+            map_vector(data(), size()) = map_vector(other.data(), other.size());
         }
 
         // attributes

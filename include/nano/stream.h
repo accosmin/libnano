@@ -265,18 +265,10 @@ namespace nano
         }
         identifiable_t& operator=(const identifiable_t& other)// NOLINT(cert-oop54-cpp)
         {
-            if (this != &other)
-            {
-                m_id = other.m_id;
-                if (other.m_object != nullptr)
-                {
-                    m_object = other.m_object->clone();
-                }
-                else
-                {
-                    m_object.reset();
-                }
-            }
+            auto copy = identifiable_t{other};
+            using std::swap;
+            swap(m_id, copy.m_id);
+            swap(m_object, copy.m_object);
             return *this;
         }
 

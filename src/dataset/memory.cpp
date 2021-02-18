@@ -21,6 +21,15 @@ tensor_size_t memory_dataset_t::samples() const
     }
 }
 
+feature_storage_t& memory_dataset_t::istorage(tensor_size_t feature)
+{
+    critical(
+        feature < 0 || feature >= static_cast<tensor_size_t>(m_inputs.size()),
+        "failed to access input feature: index ", feature, " not in [0, ", m_inputs.size());
+
+    return m_inputs[static_cast<size_t>(feature)];
+}
+
 const feature_storage_t& memory_dataset_t::istorage(tensor_size_t feature) const
 {
     critical(

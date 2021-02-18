@@ -23,6 +23,8 @@ public:
     {
         resize(m_samples, m_features, m_target);
 
+        this->set(0, 0.1);
+
         // TODO
     }
 

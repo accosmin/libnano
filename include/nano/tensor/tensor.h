@@ -415,14 +415,14 @@ namespace nano
         ///
         /// \brief access an element of the tensor
         ///
-        tscalar& operator()(const tensor_size_t index)
+        typename tbase::tmutableref operator()(const tensor_size_t index)
         {
             assert(const_cast<const tensor_t*>(this)->data() != nullptr);
             assert(index >= 0 && index < size());
             return data()[index];
         }
 
-        tscalar operator()(const tensor_size_t index) const
+        typename tbase::tconstref operator()(const tensor_size_t index) const
         {
             assert(data() != nullptr);
             assert(index >= 0 && index < size());
@@ -430,13 +430,13 @@ namespace nano
         }
 
         template <typename... tindices>
-        tscalar& operator()(const tensor_size_t index, const tindices... indices)
+        typename tbase::tmutableref operator()(const tensor_size_t index, const tindices... indices)
         {
             return operator()(offset(index, indices...));
         }
 
         template <typename... tindices>
-        tscalar operator()(const tensor_size_t index, const tindices... indices) const
+        typename tbase::tconstref operator()(const tensor_size_t index, const tindices... indices) const
         {
             return operator()(offset(index, indices...));
         }

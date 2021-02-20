@@ -27,6 +27,8 @@ namespace nano
 
         using tbase::size;
         using tdims = typename tbase::tdims;
+        using tmutableref = tscalar&;
+        using tconstref = const tscalar&;
 
         tensor_vector_storage_t() = default;
         ~tensor_vector_storage_t() = default;
@@ -117,6 +119,8 @@ namespace nano
 
         using tbase::size;
         using tdims = typename tbase::tdims;
+        using tmutableref = const tscalar&;
+        using tconstref = const tscalar&;
 
         tensor_carray_storage_t() = default;
         ~tensor_carray_storage_t() = default;
@@ -183,6 +187,8 @@ namespace nano
 
         using tbase::size;
         using tdims = typename tbase::tdims;
+        using tmutableref = tscalar&;
+        using tconstref = tscalar&;
 
         tensor_marray_storage_t() = default;
         ~tensor_marray_storage_t() = default;

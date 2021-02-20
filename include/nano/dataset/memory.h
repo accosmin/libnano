@@ -128,7 +128,8 @@ namespace nano
         }
 
         template <typename tscalar, size_t trank, typename tvalue>
-        static void set(const feature_t& feature, const tensor_map_t<tscalar, trank>& tensor, tensor_size_t sample, const tvalue& value)
+        static void set(
+            const feature_t& feature, const tensor_map_t<tscalar, trank>& tensor, tensor_size_t sample, const tvalue& value)
         {
             // single-label feature
             if constexpr (trank == 1)

@@ -160,7 +160,7 @@ namespace nano
                     "cannot set single-label feature <", feature.name(),
                     ">: invalid label ", label, " not in [0, ", labels, ")!");
 
-                tensor(sample) = static_cast<tscalar>(value);
+                tensor(sample) = static_cast<tscalar>(label);
             }
 
             // multi-label feature
@@ -223,19 +223,10 @@ namespace nano
 
                     tensor(sample) = static_cast<tscalar>(value);
                 }
-                else if constexpr (tvalue::rank() == 1)
+                else if constexpr (::nano::is_tensor<tvalue>())
                 {
                     critical(
                         ::nano::size(feature.dims()) != value.size(),
-                        "cannot set scalar feature <", feature.name(),
-                        ">: invalid tensor dimensions ", feature.dims(), " vs. ", value.dims(), "!");
-
-                    tensor.vector(sample) = value.vector().template cast<tscalar>();
-                }
-                else if constexpr (tvalue::rank() == 3)
-                {
-                    critical(
-                        feature.dims() != value.dims(),
                         "cannot set scalar feature <", feature.name(),
                         ">: invalid tensor dimensions ", feature.dims(), " vs. ", value.dims(), "!");
 
@@ -260,10 +251,10 @@ namespace nano
         }
 
         // attributes
-        target_t                m_target;       ///<
-        inputs_t                m_inputs;       ///<
-        inputs_mask_t           m_inputs_mask;  ///< given is the bit at (feature, sample) is 1
-        target_mask_t           m_target_mask;  ///< given is the bit at (sample) is 1
+        target_t                m_target;           ///<
+        inputs_t                m_inputs;           ///<
+        inputs_mask_t           m_inputs_mask;      ///< given is the bit at (feature, sample) is 1
+        target_mask_t           m_target_mask;      ///< given is the bit at (sample) is 1
     };
 
     ///

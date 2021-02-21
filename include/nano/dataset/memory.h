@@ -127,115 +127,95 @@ namespace nano
             return scalar;
         }
 
-        template <typename tscalar, size_t trank, typename tvalue>
-        static void set(
-            const feature_t& feature, const tensor_map_t<tscalar, trank>& tensor, tensor_size_t sample, const tvalue& value)
+        template <typename tscalar, typename tvalue>
+        static void set(const feature_t& feature, const tensor_map_t<tscalar, 1>& tensor, tensor_size_t sample, const tvalue& value)
         {
             // single-label feature
-            if constexpr (trank == 1)
+            tensor_size_t label;
+            if constexpr (std::is_same<tvalue, string_t>::value)
             {
-                const auto samples = tensor.template size<0>();
-                critical(
-                    sample < 0 || sample >= samples,
-                    "cannot set single-label feature <", feature.name(),
-                    ">: invalid sample ", sample, " not in [0, ", samples, ")!");
-
-                tensor_size_t label;
-                if constexpr (std::is_same<tvalue, string_t>::value)
-                {
-                    label = memory_dataset_t::check_from_string<tensor_size_t>("single-label", feature, value);
-                }
-                else if constexpr (std::is_arithmetic<tvalue>::value)
-                {
-                    label = static_cast<tensor_size_t>(value);
-                }
-                else
-                {
-                    critical0("cannot set single-label feature <", feature.name(), ">!");
-                }
-
-                const auto labels = static_cast<tensor_size_t>(feature.labels().size());
-                critical(
-                    label < 0 || label >= labels,
-                    "cannot set single-label feature <", feature.name(),
-                    ">: invalid label ", label, " not in [0, ", labels, ")!");
-
-                tensor(sample) = static_cast<tscalar>(label);
+                label = memory_dataset_t::check_from_string<tensor_size_t>("single-label", feature, value);
+            }
+            else if constexpr (std::is_arithmetic<tvalue>::value)
+            {
+                label = static_cast<tensor_size_t>(value);
+            }
+            else
+            {
+                critical0("cannot set single-label feature <", feature.name(), ">!");
             }
 
+            const auto labels = static_cast<tensor_size_t>(feature.labels().size());
+            critical(
+                label < 0 || label >= labels,
+                "cannot set single-label feature <", feature.name(),
+                ">: invalid label ", label, " not in [0, ", labels, ")!");
+
+            tensor(sample) = static_cast<tscalar>(label);
+        }
+
+        template <typename tscalar, typename tvalue>
+        static void set(const feature_t& feature, const tensor_map_t<tscalar, 2>& tensor, tensor_size_t sample, const tvalue& value)
+        {
             // multi-label feature
-            else if constexpr (trank == 2)
+            if constexpr (::nano::is_tensor<tvalue>::value)
             {
-                const auto samples = tensor.template size<0>();
-                critical(
-                    sample < 0 || sample >= samples,
-                    "cannot set multi-label feature <", feature.name(),
-                    ">: invalid sample ", sample, " not in [0, ", samples, ")!");
-
-                if constexpr (::nano::is_tensor<tvalue>::value)
+                if constexpr (tvalue::rank() == 1)
                 {
-                    if constexpr (tvalue::rank() == 1)
-                    {
-                        const auto labels = static_cast<tensor_size_t>(feature.labels().size());
+                    const auto labels = static_cast<tensor_size_t>(feature.labels().size());
 
-                        critical(
-                            value.size() != labels,
-                            "cannot set multi-label feature <", feature.name(),
-                            ">: invalid number of labels ", value.size(), " vs. ", labels, "!");
+                    critical(
+                        value.size() != labels,
+                        "cannot set multi-label feature <", feature.name(),
+                        ">: invalid number of labels ", value.size(), " vs. ", labels, "!");
 
-                        tensor.vector(sample) = value.vector().template cast<tscalar>();
-                    }
-                    else
-                    {
-                        critical0("cannot set multi-label feature <", feature.name(), ">!");
-                    }
+                    tensor.vector(sample) = value.vector().template cast<tscalar>();
                 }
                 else
                 {
                     critical0("cannot set multi-label feature <", feature.name(), ">!");
                 }
             }
-
-            // continuous feature
             else
             {
-                const auto samples = tensor.template size<0>();
+                critical0("cannot set multi-label feature <", feature.name(), ">!");
+            }
+        }
+
+        template <typename tscalar, typename tvalue>
+        static void set(const feature_t& feature, const tensor_map_t<tscalar, 4>& tensor, tensor_size_t sample, const tvalue& value)
+        {
+            // continuous feature
+            if constexpr (std::is_same<tvalue, string_t>::value)
+            {
                 critical(
-                    sample < 0 || sample >= samples,
+                    ::nano::size(feature.dims()) != 1,
                     "cannot set scalar feature <", feature.name(),
-                    ">: invalid sample ", sample, " not in [0, ", samples, ")!");
+                    ">: invalid tensor dimensions ", feature.dims(), "!");
 
-                if constexpr (std::is_same<tvalue, string_t>::value)
-                {
-                    critical(
-                        ::nano::size(feature.dims()) != 1,
-                        "cannot set scalar feature <", feature.name(),
-                        ">: invalid tensor dimensions ", feature.dims(), "!");
+                tensor(sample) = memory_dataset_t::check_from_string<tscalar>("scalar", feature, value);
+            }
+            else if constexpr (std::is_arithmetic<tvalue>::value)
+            {
+                critical(
+                    ::nano::size(feature.dims()) != 1,
+                    "cannot set scalar feature <", feature.name(),
+                    ">: invalid tensor dimensions ", feature.dims(), "!");
 
-                    tensor(sample) = memory_dataset_t::check_from_string<tscalar>("scalar", feature, value);
-                }
-                else if constexpr (std::is_arithmetic<tvalue>::value)
-                {
-                    critical(
-                        ::nano::size(feature.dims()) != 1,
-                        "cannot set scalar feature <", feature.name(),
-                        ">: invalid tensor dimensions ", feature.dims(), "!");
+                tensor(sample) = static_cast<tscalar>(value);
+            }
+            else if constexpr (::nano::is_tensor<tvalue>())
+            {
+                critical(
+                    ::nano::size(feature.dims()) != value.size(),
+                    "cannot set scalar feature <", feature.name(),
+                    ">: invalid tensor dimensions ", feature.dims(), " vs. ", value.dims(), "!");
 
-                    tensor(sample) = static_cast<tscalar>(value);
-                }
-                else if constexpr (::nano::is_tensor<tvalue>())
-                {
-                    critical(
-                        ::nano::size(feature.dims()) != value.size(),
-                        "cannot set scalar feature <", feature.name(),
-                        ">: invalid tensor dimensions ", feature.dims(), " vs. ", value.dims(), "!");
-
-                    tensor.vector(sample) = value.vector().template cast<tscalar>();
-                }
-                else
-                {
-                    critical0("cannot set scalar feature <", feature.name(), ">!");
-                }
+                tensor.vector(sample) = value.vector().template cast<tscalar>();
+            }
+            else
+            {
+                critical0("cannot set scalar feature <", feature.name(), ">!");
             }
         }
 
@@ -244,6 +224,12 @@ namespace nano
         {
             fs.visit([&] (const auto& tensor)
             {
+                const auto samples = tensor.template size<0>();
+                critical(
+                    sample < 0 || sample >= samples,
+                    "cannot set feature <", fs.feature().name(),
+                    ">: invalid sample ", sample, " not in [0, ", samples, ")!");
+
                 memory_dataset_t::set(fs.feature(), tensor, sample, value);
             });
 

@@ -2,66 +2,184 @@
 
 using namespace nano;
 
-memory_dataset_t::memory_dataset_t() = default;
-
-task_type memory_dataset_t::type() const
+feature_storage_t::feature_storage_t(feature_t feature, tensor_size_t samples) :
+    m_feature(std::move(feature))
 {
-    return static_cast<task_type>(m_target.feature());
-}
+    const auto& name = m_feature.name();
+    const auto itype = static_cast<int>(m_feature.type());
 
-tensor_size_t memory_dataset_t::samples() const
-{
-    if (m_inputs.empty())
+    if (m_feature.discrete())
     {
-        return 0;
+        const auto ulabels = m_feature.labels().size();
+        const auto ilabels = static_cast<tensor_size_t>(ulabels);
+
+        if (ulabels <= 0xFF)
+        {
+            switch (m_feature.type())
+            {
+            case feature_type::sclass:  m_storage = tensor_mem_t<uint8_t, 1>{samples}; break;
+            case feature_type::mclass:  m_storage = tensor_mem_t<uint8_t, 2>{samples, ilabels}; break;
+            default:                    critical0("feature <", name, "> has inconsistent type ", itype, "!"); break;
+            }
+        }
+        else if (ulabels <= 0xFFFF)
+        {
+            switch (m_feature.type())
+            {
+            case feature_type::sclass:  m_storage = tensor_mem_t<uint16_t, 1>{samples}; break;
+            case feature_type::mclass:  m_storage = tensor_mem_t<uint8_t, 2>{samples, ilabels}; break;
+            default:                    critical0("feature <", name, "> has inconsistent type ", itype, "!"); break;
+            }
+        }
+        else
+        {
+            critical0("discrete feature <", name, "> has too many labels ", ulabels, " vs. 65535!");
+        }
     }
     else
     {
-        return m_inputs.begin()->samples();
+        const auto dims = cat_dims(samples, m_feature.dims());
+
+        switch (m_feature.type())
+        {
+        case feature_type::float32: m_storage = tensor_mem_t<float, 4>{dims}; break;
+        case feature_type::float64: m_storage = tensor_mem_t<double, 4>{dims}; break;
+        case feature_type::int8:    m_storage = tensor_mem_t<int8_t, 4>{dims}; break;
+        case feature_type::int16:   m_storage = tensor_mem_t<int16_t, 4>{dims}; break;
+        case feature_type::int32:   m_storage = tensor_mem_t<int32_t, 4>{dims}; break;
+        case feature_type::int64:   m_storage = tensor_mem_t<int64_t, 4>{dims}; break;
+        case feature_type::uint8:   m_storage = tensor_mem_t<uint8_t, 4>{dims}; break;
+        case feature_type::uint16:  m_storage = tensor_mem_t<uint16_t, 4>{dims}; break;
+        case feature_type::uint32:  m_storage = tensor_mem_t<uint32_t, 4>{dims}; break;
+        case feature_type::uint64:  m_storage = tensor_mem_t<uint64_t, 4>{dims}; break;
+        default:                    critical0("feature <", name, "> has inconsistent type ", itype, "!"); break;
+        }
     }
 }
 
-feature_storage_t& memory_dataset_t::istorage(tensor_size_t feature)
+feature_scalar_stats_t feature_storage_t::scalar_stats(const indices_cmap_t& samples, const mask_cmap_t& mask) const
 {
-    critical(
-        feature < 0 || feature >= static_cast<tensor_size_t>(m_inputs.size()),
-        "failed to access input feature: index ", feature, " not in [0, ", m_inputs.size());
+    return visit([&] (const auto& tensor)
+    {
+        feature_scalar_stats_t stats;
 
-    return m_inputs[static_cast<size_t>(feature)];
+        if constexpr (tensor.rank() == 4)
+        {
+            stats.m_min.resize(dims());
+            stats.m_max.resize(dims());
+            stats.m_mean.resize(dims());
+            stats.m_stdev.resize(dims());
+
+            stats.m_count = 0;
+            stats.m_mean.zero();
+            stats.m_stdev.zero();
+            stats.m_min.constant(std::numeric_limits<scalar_t>::max());
+            stats.m_max.constant(std::numeric_limits<scalar_t>::lowest());
+
+            for (const auto sample : samples)
+            {
+                if (::nano::getbit(mask, sample))
+                {
+                    const auto values = tensor.vector(sample).template cast<scalar_t>();
+
+                    stats.m_count ++;
+                    stats.m_mean.array() += values.array();
+                    stats.m_stdev.array() += values.array().square();
+                    stats.m_min.array() = stats.m_min.array().min(values.array());
+                    stats.m_max.array() = stats.m_max.array().max(values.array());
+                }
+            }
+
+            if (stats.m_count > 1)
+            {
+                const auto N = stats.m_count;
+                stats.m_stdev.array() = ((stats.m_stdev.array() - stats.m_mean.array().square() / N) / (N - 1)).sqrt();
+                stats.m_mean.array() /= static_cast<scalar_t>(N);
+            }
+        }
+        else
+        {
+            critical0("cannot access scalar feature <", name(), ">!");
+        }
+        return stats;
+    });
 }
 
-const feature_storage_t& memory_dataset_t::istorage(tensor_size_t feature) const
+feature_sclass_stats_t feature_storage_t::sclass_stats(const indices_cmap_t& samples, const mask_cmap_t& mask) const
 {
-    critical(
-        feature < 0 || feature >= static_cast<tensor_size_t>(m_inputs.size()),
-        "failed to access input feature: index ", feature, " not in [0, ", m_inputs.size());
+    return visit([&] (const auto& tensor)
+    {
+        feature_sclass_stats_t stats;
 
-    return m_inputs[static_cast<size_t>(feature)];
+        if constexpr (tensor.rank() == 1)
+        {
+            stats.m_class_counts.resize(static_cast<tensor_size_t>(m_feature.labels().size()));
+            stats.m_class_counts.zero();
+
+            for (const auto sample : samples)
+            {
+                if (::nano::getbit(mask, sample))
+                {
+                    const auto label = static_cast<tensor_size_t>(tensor(sample));
+
+                    stats.m_class_counts(label) ++;
+                }
+            }
+        }
+        else
+        {
+            critical0("cannot access single-label feature <", name(), ">!");
+        }
+        return stats;
+    });
+}
+
+feature_mclass_stats_t feature_storage_t::mclass_stats(const indices_cmap_t& samples, const mask_cmap_t& mask) const
+{
+    return visit([&] (const auto& tensor)
+    {
+        feature_mclass_stats_t stats;
+
+        if constexpr (tensor.rank() == 2)
+        {
+            stats.m_class_counts.resize(static_cast<tensor_size_t>(m_feature.labels().size()));
+            stats.m_class_counts.zero();
+
+            for (const auto sample : samples)
+            {
+                if (::nano::getbit(mask, sample))
+                {
+                    stats.m_class_counts.array() += tensor.array(sample).template cast<tensor_size_t>();
+                }
+            }
+        }
+        else
+        {
+            critical0("cannot access multi-label feature <", name(), ">!");
+        }
+        return stats;
+    });
+}
+
+memory_dataset_t::memory_dataset_t() = default;
+
+void memory_dataset_t::resize(tensor_size_t samples, const features_t& features)
+{
+    this->resize(samples, features, string_t::npos);
 }
 
 void memory_dataset_t::resize(tensor_size_t samples, const features_t& features, size_t target)
 {
-    m_inputs.clear();
-    m_inputs.shrink_to_fit();
-    m_target = feature_storage_t{};
+    m_target = target;
 
-    for (size_t i = 0; i < features.size(); ++ i)
+    m_storage.clear();
+    for (const auto& feature : features)
     {
-        if (i == target)
-        {
-            m_target = feature_storage_t{features[i], samples};
-        }
-        else
-        {
-            m_inputs.emplace_back(features[i], samples);
-        }
+        m_storage.emplace_back(feature, samples);
     }
 
-    m_inputs_mask.resize(static_cast<tensor_size_t>(features.size()), (samples + 7) / 8);
-    m_inputs_mask.zero();
-
-    m_target_mask.resize((samples + 7) / 8);
-    m_target_mask.zero();
+    m_mask.resize(static_cast<tensor_size_t>(features.size()), (samples + 7) / 8);
+    m_mask.zero();
 }
 
 rfeature_dataset_iterator_t memory_dataset_t::feature_iterator(indices_t samples) const
@@ -86,6 +204,11 @@ const indices_t& memory_feature_dataset_iterator_t::samples() const
     return m_samples;
 }
 
+tensor_size_t memory_feature_dataset_iterator_t::features() const
+{
+    return m_dataset.features();
+}
+
 feature_t memory_feature_dataset_iterator_t::target() const
 {
     return m_dataset.tstorage().feature();
@@ -93,37 +216,44 @@ feature_t memory_feature_dataset_iterator_t::target() const
 
 tensor3d_dims_t memory_feature_dataset_iterator_t::target_dims() const
 {
+    // TODO: handle classification tasks!!!
     return m_dataset.tstorage().feature().dims();
 }
 
-tensor4d_cmap_t memory_feature_dataset_iterator_t::targets(tensor_range_t samples, tensor4d_t& buffer) const
+tensor4d_cmap_t memory_feature_dataset_iterator_t::targets(tensor4d_t& buffer) const
 {
-    m_dataset.tstorage().get(m_samples.slice(samples), buffer);
+    const auto& fs = m_dataset.tstorage();
+    fs.get(m_samples, m_dataset.tmask(), buffer);
     return buffer.tensor();
 }
 
-tensor_size_t memory_feature_dataset_iterator_t::features() const
+namespace
 {
-    return static_cast<tensor_size_t>(m_dataset.istorage().size());
-}
-
-namespace {
-
     template <typename top>
-    indices_t filter(const std::vector<feature_storage_t>& istorage, const top& op)
+    indices_t filter(const std::vector<feature_storage_t>& storage, size_t target, const top& op)
     {
-        const auto count = std::count_if(istorage.begin(), istorage.end(), op);
+        tensor_size_t count = 0;
+        for (size_t i = 0, size = storage.size(); i < size; ++ i)
+        {
+            if (i != target && op(storage[i]))
+            {
+                ++ count;
+            }
+        }
 
         indices_t indices(count);
 
         tensor_size_t feature = 0, index = 0;
-        for (const auto& fs : istorage)
+        for (size_t i = 0, size = storage.size(); i < size; ++ i)
         {
-            if (op(fs))
+            if (i != target)
             {
-                indices(index ++) = feature;
+                if (op(storage[i]))
+                {
+                    indices(index ++) = feature;
+                }
+                ++ feature;
             }
-            ++ feature;
         }
 
         return indices;
@@ -139,7 +269,7 @@ indices_t memory_feature_dataset_iterator_t::scalar_features() const
                 ::nano::size(fs.feature().dims()) == 1;
     };
 
-    return ::filter(m_dataset.istorage(), op);
+    return ::filter(m_dataset.storage(), m_dataset.target(), op);
 }
 
 indices_t memory_feature_dataset_iterator_t::struct_features() const
@@ -151,7 +281,7 @@ indices_t memory_feature_dataset_iterator_t::struct_features() const
                 ::nano::size(fs.feature().dims()) > 1;
     };
 
-    return ::filter(m_dataset.istorage(), op);
+    return ::filter(m_dataset.storage(), m_dataset.target(), op);
 }
 
 indices_t memory_feature_dataset_iterator_t::sclass_features() const
@@ -161,7 +291,7 @@ indices_t memory_feature_dataset_iterator_t::sclass_features() const
         return  fs.feature().type() == feature_type::sclass;
     };
 
-    return ::filter(m_dataset.istorage(), op);
+    return ::filter(m_dataset.storage(), m_dataset.target(), op);
 }
 
 indices_t memory_feature_dataset_iterator_t::mclass_features() const
@@ -171,7 +301,7 @@ indices_t memory_feature_dataset_iterator_t::mclass_features() const
         return  fs.feature().type() == feature_type::mclass;
     };
 
-    return ::filter(m_dataset.istorage(), op);
+    return ::filter(m_dataset.storage(), m_dataset.target(), op);
 }
 
 feature_t memory_feature_dataset_iterator_t::feature(tensor_size_t feature) const
@@ -183,31 +313,28 @@ feature_t memory_feature_dataset_iterator_t::feature(tensor_size_t feature) cons
 sindices_cmap_t memory_feature_dataset_iterator_t::input(tensor_size_t feature, sindices_t& buffer) const
 {
     const auto& fs = m_dataset.istorage(feature);
-    fs.get(m_samples, buffer);
+    fs.get(m_samples, m_dataset.imask(feature), buffer);
     return buffer.tensor();
 }
 
 mindices_cmap_t memory_feature_dataset_iterator_t::input(tensor_size_t feature, mindices_t& buffer) const
 {
     const auto& fs = m_dataset.istorage(feature);
-    fs.get(m_samples, buffer);
+    fs.get(m_samples, m_dataset.imask(feature), buffer);
     return buffer.tensor();
 }
 
 tensor1d_cmap_t memory_feature_dataset_iterator_t::input(tensor_size_t feature, tensor1d_t& buffer) const
 {
     const auto& fs = m_dataset.istorage(feature);
-    // FIXME: have feature_storage_t return 1D tensors as well
-    tensor4d_t buffer2;
-    fs.get(m_samples, buffer2);
-    buffer = buffer2.reshape(-1);
+    fs.get(m_samples, m_dataset.imask(feature), buffer);
     return buffer.tensor();
 }
 
 tensor4d_cmap_t memory_feature_dataset_iterator_t::input(tensor_size_t feature, tensor4d_t& buffer) const
 {
     const auto& fs = m_dataset.istorage(feature);
-    (void)fs;
+    fs.get(m_samples, m_dataset.imask(feature), buffer);
     return buffer.tensor();
 }
 

@@ -1,4 +1,5 @@
 #include <numeric>
+#include <algorithm>
 #include <nano/arch.h>
 #include <nano/tpool.h>
 #include <nano/random.h>

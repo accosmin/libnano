@@ -52,7 +52,7 @@ namespace nano
 
         virtual feature_t target() const = 0;
         virtual tensor3d_dims_t target_dims() const = 0;
-        virtual tensor4d_cmap_t targets(tensor_range_t samples, tensor4d_t& buffer) const = 0;
+        virtual tensor4d_cmap_t targets(tensor4d_t& buffer) const = 0;
 
         virtual bool cache_inputs(int64_t bytes, execution) = 0;
         virtual bool cache_targets(int64_t bytes, execution) = 0;

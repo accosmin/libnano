@@ -14,9 +14,9 @@ function(make_test test libs)
     add_executable(${test} ${test}.cpp)
     target_compile_configure(${test})
     target_compile_definitions(${test}
-        PRIVATE UTEST_WITH_EIGEN)
+        PRIVATE UTEST_WITH_EIGEN UTEST_WITH_TENSOR)
     target_include_directories(${test}
-        SYSTEM PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/utest>)
+        SYSTEM PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>)
     target_link_libraries(${test}
         PRIVATE ${libs})
     add_test(${test} ${test})

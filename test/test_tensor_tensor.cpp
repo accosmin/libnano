@@ -430,7 +430,7 @@ UTEST_CASE(tensor4d_subtensor_copying)
     tensor1.tensor(0) = tensor2.tensor(0);
     tensor1.tensor(1) = tensor2.tensor(1);
 
-    UTEST_CHECK_EIGEN_CLOSE(tensor1.vector(), tensor2.vector(), 1);
+    UTEST_CHECK_TENSOR_EQUAL(tensor1, tensor2);
 }
 
 UTEST_CASE(tensor1d_indexing)
@@ -468,12 +468,12 @@ UTEST_CASE(tensor4d_indexing)
     UTEST_REQUIRE_EQUAL(subtensor.size<2>(), tensor.size<2>());
     UTEST_REQUIRE_EQUAL(subtensor.size<3>(), tensor.size<3>());
 
-    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(0).cast<int16_t>(), tensor.vector(0), 1);
-    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(1).cast<int16_t>(), tensor.vector(1), 1);
-    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(2).cast<int16_t>(), tensor.vector(3), 1);
-    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(3).cast<int16_t>(), tensor.vector(2), 1);
-    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(4).cast<int16_t>(), tensor.vector(2), 1);
-    UTEST_CHECK_EIGEN_CLOSE(subtensor.vector(5).cast<int16_t>(), tensor.vector(3), 1);
+    UTEST_CHECK_EIGEN_EQUAL(subtensor.vector(0).cast<int16_t>(), tensor.vector(0));
+    UTEST_CHECK_EIGEN_EQUAL(subtensor.vector(1).cast<int16_t>(), tensor.vector(1));
+    UTEST_CHECK_EIGEN_EQUAL(subtensor.vector(2).cast<int16_t>(), tensor.vector(3));
+    UTEST_CHECK_EIGEN_EQUAL(subtensor.vector(3).cast<int16_t>(), tensor.vector(2));
+    UTEST_CHECK_EIGEN_EQUAL(subtensor.vector(4).cast<int16_t>(), tensor.vector(2));
+    UTEST_CHECK_EIGEN_EQUAL(subtensor.vector(5).cast<int16_t>(), tensor.vector(3));
 }
 
 UTEST_CASE(tensor4d_slice)
@@ -492,9 +492,9 @@ UTEST_CASE(tensor4d_slice)
     UTEST_REQUIRE_EQUAL(slice1.dims(), dims1);
     UTEST_REQUIRE_EQUAL(slice2.dims(), dims2);
 
-    UTEST_CHECK_EIGEN_CLOSE(tensor.vector(0), slice1.vector(0), 1);
-    UTEST_CHECK_EIGEN_CLOSE(tensor.vector(1), slice1.vector(1), 1);
-    UTEST_CHECK_EIGEN_CLOSE(tensor.vector(2, 3, 1), slice2.vector(), 1);
+    UTEST_CHECK_EIGEN_EQUAL(tensor.vector(0), slice1.vector(0));
+    UTEST_CHECK_EIGEN_EQUAL(tensor.vector(1), slice1.vector(1));
+    UTEST_CHECK_EIGEN_EQUAL(tensor.vector(2, 3, 1), slice2.vector());
 }
 
 UTEST_CASE(tensor4d_lin_spaced)

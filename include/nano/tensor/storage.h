@@ -194,7 +194,11 @@ namespace nano
         ~tensor_marray_storage_t() = default;
         tensor_marray_storage_t(const tensor_marray_storage_t&) = default;
         tensor_marray_storage_t(tensor_marray_storage_t&&) noexcept = default;
-        tensor_marray_storage_t& operator=(tensor_marray_storage_t&& other) noexcept = default;
+        tensor_marray_storage_t& operator=(tensor_marray_storage_t&& other) noexcept
+        {
+            copy(other);
+            return *this;
+        }
 
         template <typename... tsizes>
         explicit tensor_marray_storage_t(tscalar* data, tsizes... dims) :

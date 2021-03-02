@@ -1,4 +1,0 @@
-[submodule "external/utest"]
-	path = utest
-    url = https://github.com/accosmin/utest
-    branch = master

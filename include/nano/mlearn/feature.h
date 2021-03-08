@@ -133,7 +133,7 @@ namespace nano
         const auto& dims() const { return m_dims; }
         const auto& name() const { return m_name; }
         const auto& labels() const { return m_labels; }
-        auto classes() const { return m_labels.size(); }
+        auto classes() const { return static_cast<tensor_size_t>(m_labels.size()); }
 
     private:
 

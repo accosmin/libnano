@@ -5,16 +5,6 @@
 
 namespace nano
 {
-    // single-label indices
-    using sindices_t = tensor_mem_t<tensor_size_t, 1>;
-    using sindices_map_t = tensor_map_t<tensor_size_t, 1>;
-    using sindices_cmap_t = tensor_cmap_t<tensor_size_t, 1>;
-
-    // multi-label indices
-    using mindices_t = tensor_mem_t<tensor_size_t, 2>;
-    using mindices_map_t = tensor_map_t<tensor_size_t, 2>;
-    using mindices_cmap_t = tensor_cmap_t<tensor_size_t, 2>;
-
     class feature_dataset_iterator_t;
     class flatten_dataset_iterator_t;
 
@@ -37,26 +27,17 @@ namespace nano
         virtual ~feature_dataset_iterator_t() = default;
 
         virtual const indices_t& samples() const = 0;
-
         virtual tensor_size_t features() const = 0;
-        virtual indices_t scalar_features() const = 0;
-        virtual indices_t struct_features() const = 0;
-        virtual indices_t sclass_features() const = 0;
-        virtual indices_t mclass_features() const = 0;
         virtual feature_t feature(tensor_size_t feature) const = 0;
+        virtual feature_t original_feature(tensor_size_t feature) const = 0;
 
-        virtual sindices_cmap_t input(tensor_size_t feature, sindices_t& buffer) const = 0;
-        virtual mindices_cmap_t input(tensor_size_t feature, mindices_t& buffer) const = 0;
+        virtual indices_cmap_t input(tensor_size_t feature, indices_t& buffer) const = 0;
         virtual tensor1d_cmap_t input(tensor_size_t feature, tensor1d_t& buffer) const = 0;
         virtual tensor4d_cmap_t input(tensor_size_t feature, tensor4d_t& buffer) const = 0;
 
         virtual feature_t target() const = 0;
         virtual tensor3d_dims_t target_dims() const = 0;
         virtual tensor4d_cmap_t targets(tensor4d_t& buffer) const = 0;
-
-        virtual bool cache_inputs(int64_t bytes, execution) = 0;
-        virtual bool cache_targets(int64_t bytes, execution) = 0;
-        virtual bool cache_inputs(int64_t bytes, indices_cmap_t features, execution) = 0;
     };
 
     ///
@@ -75,6 +56,7 @@ namespace nano
         virtual ~flatten_dataset_iterator_t() = default;
 
         virtual const indices_t& samples() const = 0;
+        virtual feature_t original_feature(tensor_size_t input) const = 0;
 
         virtual void normalize(normalization) = 0;
         virtual tensor1d_dims_t inputs_dims() const = 0;
@@ -83,8 +65,5 @@ namespace nano
         virtual feature_t target() const = 0;
         virtual tensor3d_dims_t target_dims() const = 0;
         virtual tensor4d_cmap_t targets(tensor_range_t samples, tensor4d_t& buffer) const = 0;
-
-        virtual bool cache_inputs(int64_t bytes, execution) = 0;
-        virtual bool cache_targets(int64_t bytes, execution) = 0;
     };
 }

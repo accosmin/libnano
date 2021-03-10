@@ -11,6 +11,50 @@ static auto make_tensor(tvalue value, tensor_dims_t<trank> dims)
     return values;
 }
 
+template <typename ttensor>
+static void check_scalar_stats(
+    const feature_storage_t& storage, const ttensor& values, const indices_cmap_t& samples, const mask_cmap_t& mask,
+    tensor_size_t gt_count, scalar_t gt_min, scalar_t gt_max, scalar_t gt_mean, scalar_t gt_stdev,
+    scalar_t epsilon = 1e-12)
+{
+    feature_scalar_stats_t stats;
+    UTEST_CHECK_NOTHROW(stats = storage.stats(values.tensor(), samples, mask));
+
+    const auto expected_min = make_tensor<scalar_t>(gt_min, storage.dims());
+    const auto expected_max = make_tensor<scalar_t>(gt_max, storage.dims());
+    const auto expected_mean = make_tensor<scalar_t>(gt_mean, storage.dims());
+    const auto expected_stdev = make_tensor<scalar_t>(gt_stdev, storage.dims());
+
+    UTEST_CHECK_EQUAL(stats.m_count, gt_count);
+    UTEST_CHECK_TENSOR_CLOSE(stats.m_min, expected_min, epsilon);
+    UTEST_CHECK_TENSOR_CLOSE(stats.m_max, expected_max, epsilon);
+    UTEST_CHECK_TENSOR_CLOSE(stats.m_mean, expected_mean, epsilon);
+    UTEST_CHECK_TENSOR_CLOSE(stats.m_stdev, expected_stdev, epsilon);
+}
+
+template <typename ttensor>
+static void check_sclass_stats(
+    const feature_storage_t& storage, const ttensor& values, const indices_cmap_t& samples, const mask_cmap_t& mask,
+    const indices_t& gt_class_counts)
+{
+    feature_sclass_stats_t stats;
+    UTEST_CHECK_NOTHROW(stats = storage.stats(values.tensor(), samples, mask));
+
+    UTEST_CHECK_TENSOR_EQUAL(stats.m_class_counts, gt_class_counts);
+}
+
+template <typename ttensor>
+static void check_mclass_stats(
+    const feature_storage_t& storage, const ttensor& values, const indices_cmap_t& samples, const mask_cmap_t& mask,
+    const indices_t& gt_class_counts)
+{
+    feature_mclass_stats_t stats;
+    UTEST_CHECK_NOTHROW(stats = storage.stats(values.tensor(), samples, mask));
+
+    UTEST_CHECK_TENSOR_EQUAL(stats.m_class_counts, gt_class_counts);
+}
+
+/*
 static auto make_features()
 {
     return features_t
@@ -32,59 +76,6 @@ static auto make_features()
 
         feature_t{"mclass10"}.mclass(10),
     };
-}
-
-static void check_scalar_stats(
-    const feature_storage_t& fs, const indices_cmap_t& samples, const mask_cmap_t& mask,
-    tensor_size_t gt_count, scalar_t gt_min, scalar_t gt_max, scalar_t gt_mean, scalar_t gt_stdev,
-    scalar_t epsilon = 1e-12)
-{
-    UTEST_CHECK_THROW(fs.sclass_stats(samples, mask), std::runtime_error);
-    UTEST_CHECK_THROW(fs.mclass_stats(samples, mask), std::runtime_error);
-
-    feature_scalar_stats_t stats;
-    UTEST_CHECK_NOTHROW(stats = fs.scalar_stats(samples, mask));
-
-    UTEST_CHECK_EQUAL(stats.m_min.dims(), fs.dims());
-    UTEST_CHECK_EQUAL(stats.m_max.dims(), fs.dims());
-    UTEST_CHECK_EQUAL(stats.m_mean.dims(), fs.dims());
-    UTEST_CHECK_EQUAL(stats.m_stdev.dims(), fs.dims());
-
-    UTEST_CHECK_EQUAL(stats.m_count, gt_count);
-    UTEST_CHECK_CLOSE(stats.m_min.min(), gt_min, epsilon);
-    UTEST_CHECK_CLOSE(stats.m_min.max(), gt_min, epsilon);
-    UTEST_CHECK_CLOSE(stats.m_max.min(), gt_max, epsilon);
-    UTEST_CHECK_CLOSE(stats.m_max.max(), gt_max, epsilon);
-    UTEST_CHECK_CLOSE(stats.m_mean.min(), gt_mean, epsilon);
-    UTEST_CHECK_CLOSE(stats.m_mean.max(), gt_mean, epsilon);
-    UTEST_CHECK_CLOSE(stats.m_stdev.min(), gt_stdev, epsilon);
-    UTEST_CHECK_CLOSE(stats.m_stdev.max(), gt_stdev, epsilon);
-}
-
-static void check_sclass_stats(
-    const feature_storage_t& fs, const indices_cmap_t& samples, const mask_cmap_t& mask,
-    const indices_t& gt_class_counts)
-{
-    UTEST_CHECK_THROW(fs.scalar_stats(samples, mask), std::runtime_error);
-    UTEST_CHECK_THROW(fs.mclass_stats(samples, mask), std::runtime_error);
-
-    feature_sclass_stats_t stats;
-    UTEST_CHECK_NOTHROW(stats = fs.sclass_stats(samples, mask));
-
-    UTEST_CHECK_TENSOR_EQUAL(stats.m_class_counts, gt_class_counts);
-}
-
-static void check_mclass_stats(
-    const feature_storage_t& fs, const indices_cmap_t& samples, const mask_cmap_t& mask,
-    const indices_t& gt_class_counts)
-{
-    UTEST_CHECK_THROW(fs.scalar_stats(samples, mask), std::runtime_error);
-    UTEST_CHECK_THROW(fs.sclass_stats(samples, mask), std::runtime_error);
-
-    feature_mclass_stats_t stats;
-    UTEST_CHECK_NOTHROW(stats = fs.mclass_stats(samples, mask));
-
-    UTEST_CHECK_TENSOR_EQUAL(stats.m_class_counts, gt_class_counts);
 }
 
 class fixture_dataset_t final : public memory_dataset_t
@@ -145,126 +136,6 @@ private:
         set(sample, feature, value);
     }
 
-    template <typename tvalue>
-    void check_set_scalar(tensor_size_t sample, tensor_size_t feature, tvalue value, tensor3d_dims_t dims)
-    {
-        // check if possible to set with scalar
-        if (::nano::size(dims) == 1)
-        {
-            UTEST_REQUIRE_NOTHROW(check_set(sample, feature, value));
-            UTEST_REQUIRE_NOTHROW(check_set(sample, feature, std::to_string(value)));
-        }
-        else
-        {
-            UTEST_REQUIRE_THROW(check_set(sample, feature, value), std::runtime_error);
-        }
-
-        // should be possible to set with compatible tensor
-        const auto values = make_tensor<tvalue, 3>(value, dims);
-        UTEST_REQUIRE_NOTHROW(check_set(sample, feature, values));
-
-        const auto values1d = make_tensor<tvalue, 1>(value, make_dims(::nano::size(dims)));
-        UTEST_REQUIRE_NOTHROW(check_set(sample, feature, values1d));
-
-        // cannot set with incompatible tensor
-        {
-            const auto values_nok = make_tensor<tvalue, 1>(value, make_dims(::nano::size(dims) + 1));
-            UTEST_REQUIRE_THROW(check_set(sample, feature, values_nok), std::runtime_error);
-        }
-        {
-            const auto [dim0, dim1, dim2] = dims;
-            const auto values_nok = make_tensor<tvalue, 3>(value, make_dims(dim0, dim1 + 1, dim2));
-            UTEST_REQUIRE_THROW(check_set(sample, feature, values_nok), std::runtime_error);
-        }
-
-        // cannot set with invalid string
-        UTEST_REQUIRE_THROW(check_set(sample, feature, "N/A"), std::runtime_error);
-
-        // cannot set if the sample index is invalid
-        for (const auto invalid_sample : {-1, 10001})
-        {
-            if (::nano::size(dims) == 1)
-            {
-                UTEST_REQUIRE_THROW(check_set(invalid_sample, feature, value), std::runtime_error);
-            }
-            UTEST_REQUIRE_THROW(check_set(invalid_sample, feature, values), std::runtime_error);
-        }
-    }
-
-    template <typename tvalue>
-    void check_set_sclass(tensor_size_t sample, tensor_size_t feature, tvalue value, tensor_size_t classes)
-    {
-        // cannot set multi-label indices
-        for (const auto& values_nok : {
-            make_tensor<tvalue, 1>(value, make_dims(1)),
-            make_tensor<tvalue, 1>(value, make_dims(classes)),
-        })
-        {
-            UTEST_REQUIRE_THROW(check_set(sample, feature, values_nok), std::runtime_error);
-        }
-
-        // cannot set multivariate scalars
-        for (const auto& values_nok : {
-            make_tensor<tvalue, 3>(value, make_dims(1, 1, 1)),
-            make_tensor<tvalue, 3>(value, make_dims(2, 1, 3)),
-        })
-        {
-            UTEST_REQUIRE_THROW(check_set(sample, feature, values_nok), std::runtime_error);
-        }
-
-        // cannot set with out-of-bounds class indices
-        UTEST_REQUIRE_THROW(check_set(sample, feature, static_cast<tvalue>(-1)), std::runtime_error);
-        UTEST_REQUIRE_THROW(check_set(sample, feature, static_cast<tvalue>(classes)), std::runtime_error);
-        UTEST_REQUIRE_THROW(check_set(sample, feature, static_cast<tvalue>(classes + 1)), std::runtime_error);
-
-        // check if possible to set with valid class index
-        UTEST_REQUIRE_NOTHROW(check_set(sample, feature, value));
-
-        // cannot set if the sample index is invalid
-        for (const auto invalid_sample : {-1, 10001})
-        {
-            UTEST_REQUIRE_THROW(check_set(invalid_sample, feature, value), std::runtime_error);
-        }
-    }
-
-    template <typename tvalue>
-    void check_set_mclass(tensor_size_t sample, tensor_size_t feature, tvalue value, tensor_size_t classes)
-    {
-        // cannot set multi-label indices of invalid size
-        for (const auto& values_nok : {
-            make_tensor<tvalue, 1>(0, make_dims(classes + 1)),
-            make_tensor<tvalue, 1>(0, make_dims(classes + 2)),
-        })
-        {
-            UTEST_REQUIRE_THROW(check_set(sample, feature, values_nok), std::runtime_error);
-        }
-
-        // cannot set scalars
-        UTEST_REQUIRE_THROW(check_set(sample, feature, value), std::runtime_error);
-
-        // cannot set multivariate scalars
-        for (const auto& values_nok : {
-            make_tensor<tvalue, 3>(value, make_dims(1, 1, 1)),
-            make_tensor<tvalue, 3>(value, make_dims(2, 1, 3)),
-        })
-        {
-            UTEST_REQUIRE_THROW(check_set(sample, feature, values_nok), std::runtime_error);
-        }
-
-        // check if possible to set with valid class hits
-        tensor_mem_t<tvalue, 1> values{classes};
-        values.zero();
-        values(0) = 1;
-        values(static_cast<tensor_size_t>(value)) = 1;
-        UTEST_REQUIRE_NOTHROW(check_set(sample, feature, values));
-
-        // cannot set if the sample index is invalid
-        for (const auto invalid_sample : {-1, 10001})
-        {
-            UTEST_REQUIRE_THROW(check_set(invalid_sample, feature, values), std::runtime_error);
-        }
-    }
-
     tensor_size_t   m_samples{0};
     features_t      m_features;
     size_t          m_target;
@@ -276,7 +147,7 @@ static auto make_dataset(tensor_size_t samples, const features_t& features, size
     UTEST_CHECK_NOTHROW(dataset.load());
     UTEST_CHECK_EQUAL(dataset.samples(), samples);
     return dataset;
-}
+}*/
 
 UTEST_BEGIN_MODULE(test_dataset_memory)
 
@@ -318,12 +189,228 @@ UTEST_CASE(mask)
     }
 }
 
-UTEST_CASE(fs_default)
+UTEST_CASE(storage_scalar)
 {
-    const auto storage = feature_storage_t{};
-    UTEST_CHECK_EQUAL(storage.samples(), 0);
+    for (const auto dims : {make_dims(3, 1, 2), make_dims(1, 1, 1)})
+    {
+        const auto feature = feature_t{"feature"}.scalar(feature_type::float32, dims);
+
+        const auto storage = feature_storage_t{feature};
+        UTEST_CHECK_EQUAL(storage.dims(), dims);
+        UTEST_CHECK_EQUAL(storage.classes(), 0);
+        UTEST_CHECK_EQUAL(storage.name(), "feature");
+        UTEST_CHECK_EQUAL(storage.feature(), feature);
+
+        const auto samples = arange(0, 42);
+        auto mask = make_mask(make_dims(samples.size()));
+
+        tensor_mem_t<scalar_t, 4> values(cat_dims(samples.size(), dims));
+        values.constant(std::numeric_limits<scalar_t>::quiet_NaN());
+        {
+            const auto min = std::numeric_limits<scalar_t>::max();
+            const auto max = std::numeric_limits<scalar_t>::lowest();
+            check_scalar_stats(storage, values, samples, mask, 0, min, max, 0.0, 0.0);
+        }
+        {
+            UTEST_REQUIRE_NOTHROW(storage.set(values.tensor(), 0, make_tensor<int>(1, dims)));
+            setbit(mask, 0);
+            check_scalar_stats(storage, values, samples, mask, 1, 1.0, 1.0, 1.0, 0.0);
+        }
+        {
+            for (tensor_size_t sample = 1; sample < samples.size(); sample += 3)
+            {
+                if (::nano::size(dims) == 1)
+                {
+                    if (sample > 11)
+                    {
+                        UTEST_REQUIRE_NOTHROW(storage.set(values.tensor(), sample, scat(sample)));
+                    }
+                    else
+                    {
+                        UTEST_REQUIRE_NOTHROW(storage.set(values.tensor(), sample, sample));
+                    }
+                }
+                else
+                {
+                    UTEST_REQUIRE_NOTHROW(storage.set(values.tensor(), sample, make_tensor(sample, dims)));
+                }
+                setbit(mask, sample);
+            }
+            check_scalar_stats(storage, values, samples, mask, 15, 1.0, 40.0, 19.2, 13.09961831505);
+        }
+        {
+            const auto sample = 0;
+            const auto value = 14.6f;
+            const auto expected_value = make_tensor<scalar_t>(value, dims);
+
+            // check if possible to set with scalar
+            if (::nano::size(dims) == 1)
+            {
+                UTEST_REQUIRE_NOTHROW(storage.set(values.tensor(), sample, value));
+                UTEST_REQUIRE_NOTHROW(storage.set(values.tensor(), sample, std::to_string(value)));
+            }
+            else
+            {
+                UTEST_REQUIRE_THROW(storage.set(values.tensor(), sample, value), std::runtime_error);
+            }
+
+            // should be possible to set with compatible tensor
+            const auto values3d = make_tensor(value, dims);
+            UTEST_REQUIRE_NOTHROW(storage.set(values.tensor(), sample, values3d));
+
+            const auto values1d = make_tensor(value, make_dims(::nano::size(dims)));
+            UTEST_REQUIRE_NOTHROW(storage.set(values.tensor(), sample, values1d));
+
+            // cannot set with incompatible tensor
+            {
+                const auto values_nok = make_tensor(value, make_dims(::nano::size(dims) + 1));
+                UTEST_REQUIRE_THROW(storage.set(values.tensor(), sample, values_nok), std::runtime_error);
+            }
+            {
+                const auto [dim0, dim1, dim2] = dims;
+                const auto values_nok = make_tensor(value, make_dims(dim0, dim1 + 1, dim2));
+                UTEST_REQUIRE_THROW(storage.set(values.tensor(), sample, values_nok), std::runtime_error);
+            }
+
+            // cannot set with invalid string
+            UTEST_REQUIRE_THROW(storage.set(values.tensor(), sample, "N/A"), std::runtime_error);
+
+            // the expected feature value should be there
+            UTEST_CHECK_TENSOR_CLOSE(values.tensor(sample), expected_value, 1e-12);
+        }
+    }
 }
 
+UTEST_CASE(storage_sclass)
+{
+    const auto feature = feature_t{"feature"}.sclass(3);
+
+    const auto storage = feature_storage_t{feature};
+    UTEST_CHECK_EQUAL(storage.classes(), 3);
+    UTEST_CHECK_EQUAL(storage.name(), "feature");
+    UTEST_CHECK_EQUAL(storage.feature(), feature);
+
+    const auto samples = arange(0, 42);
+    auto mask = make_mask(make_dims(samples.size()));
+
+    tensor_mem_t<uint8_t, 1> values(samples.size());
+    values.zero();
+    {
+        check_sclass_stats(storage, values, samples, mask, indices_t{make_dims(3), {0, 0, 0}});
+    }
+    {
+        for (tensor_size_t sample = 1; sample < samples.size(); sample += 7)
+        {
+            if (sample > 17)
+            {
+                UTEST_REQUIRE_NOTHROW(storage.set(values.tensor(), sample, scat(sample % 3)));
+            }
+            else
+            {
+                UTEST_REQUIRE_NOTHROW(storage.set(values.tensor(), sample, sample % 3));
+            }
+            setbit(mask, sample);
+        }
+        check_sclass_stats(storage, values, samples, mask, indices_t{make_dims(3), {2, 2, 2}});
+    }
+    {
+        const auto sample = 2;
+        const auto value = feature.classes() - 1;
+        const auto expected_value = value;
+
+        // cannot set multi-label indices
+        for (const auto& values_nok : {
+            make_tensor(value, make_dims(1)),
+            make_tensor(value, make_dims(feature.classes())),
+        })
+        {
+            UTEST_REQUIRE_THROW(storage.set(values.tensor(), sample, values_nok), std::runtime_error);
+        }
+
+        // cannot set multivariate scalars
+        for (const auto& values_nok : {
+            make_tensor(value, make_dims(1, 1, 1)),
+            make_tensor(value, make_dims(2, 1, 3)),
+        })
+        {
+            UTEST_REQUIRE_THROW(storage.set(values.tensor(), sample, values_nok), std::runtime_error);
+        }
+
+        // cannot set with out-of-bounds class indices
+        UTEST_REQUIRE_THROW(storage.set(values.tensor(), sample, -1), std::runtime_error);
+        UTEST_REQUIRE_THROW(storage.set(values.tensor(), sample, feature.classes()), std::runtime_error);
+        UTEST_REQUIRE_THROW(storage.set(values.tensor(), sample, feature.classes() + 1), std::runtime_error);
+
+        // check if possible to set with valid class index
+        UTEST_REQUIRE_NOTHROW(storage.set(values.tensor(), sample, value));
+
+        // the expected feature value should be there
+        UTEST_CHECK_EQUAL(values(sample), expected_value);
+    }
+}
+
+UTEST_CASE(storage_mclass)
+{
+    const auto feature = feature_t{"feature"}.sclass(3);
+
+    const auto storage = feature_storage_t{feature};
+    UTEST_CHECK_EQUAL(storage.classes(), 3);
+    UTEST_CHECK_EQUAL(storage.name(), "feature");
+    UTEST_CHECK_EQUAL(storage.feature(), feature);
+
+    const auto samples = arange(0, 42);
+    auto mask = make_mask(make_dims(samples.size()));
+
+    tensor_mem_t<uint8_t, 2> values(samples.size(), feature.classes());
+    values.zero();
+    {
+        check_mclass_stats(storage, values, samples, mask, indices_t{make_dims(3), {0, 0, 0}});
+    }
+    {
+        UTEST_REQUIRE_NOTHROW(storage.set(values.tensor(), 3, indices_t{make_dims(3), {0, 1, 1}}));
+        UTEST_REQUIRE_NOTHROW(storage.set(values.tensor(), 5, indices_t{make_dims(3), {1, 1, 1}}));
+        UTEST_REQUIRE_NOTHROW(storage.set(values.tensor(), 8, indices_t{make_dims(3), {0, 0, 1}}));
+        setbit(mask, 3);
+        setbit(mask, 5);
+        setbit(mask, 8);
+        check_mclass_stats(storage, values, samples, mask, indices_t{make_dims(3), {1, 2, 3}});
+    }
+    {
+        const auto sample = 11;
+        const auto value = tensor_mem_t<uint16_t, 1>{make_dims(feature.classes()), {1, 0, 1}};
+        const auto expected_value = tensor_mem_t<uint8_t, 1>{make_dims(feature.classes()), {1, 0, 1}};
+
+        // cannot set multi-label indices of invalid size
+        for (const auto& values_nok : {
+            make_tensor(0, make_dims(feature.classes() - 1)),
+            make_tensor(0, make_dims(feature.classes() + 1)),
+        })
+        {
+            UTEST_REQUIRE_THROW(storage.set(values.tensor(), sample, values_nok), std::runtime_error);
+        }
+
+        // cannot set scalars or strings
+        UTEST_REQUIRE_THROW(storage.set(values.tensor(), sample, 1), std::runtime_error);
+        UTEST_REQUIRE_THROW(storage.set(values.tensor(), sample, "2"), std::runtime_error);
+
+        // cannot set multivariate scalars
+        for (const auto& values_nok : {
+            make_tensor(1, make_dims(1, 1, 1)),
+            make_tensor(1, make_dims(2, 1, 3)),
+        })
+        {
+            UTEST_REQUIRE_THROW(storage.set(values.tensor(), sample, values_nok), std::runtime_error);
+        }
+
+        // check if possible to set with valid class hits
+        UTEST_REQUIRE_NOTHROW(storage.set(values.tensor(), sample, value));
+
+        // the expected feature value should be there
+        UTEST_CHECK_TENSOR_EQUAL(values.tensor(sample), expected_value);
+    }
+}
+
+/*
 UTEST_CASE(dataset)
 {
     const auto mask0 = mask_t{make_dims(6), {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xC0}};
@@ -383,6 +470,6 @@ UTEST_CASE(dataset)
         // TODO: check that feature normalization works
         // TODO: check that feature extraction works (e.g sign(x), sign(x)*log(1+x^2), polynomial expansion)
     }
-}
+}*/
 
 UTEST_END_MODULE()

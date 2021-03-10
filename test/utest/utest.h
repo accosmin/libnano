@@ -229,7 +229,7 @@ catch (...) \
 
 #define UTEST_EVALUATE_TENSOR_CLOSE(left, right, epsilon, critical) \
     UTEST_REQUIRE_EQUAL((left).dims(), (right).dims()); \
-    UTEST_EVALUATE_LESS((((left) - (right)).array().abs().maxCoeff()), \
+    UTEST_EVALUATE_LESS((((left).array() - (right).array()).abs().maxCoeff()), \
         epsilon * (1 + (left).array().abs().maxCoeff() + (right).array().abs().maxCoeff()), critical)
 
 #define UTEST_CHECK_TENSOR_CLOSE(left, right, epsilon) \

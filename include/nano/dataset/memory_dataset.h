@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/dataset/memory.h>
+#include <nano/dataset/storage.h>
 #include <nano/dataset/dataset.h>
 
 namespace nano

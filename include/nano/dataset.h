@@ -3,7 +3,7 @@
 #include <nano/arch.h>
 #include <nano/tpool.h>
 #include <nano/factory.h>
-#include <nano/mlearn/feature.h>
+#include <nano/dataset/feature.h>
 #include <nano/mlearn/elemwise.h>
 
 namespace nano

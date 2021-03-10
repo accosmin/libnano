@@ -1,9 +1,9 @@
 #include <utest/utest.h>
-#include <nano/mlearn/feature.h>
+#include <nano/dataset/feature.h>
 
 using namespace nano;
 
-UTEST_BEGIN_MODULE(test_mlearn_feature)
+UTEST_BEGIN_MODULE(test_dataset_feature)
 
 UTEST_CASE(_default)
 {

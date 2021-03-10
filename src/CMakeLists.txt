@@ -10,6 +10,7 @@ target_sources(nano PRIVATE
     table.cpp
     logger.cpp
     stream.cpp
+    dataset/feature.cpp
     dataset/imclass.cpp
     dataset/imclass_mnist.cpp
     dataset/tabular.cpp
@@ -43,7 +44,6 @@ target_sources(nano PRIVATE
     mlearn/kfold.cpp
     mlearn/train.cpp
     mlearn/cluster.cpp
-    mlearn/feature.cpp
     mlearn/stacking.cpp
     gboost/model.cpp
     gboost/function.cpp

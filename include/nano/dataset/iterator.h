@@ -1,7 +1,6 @@
 #pragma once
 
-#include <nano/tensor.h>
-#include <nano/mlearn/feature.h>
+#include <nano/dataset/feature.h>
 
 namespace nano
 {

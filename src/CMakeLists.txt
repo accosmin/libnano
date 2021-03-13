@@ -10,12 +10,12 @@ target_sources(nano PRIVATE
     table.cpp
     logger.cpp
     stream.cpp
+    dataset/dataset.cpp
     dataset/feature.cpp
     dataset/imclass.cpp
     dataset/imclass_mnist.cpp
     dataset/tabular.cpp
     dataset/imclass_cifar.cpp
-    dataset/memory_dataset.cpp
     dataset/memory_iterator.cpp
     lsearch0.cpp
     lsearch0/quadratic.cpp

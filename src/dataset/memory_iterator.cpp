@@ -1,5 +1,5 @@
-#include <nano/dataset/memory_dataset.h>
 #include <nano/dataset/memory_iterator.h>
+#include <nano/dataset/dataset.h>
 
 using namespace nano;
 
@@ -161,7 +161,7 @@ indices_cmap_t memory_feature_dataset_iterator_t::input(tensor_size_t f, indices
             buffer.constant(-1);
             loop_masked(mask, m_samples, [&] (tensor_size_t i, tensor_size_t sample)
             {
-                buffer(i) = (component == -1) ? tensor(sample) : (tensor(sample) == component ? 1 : 0);
+                buffer(i) = (component == -1) ? tensor(sample) : (static_cast<tensor_size_t>(tensor(sample)) == component ? 1 : 0);
             });
         }
         else if constexpr (tensor.rank() == 2)
@@ -352,7 +352,11 @@ tensor2d_cmap_t memory_flatten_dataset_iterator_t::inputs(tensor_range_t range, 
     return buffer.tensor();
 }
 
-void memory_flatten_dataset_iterator_t::normalize(normalization)
+tensor2d_t memory_flatten_dataset_iterator_t::normalize(normalization) const
 {
+    tensor2d_t weights(m_mapping.size<0>(), 2);
+    weights.matrix().col(0).array() = 1.0;
+    weights.matrix().col(1).array() = 0.0;
     // TODO
+    return weights;
 }

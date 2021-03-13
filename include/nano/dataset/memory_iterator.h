@@ -34,9 +34,9 @@ namespace nano
         using feature_mapping_t = tensor_mem_t<tensor_size_t, 2>;
 
         // attributes
-        const memory_dataset_t& m_dataset;  ///<
-        indices_t               m_samples;  ///<
-        feature_mapping_t       m_mapping;  ///<
+        const memory_dataset_t&    m_dataset;  ///<
+        indices_t           m_samples;  ///<
+        feature_mapping_t   m_mapping;  ///<
     };
 
     ///
@@ -49,8 +49,8 @@ namespace nano
         memory_flatten_dataset_iterator_t(const memory_dataset_t&, indices_t samples);
 
         const indices_t& samples() const override;
+        tensor2d_t normalize(normalization) const override;
         feature_t original_feature(tensor_size_t input) const override;
-        void normalize(normalization) override;
 
         feature_t target() const override;
         tensor3d_dims_t target_dims() const override;
@@ -64,8 +64,8 @@ namespace nano
         using feature_mapping_t = tensor_mem_t<tensor_size_t, 2>;
 
         // attributes
-        const memory_dataset_t& m_dataset;  ///<
-        indices_t               m_samples;  ///<
-        feature_mapping_t       m_mapping;  ///<
+        const memory_dataset_t&    m_dataset;  ///<
+        indices_t           m_samples;  ///<
+        feature_mapping_t   m_mapping;  ///<
     };
 }

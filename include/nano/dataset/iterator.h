@@ -55,9 +55,9 @@ namespace nano
         virtual ~flatten_dataset_iterator_t() = default;
 
         virtual const indices_t& samples() const = 0;
+        virtual tensor2d_t normalize(normalization) const = 0;
         virtual feature_t original_feature(tensor_size_t input) const = 0;
 
-        virtual void normalize(normalization) = 0;
         virtual tensor1d_dims_t inputs_dims() const = 0;
         virtual tensor2d_cmap_t inputs(tensor_range_t samples, tensor2d_t& buffer) const = 0;
 

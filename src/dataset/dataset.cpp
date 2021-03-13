@@ -1,9 +1,7 @@
-#include <nano/dataset/memory_dataset.h>
+#include <nano/dataset/dataset.h>
 #include <nano/dataset/memory_iterator.h>
 
 using namespace nano;
-
-memory_dataset_t::memory_dataset_t() = default;
 
 void memory_dataset_t::resize(tensor_size_t samples, const features_t& features)
 {
@@ -73,6 +71,17 @@ void memory_dataset_t::resize(tensor_size_t samples, const features_t& features,
     m_storage_u32.resize(size_storage[feature_type::uint32], samples);
     m_storage_u64.resize(size_storage[feature_type::uint64], samples);
 
+    m_storage_f32.zero();
+    m_storage_f64.zero();
+    m_storage_i08.zero();
+    m_storage_i16.zero();
+    m_storage_i32.zero();
+    m_storage_i64.zero();
+    m_storage_u08.zero();
+    m_storage_u16.zero();
+    m_storage_u32.zero();
+    m_storage_u64.zero();
+
     m_storage_mask.resize(static_cast<tensor_size_t>(features.size()), (samples + 7) / 8);
     m_storage_mask.zero();
 }
@@ -85,6 +94,13 @@ rfeature_dataset_iterator_t memory_dataset_t::feature_iterator(indices_t samples
 rflatten_dataset_iterator_t memory_dataset_t::flatten_iterator(indices_t samples) const
 {
     return std::make_unique<memory_flatten_dataset_iterator_t>(*this, std::move(samples));
+}
+
+task_type memory_dataset_t::type() const
+{
+    return  has_target() ?
+            static_cast<task_type>(m_features[static_cast<size_t>(m_target)]) :
+            task_type::unsupervised;
 }
 
 feature_t memory_dataset_t::target() const

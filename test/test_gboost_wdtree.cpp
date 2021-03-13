@@ -45,12 +45,12 @@ public:
 
     indices_t features() const override
     {
-        return {make_dims(1), {gt_feature()}};
+        return make_tensor<tensor_size_t>(make_dims(1), gt_feature());
     }
 
     tensor4d_t tables() const override
     {
-        return {make_dims(2, 1, 1, 1), {-4.0, +3.7}};
+        return make_tensor<scalar_t>(make_dims(2, 1, 1, 1), -4.0, +3.7);
     }
 
     dtree_nodes_t nodes() const override
@@ -82,12 +82,12 @@ public:
 
     indices_t features() const override
     {
-        return {make_dims(1), {gt_feature()}};
+        return make_tensor<tensor_size_t>(make_dims(1), gt_feature());
     }
 
     tensor4d_t tables() const override
     {
-        return {make_dims(3, 1, 1, 1), {-5.0, +0.0, +5.0}};
+        return make_tensor<scalar_t>(make_dims(3, 1, 1, 1), -5.0, +0.0, +5.0);
     }
 
     dtree_nodes_t nodes() const override
@@ -143,12 +143,12 @@ public:
 
     indices_t features() const override
     {
-        return {make_dims(4), {gt_feature12(), gt_feature11(), gt_feature0(), gt_feature10()}};
+        return make_tensor<tensor_size_t>(make_dims(4), gt_feature12(), gt_feature11(), gt_feature0(), gt_feature10());
     }
 
     tensor4d_t tables() const override
     {
-        return {make_dims(6, 1, 1, 1), {-1.2, +3.4, -1.3, +3.5, -1.4, +3.6}};
+        return make_tensor<scalar_t>(make_dims(6, 1, 1, 1), -1.2, +3.4, -1.3, +3.5, -1.4, +3.6);
     }
 
     dtree_nodes_t nodes() const override
@@ -234,12 +234,16 @@ public:
     indices_t features() const override
     {
         // NB: features = {3, 4, 5, 6, 7, 8, 9} aka {stump21, table23, stump11, table22, stump10, table20, stump0}
-        return {make_dims(7), {gt_feature21(), gt_feature23(), gt_feature11(), gt_feature22(), gt_feature10(), gt_feature20(), gt_feature0()}};
+        return  make_tensor<tensor_size_t>(
+                make_dims(7),
+                gt_feature21(), gt_feature23(), gt_feature11(), gt_feature22(), gt_feature10(), gt_feature20(), gt_feature0());
     }
 
     tensor4d_t tables() const override
     {
-        return {make_dims(11, 1, 1, 1), {-2.0, +0.0, +2.0, +1.9, -0.7, -23.0, -20.0, -17.0, -33.0, -30.0, -27.0}};
+        return  make_tensor<scalar_t>(
+                make_dims(11, 1, 1, 1),
+                -2.0, +0.0, +2.0, +1.9, -0.7, -23.0, -20.0, -17.0, -33.0, -30.0, -27.0);
     }
 
     dtree_nodes_t nodes() const override

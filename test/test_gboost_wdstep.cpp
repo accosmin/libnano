@@ -38,7 +38,7 @@ public:
         const auto table0 = fvalue == 0 ? 5.0 : 0.0;
         const auto table1 = fvalue == 1 ? 5.0 : 0.0;
         const auto table2 = fvalue == 2 ? 5.0 : 0.0;
-        return {make_dims(3, 1, 1, 1), {table0, table1, table2}};
+        return make_tensor<scalar_t>(make_dims(3, 1, 1, 1), table0, table1, table2);
     }
 };
 

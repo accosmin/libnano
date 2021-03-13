@@ -53,24 +53,24 @@ UTEST_CASE(dropcol)
     }
     {
         const auto inputs = dataset.inputs(samples, 22);
-        check_inputs(inputs, range, {make_dims(1), {22}});
+        check_inputs(inputs, range, make_tensor<tensor_size_t>(make_dims(1), 22));
     }
     {
         const auto inputs = dataset.inputs(samples, 13);
-        check_inputs(inputs, range, {make_dims(1), {13}});
+        check_inputs(inputs, range, make_tensor<tensor_size_t>(make_dims(1), 13));
     }
     {
-        const auto features = indices_t{make_dims(3), {1, 7, 14}};
+        const auto features = make_tensor<tensor_size_t>(make_dims(3), 1, 7, 14);
         const auto inputs = dataset.inputs(samples, features);
         check_inputs(inputs, range, features);
     }
     {
-        const auto features = indices_t{make_dims(3), {1, 7, 13}};
+        const auto features = make_tensor<tensor_size_t>(make_dims(3), 1, 7, 13);
         const auto inputs = dataset.inputs(samples, features);
         check_inputs(inputs, range, features);
     }
     {
-        const auto features = indices_t{make_dims(3), {13, 1, 7}};
+        const auto features = make_tensor<tensor_size_t>(make_dims(3), 13, 1, 7);
         const auto inputs = dataset.inputs(samples, features);
         check_inputs(inputs, range, features);
     }

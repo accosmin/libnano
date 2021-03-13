@@ -161,7 +161,7 @@ UTEST_CASE(sclass_stats)
     tensor_mem_t<uint8_t, 1> values(samples.size());
     values.zero();
     {
-        check_sclass_stats(storage, values, samples, mask, indices_t{make_dims(3), {0, 0, 0}});
+        check_sclass_stats(storage, values, samples, mask, make_tensor<tensor_size_t>(make_dims(3), 0, 0, 0));
     }
     {
         for (tensor_size_t sample = 1; sample < samples.size(); sample += 7)
@@ -176,7 +176,7 @@ UTEST_CASE(sclass_stats)
             }
             setbit(mask, sample);
         }
-        check_sclass_stats(storage, values, samples, mask, indices_t{make_dims(3), {2, 2, 2}});
+        check_sclass_stats(storage, values, samples, mask, make_tensor<tensor_size_t>(make_dims(3), 2, 2, 2));
     }
 }
 
@@ -195,16 +195,16 @@ UTEST_CASE(mclass_stats)
     tensor_mem_t<uint8_t, 2> values(samples.size(), feature.classes());
     values.zero();
     {
-        check_mclass_stats(storage, values, samples, mask, indices_t{make_dims(3), {0, 0, 0}});
+        check_mclass_stats(storage, values, samples, mask, make_tensor<tensor_size_t>(make_dims(3), 0, 0, 0));
     }
     {
-        UTEST_REQUIRE_NOTHROW(storage.set(values.tensor(), 3, indices_t{make_dims(3), {0, 1, 1}}));
-        UTEST_REQUIRE_NOTHROW(storage.set(values.tensor(), 5, indices_t{make_dims(3), {1, 1, 1}}));
-        UTEST_REQUIRE_NOTHROW(storage.set(values.tensor(), 8, indices_t{make_dims(3), {0, 0, 1}}));
+        UTEST_REQUIRE_NOTHROW(storage.set(values.tensor(), 3, make_tensor<tensor_size_t>(make_dims(3), 0, 1, 1)));
+        UTEST_REQUIRE_NOTHROW(storage.set(values.tensor(), 5, make_tensor<tensor_size_t>(make_dims(3), 1, 1, 1)));
+        UTEST_REQUIRE_NOTHROW(storage.set(values.tensor(), 8, make_tensor<tensor_size_t>(make_dims(3), 0, 0, 1)));
         setbit(mask, 3);
         setbit(mask, 5);
         setbit(mask, 8);
-        check_mclass_stats(storage, values, samples, mask, indices_t{make_dims(3), {1, 2, 3}});
+        check_mclass_stats(storage, values, samples, mask, make_tensor<tensor_size_t>(make_dims(3), 1, 2, 3));
     }
 }
 
@@ -326,8 +326,8 @@ UTEST_CASE(storage_mclass)
     values.zero();
     for (tensor_size_t sample : {11, 17})
     {
-        const auto value = tensor_mem_t<uint16_t, 1>{make_dims(feature.classes()), {1, 0, 1}};
-        const auto expected_value = tensor_mem_t<uint8_t, 1>{make_dims(feature.classes()), {1, 0, 1}};
+        const auto value = make_tensor<uint16_t>(make_dims(feature.classes()), 1, 0, 1);
+        const auto expected_value = make_tensor<uint8_t>(make_dims(feature.classes()), 1, 0, 1);
 
         // cannot set multi-label indices of invalid size
         for (const auto& values_nok : {

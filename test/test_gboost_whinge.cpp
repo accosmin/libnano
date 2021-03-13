@@ -54,7 +54,7 @@ public:
 
     tensor4d_t tables() const override
     {
-        return {make_dims(2, 1, 1, 1), {+3.0, -3.0 * threshold()}};
+        return make_tensor<scalar_t>(make_dims(2, 1, 1, 1), +3.0, -3.0 * threshold());
     }
 };
 
@@ -77,7 +77,7 @@ public:
 
     tensor4d_t tables() const override
     {
-        return {make_dims(2, 1, 1, 1), {-2.1, +2.1 * threshold()}};
+        return make_tensor<scalar_t>(make_dims(2, 1, 1, 1), -2.1, +2.1 * threshold());
     }
 };
 

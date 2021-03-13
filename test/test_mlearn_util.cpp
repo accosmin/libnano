@@ -58,31 +58,27 @@ UTEST_CASE(sample_without_replacement_all)
 
 UTEST_CASE(exhaustive)
 {
-    const auto config1 = tensor_mem_t<tensor_size_t, 1>(make_dims(1), std::initializer_list<tensor_size_t>{3});
-    const auto config2 = tensor_mem_t<tensor_size_t, 1>(make_dims(2), std::initializer_list<tensor_size_t>{3, 2});
-    const auto config3 = tensor_mem_t<tensor_size_t, 1>(make_dims(3), std::initializer_list<tensor_size_t>{3, 2, 2});
-    const auto config4 = tensor_mem_t<tensor_size_t, 1>(make_dims(3), std::initializer_list<tensor_size_t>{2, 3, 3});
+    const auto config1 = make_tensor<tensor_size_t>(make_dims(1), 3);
+    const auto config2 = make_tensor<tensor_size_t>(make_dims(2), 3, 2);
+    const auto config3 = make_tensor<tensor_size_t>(make_dims(3), 3, 2, 2);
+    const auto config4 = make_tensor<tensor_size_t>(make_dims(3), 2, 3, 3);
 
-    const auto product1 = tensor_mem_t<tensor_size_t, 2>(make_dims(3, 1), std::initializer_list<tensor_size_t>{
-        0, 1, 2});
-
-    const auto product2 = tensor_mem_t<tensor_size_t, 2>(make_dims(6, 2), std::initializer_list<tensor_size_t>{
+    const auto product1 = make_tensor<tensor_size_t>(make_dims(3, 1), 0, 1, 2);
+    const auto product2 = make_tensor<tensor_size_t>(make_dims(6, 2),
         0, 0, 0, 1,
         1, 0, 1, 1,
-        2, 0, 2, 1});
-
-    const auto product3 = tensor_mem_t<tensor_size_t, 2>(make_dims(12, 3), std::initializer_list<tensor_size_t>{
+        2, 0, 2, 1);
+    const auto product3 = make_tensor<tensor_size_t>(make_dims(12, 3),
         0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1,
         1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1,
-        2, 0, 0, 2, 0, 1, 2, 1, 0, 2, 1, 1});
-
-    const auto product4 = tensor_mem_t<tensor_size_t, 2>(make_dims(18, 3), std::initializer_list<tensor_size_t>{
+        2, 0, 0, 2, 0, 1, 2, 1, 0, 2, 1, 1);
+    const auto product4 = make_tensor<tensor_size_t>(make_dims(18, 3),
         0, 0, 0, 0, 0, 1, 0, 0, 2,
         0, 1, 0, 0, 1, 1, 0, 1, 2,
         0, 2, 0, 0, 2, 1, 0, 2, 2,
         1, 0, 0, 1, 0, 1, 1, 0, 2,
         1, 1, 0, 1, 1, 1, 1, 1, 2,
-        1, 2, 0, 1, 2, 1, 1, 2, 2});
+        1, 2, 0, 1, 2, 1, 1, 2, 2);
 
     UTEST_CHECK_EQUAL(exhaustive(config1), product1);
     UTEST_CHECK_EQUAL(exhaustive(config2), product2);

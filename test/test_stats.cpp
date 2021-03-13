@@ -19,9 +19,7 @@ UTEST_CASE(empty)
 
 UTEST_CASE(tensor)
 {
-    using tensor3d_t = nano::tensor_mem_t<int16_t, 3>;
-
-    tensor3d_t tensor(make_dims(4, 2, 1), std::initializer_list<int>{2, 4, 4, 4, 5, 5, 7, 9});
+    auto tensor = make_tensor<int16_t>(make_dims(4, 2, 1), 2, 4, 4, 4, 5, 5, 7, 9);
 
     UTEST_CHECK_EQUAL(tensor.min(), 2.0);
     UTEST_CHECK_EQUAL(tensor.max(), 9.0);

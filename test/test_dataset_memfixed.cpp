@@ -61,7 +61,7 @@ UTEST_CASE(check_inputs_targets)
 
     const auto inputs = dataset.inputs(::nano::arange(10, 70));
     const auto inputs0 = dataset.inputs(::nano::arange(10, 70), 13);
-    const auto inputsX = dataset.inputs(::nano::arange(10, 70), indices_t{make_dims(3), {13, 17, 201}});
+    const auto inputsX = dataset.inputs(::nano::arange(10, 70), make_tensor<tensor_size_t>(make_dims(3), 13, 17, 201));
     const auto targets = dataset.targets(::nano::arange(10, 70));
 
     UTEST_CHECK_EQUAL(inputs.dims(), nano::make_dims(60, 3, 10, 10));

@@ -122,65 +122,65 @@ public:
         }
     }
 
-    static auto mask0() { return mask_t{make_dims(4), {0xFF, 0xFF, 0xFF, 0x80}}; }
-    static auto mask1() { return mask_t{make_dims(4), {0xAA, 0xAA, 0xAA, 0x80}}; }
-    static auto mask2() { return mask_t{make_dims(4), {0x92, 0x49, 0x24, 0x80}}; }
-    static auto mask3() { return mask_t{make_dims(4), {0x88, 0x88, 0x88, 0x80}}; }
-    static auto mask4() { return mask_t{make_dims(4), {0x84, 0x21, 0x08, 0x00}}; }
-    static auto mask5() { return mask_t{make_dims(4), {0x82, 0x08, 0x20, 0x80}}; }
-    static auto mask6() { return mask_t{make_dims(4), {0xFF, 0xFF, 0xFF, 0x80}}; }
-    static auto mask7() { return mask_t{make_dims(4), {0xFF, 0xFF, 0xFF, 0x80}}; }
-    static auto mask8() { return mask_t{make_dims(4), {0xFF, 0xFF, 0xFF, 0x80}}; }
-    static auto mask9() { return mask_t{make_dims(4), {0xFF, 0xFF, 0xFF, 0x80}}; }
-    static auto mask10() { return mask_t{make_dims(4), {0xAA, 0xAA, 0xAA, 0x80}}; }
-    static auto mask11() { return mask_t{make_dims(4), {0x92, 0x49, 0x24, 0x80}}; }
-    static auto mask12() { return mask_t{make_dims(4), {0x88, 0x88, 0x88, 0x80}}; }
+    static auto mask0() { return make_tensor<uint8_t>(make_dims(4), 0xFF, 0xFF, 0xFF, 0x80); }
+    static auto mask1() { return make_tensor<uint8_t>(make_dims(4), 0xAA, 0xAA, 0xAA, 0x80); }
+    static auto mask2() { return make_tensor<uint8_t>(make_dims(4), 0x92, 0x49, 0x24, 0x80); }
+    static auto mask3() { return make_tensor<uint8_t>(make_dims(4), 0x88, 0x88, 0x88, 0x80); }
+    static auto mask4() { return make_tensor<uint8_t>(make_dims(4), 0x84, 0x21, 0x08, 0x00); }
+    static auto mask5() { return make_tensor<uint8_t>(make_dims(4), 0x82, 0x08, 0x20, 0x80); }
+    static auto mask6() { return make_tensor<uint8_t>(make_dims(4), 0xFF, 0xFF, 0xFF, 0x80); }
+    static auto mask7() { return make_tensor<uint8_t>(make_dims(4), 0xFF, 0xFF, 0xFF, 0x80); }
+    static auto mask8() { return make_tensor<uint8_t>(make_dims(4), 0xFF, 0xFF, 0xFF, 0x80); }
+    static auto mask9() { return make_tensor<uint8_t>(make_dims(4), 0xFF, 0xFF, 0xFF, 0x80); }
+    static auto mask10() { return make_tensor<uint8_t>(make_dims(4), 0xAA, 0xAA, 0xAA, 0x80); }
+    static auto mask11() { return make_tensor<uint8_t>(make_dims(4), 0x92, 0x49, 0x24, 0x80); }
+    static auto mask12() { return make_tensor<uint8_t>(make_dims(4), 0x88, 0x88, 0x88, 0x80); }
 
-    static auto data0() { return tensor_mem_t<int8_t, 4>{make_dims(25, 1, 1, 1), {
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}};
+    static auto data0() { return make_tensor<int8_t>(make_dims(25, 1, 1, 1),
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24);
     }
-    static auto data1() { return tensor_mem_t<int16_t, 4>{make_dims(25, 1, 1, 1), {
-        1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0, 21, 0, 23, 0, 25}};
+    static auto data1() { return make_tensor<int16_t>(make_dims(25, 1, 1, 1),
+        1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0, 21, 0, 23, 0, 25);
     }
-    static auto data2() { return tensor_mem_t<int32_t, 4>{make_dims(25, 1, 1, 1), {
-        2, 0, 0, 5, 0, 0, 8, 0, 0, 11, 0, 0, 14, 0, 0, 17, 0, 0, 20, 0, 0, 23, 0, 0, 26}};
+    static auto data2() { return make_tensor<int32_t>(make_dims(25, 1, 1, 1),
+        2, 0, 0, 5, 0, 0, 8, 0, 0, 11, 0, 0, 14, 0, 0, 17, 0, 0, 20, 0, 0, 23, 0, 0, 26);
     }
-    static auto data3() { return tensor_mem_t<int64_t, 4>{make_dims(25, 1, 1, 1), {
-        3, 0, 0, 0, 7, 0, 0, 0, 11, 0, 0, 0, 15, 0, 0, 0, 19, 0, 0, 0, 23, 0, 0, 0, 27}};
+    static auto data3() { return make_tensor<int64_t>(make_dims(25, 1, 1, 1),
+        3, 0, 0, 0, 7, 0, 0, 0, 11, 0, 0, 0, 15, 0, 0, 0, 19, 0, 0, 0, 23, 0, 0, 0, 27);
     }
-    static auto data4() { return tensor_mem_t<float, 4>{make_dims(25, 1, 1, 1), {
-        4, 0, 0, 0, 0, 9, 0, 0, 0, 0, 14, 0, 0, 0, 0, 19, 0, 0, 0, 0, 24, 0, 0, 0, 0}};
+    static auto data4() { return make_tensor<float>(make_dims(25, 1, 1, 1),
+        4, 0, 0, 0, 0, 9, 0, 0, 0, 0, 14, 0, 0, 0, 0, 19, 0, 0, 0, 0, 24, 0, 0, 0, 0);
     }
-    static auto data5() { return tensor_mem_t<double, 4>{make_dims(25, 1, 1, 1), {
-        5, 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 23, 0, 0, 0, 0, 0, 29}};
+    static auto data5() { return make_tensor<double>(make_dims(25, 1, 1, 1),
+        5, 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 23, 0, 0, 0, 0, 0, 29);
     }
-    static auto data6() { return tensor_mem_t<uint8_t, 4>{make_dims(25, 2, 1, 2), {
+    static auto data6() { return make_tensor<uint8_t>(make_dims(25, 2, 1, 2),
         0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0,
         0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0, 0,
         0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0, 0, 0,
-        0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0, 0, 0, 0}};
+        0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0, 0, 0, 0);
     }
-    static auto data7() { return tensor_mem_t<uint16_t, 4>{make_dims(25, 1, 1, 1), {
-        0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3}};
+    static auto data7() { return make_tensor<uint16_t>(make_dims(25, 1, 1, 1),
+        0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3);
     }
-    static auto data8() { return tensor_mem_t<uint32_t, 4>{make_dims(25, 1, 2, 1), {
+    static auto data8() { return make_tensor<uint32_t>(make_dims(25, 1, 2, 1),
         0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 0, 0, 1, 1, 2, 2, 3, 3, 4,
-        4, 5, 5, 6, 6, 7, 7, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 0, 0}};
+        4, 5, 5, 6, 6, 7, 7, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 0, 0);
     }
-    static auto data9() { return tensor_mem_t<uint64_t, 4>{make_dims(25, 1, 1, 2), {
+    static auto data9() { return make_tensor<uint64_t>(make_dims(25, 1, 1, 2),
         0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 0, 0, 1, 1, 2, 2, 3,
-        3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6}};
+        3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6);
     }
-    static auto data10() { return tensor_mem_t<uint8_t, 1>{make_dims(25), {
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+    static auto data10() { return make_tensor<uint8_t>(make_dims(25),
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
-    static auto data11() { return tensor_mem_t<uint8_t, 1>{make_dims(25), {
-        0, 0, 0, 3, 0, 0, 6, 0, 0, 9, 0, 0, 2, 0, 0, 5, 0, 0, 8, 0, 0, 1, 0, 0, 4}};
+    static auto data11() { return make_tensor<uint8_t>(make_dims(25),
+        0, 0, 0, 3, 0, 0, 6, 0, 0, 9, 0, 0, 2, 0, 0, 5, 0, 0, 8, 0, 0, 1, 0, 0, 4);
     }
-    static auto data12() { return tensor_mem_t<uint8_t, 2>{make_dims(25, 3), {
+    static auto data12() { return make_tensor<uint8_t>(make_dims(25, 3),
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2,
         2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1,
-        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 
 private:

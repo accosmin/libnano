@@ -130,17 +130,6 @@ namespace nano
         }
 
         ///
-        /// \brief construct from a std::initializer_list.
-        ///
-        template <typename tscalar_>
-        tensor_t(tdims dims, const std::initializer_list<tscalar_>& list) :
-            tbase(std::move(dims))
-        {
-            assert(size() == static_cast<tensor_size_t>(list.size()));
-            std::transform(list.begin(), list.end(), begin(), [] (tscalar_ value) { return static_cast<tscalar>(value); });
-        }
-
-        ///
         /// \brief enable copying (delegate to the storage object).
         ///
         tensor_t(const tensor_t&) = default;
@@ -685,4 +674,18 @@ namespace nano
     struct is_tensor<tensor_t<tstorage, tscalar, trank>> : std::true_type
     {
     };
+
+    ///
+    /// \brief create a tensor from an initializer list.
+    ///
+    template <typename tscalar, size_t trank, typename... tvalues>
+    auto make_tensor(const tensor_dims_t<trank>& dims, tvalues... values)
+    {
+        const auto list = {values...};
+        assert(::nano::size(dims) == static_cast<tensor_size_t>(list.size()));
+
+        tensor_mem_t<tscalar, trank> tensor(dims);
+        std::transform(list.begin(), list.end(), tensor.begin(), [] (auto value) { return static_cast<tscalar>(value); });
+        return tensor;
+    }
 }

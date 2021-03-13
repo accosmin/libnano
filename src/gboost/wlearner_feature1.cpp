@@ -53,5 +53,5 @@ void wlearner_feature1_t::compatible(const dataset_t& dataset) const
 
 indices_t wlearner_feature1_t::features() const
 {
-    return {make_dims(1), {m_feature}};
+    return make_tensor<tensor_size_t>(make_dims(1), m_feature);
 }

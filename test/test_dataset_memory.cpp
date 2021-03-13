@@ -30,6 +30,25 @@ static auto check_inputs(const memory_dataset_t& dataset, tensor_size_t index,
     });
 }
 
+template <typename tscalar, size_t trank>
+static auto check_target(const memory_dataset_t& dataset,
+    const feature_t& gt_feature, const tensor_mem_t<tscalar, trank>& gt_data, const mask_cmap_t& gt_mask)
+{
+    dataset.visit_target([&] (const auto& feature, const auto& data, const auto& mask)
+    {
+        UTEST_CHECK_EQUAL(feature, gt_feature);
+        if constexpr (std::is_same<decltype(data), const tensor_cmap_t<tscalar, trank>&>::value)
+        {
+            UTEST_CHECK_TENSOR_EQUAL(data, gt_data);
+            UTEST_CHECK_TENSOR_EQUAL(mask, gt_mask);
+        }
+        else
+        {
+            UTEST_REQUIRE(false);
+        }
+    });
+}
+
 static auto make_features()
 {
     return features_t
@@ -226,7 +245,7 @@ UTEST_CASE(check_samples)
     }
 }
 
-UTEST_CASE(dataset_no_target)
+UTEST_CASE(dataset_target_NA)
 {
     const auto features = make_features();
     const auto samples = ::nano::arange(0, 25);
@@ -248,6 +267,78 @@ UTEST_CASE(dataset_no_target)
     check_inputs(dataset, 10, features[10U], fixture_dataset_t::data10(), fixture_dataset_t::mask10());
     check_inputs(dataset, 11, features[11U], fixture_dataset_t::data11(), fixture_dataset_t::mask11());
     check_inputs(dataset, 12, features[12U], fixture_dataset_t::data12(), fixture_dataset_t::mask12());
+}
+
+UTEST_CASE(dataset_target_0U)
+{
+    const auto features = make_features();
+    const auto samples = ::nano::arange(0, 25);
+    const auto dataset = make_dataset(samples.size(), features, 0U);
+
+    UTEST_CHECK_EQUAL(dataset.features(), 12);
+    UTEST_CHECK_EQUAL(dataset.type(), task_type::regression);
+
+    check_target(dataset, features[0U], fixture_dataset_t::data0(), fixture_dataset_t::mask0());
+    check_inputs(dataset, 0, features[1U], fixture_dataset_t::data1(), fixture_dataset_t::mask1());
+    check_inputs(dataset, 1, features[2U], fixture_dataset_t::data2(), fixture_dataset_t::mask2());
+    check_inputs(dataset, 2, features[3U], fixture_dataset_t::data3(), fixture_dataset_t::mask3());
+    check_inputs(dataset, 3, features[4U], fixture_dataset_t::data4(), fixture_dataset_t::mask4());
+    check_inputs(dataset, 4, features[5U], fixture_dataset_t::data5(), fixture_dataset_t::mask5());
+    check_inputs(dataset, 5, features[6U], fixture_dataset_t::data6(), fixture_dataset_t::mask6());
+    check_inputs(dataset, 6, features[7U], fixture_dataset_t::data7(), fixture_dataset_t::mask7());
+    check_inputs(dataset, 7, features[8U], fixture_dataset_t::data8(), fixture_dataset_t::mask8());
+    check_inputs(dataset, 8, features[9U], fixture_dataset_t::data9(), fixture_dataset_t::mask9());
+    check_inputs(dataset, 9, features[10U], fixture_dataset_t::data10(), fixture_dataset_t::mask10());
+    check_inputs(dataset, 10, features[11U], fixture_dataset_t::data11(), fixture_dataset_t::mask11());
+    check_inputs(dataset, 11, features[12U], fixture_dataset_t::data12(), fixture_dataset_t::mask12());
+}
+
+UTEST_CASE(dataset_target_11U)
+{
+    const auto features = make_features();
+    const auto samples = ::nano::arange(0, 25);
+    const auto dataset = make_dataset(samples.size(), features, 11U);
+
+    UTEST_CHECK_EQUAL(dataset.features(), 12);
+    UTEST_CHECK_EQUAL(dataset.type(), task_type::sclassification);
+
+    check_inputs(dataset, 0, features[0U], fixture_dataset_t::data0(), fixture_dataset_t::mask0());
+    check_inputs(dataset, 1, features[1U], fixture_dataset_t::data1(), fixture_dataset_t::mask1());
+    check_inputs(dataset, 2, features[2U], fixture_dataset_t::data2(), fixture_dataset_t::mask2());
+    check_inputs(dataset, 3, features[3U], fixture_dataset_t::data3(), fixture_dataset_t::mask3());
+    check_inputs(dataset, 4, features[4U], fixture_dataset_t::data4(), fixture_dataset_t::mask4());
+    check_inputs(dataset, 5, features[5U], fixture_dataset_t::data5(), fixture_dataset_t::mask5());
+    check_inputs(dataset, 6, features[6U], fixture_dataset_t::data6(), fixture_dataset_t::mask6());
+    check_inputs(dataset, 7, features[7U], fixture_dataset_t::data7(), fixture_dataset_t::mask7());
+    check_inputs(dataset, 8, features[8U], fixture_dataset_t::data8(), fixture_dataset_t::mask8());
+    check_inputs(dataset, 9, features[9U], fixture_dataset_t::data9(), fixture_dataset_t::mask9());
+    check_inputs(dataset, 10, features[10U], fixture_dataset_t::data10(), fixture_dataset_t::mask10());
+    check_target(dataset, features[11U], fixture_dataset_t::data11(), fixture_dataset_t::mask11());
+    check_inputs(dataset, 11, features[12U], fixture_dataset_t::data12(), fixture_dataset_t::mask12());
+}
+
+UTEST_CASE(dataset_target_12U)
+{
+    const auto features = make_features();
+    const auto samples = ::nano::arange(0, 25);
+    const auto dataset = make_dataset(samples.size(), features, 12U);
+
+    UTEST_CHECK_EQUAL(dataset.features(), 12);
+    UTEST_CHECK_EQUAL(dataset.type(), task_type::mclassification);
+
+    check_inputs(dataset, 0, features[0U], fixture_dataset_t::data0(), fixture_dataset_t::mask0());
+    check_inputs(dataset, 1, features[1U], fixture_dataset_t::data1(), fixture_dataset_t::mask1());
+    check_inputs(dataset, 2, features[2U], fixture_dataset_t::data2(), fixture_dataset_t::mask2());
+    check_inputs(dataset, 3, features[3U], fixture_dataset_t::data3(), fixture_dataset_t::mask3());
+    check_inputs(dataset, 4, features[4U], fixture_dataset_t::data4(), fixture_dataset_t::mask4());
+    check_inputs(dataset, 5, features[5U], fixture_dataset_t::data5(), fixture_dataset_t::mask5());
+    check_inputs(dataset, 6, features[6U], fixture_dataset_t::data6(), fixture_dataset_t::mask6());
+    check_inputs(dataset, 7, features[7U], fixture_dataset_t::data7(), fixture_dataset_t::mask7());
+    check_inputs(dataset, 8, features[8U], fixture_dataset_t::data8(), fixture_dataset_t::mask8());
+    check_inputs(dataset, 9, features[9U], fixture_dataset_t::data9(), fixture_dataset_t::mask9());
+    check_inputs(dataset, 10, features[10U], fixture_dataset_t::data10(), fixture_dataset_t::mask10());
+    check_inputs(dataset, 11, features[11U], fixture_dataset_t::data11(), fixture_dataset_t::mask11());
+    check_target(dataset, features[12U], fixture_dataset_t::data12(), fixture_dataset_t::mask12());
 }
 
 UTEST_END_MODULE()

@@ -3,7 +3,6 @@
 #include <nano/arch.h>
 #include <nano/factory.h>
 #include <nano/dataset/storage.h>
-#include <nano/dataset/iterator.h>
 
 namespace nano
 {
@@ -118,12 +117,6 @@ namespace nano
         }
 
         ///
-        /// \brief returns an iterator over the given samples.
-        ///
-        rfeature_dataset_iterator_t feature_iterator(indices_t samples) const;
-        rflatten_dataset_iterator_t flatten_iterator(indices_t samples) const;
-
-        ///
         /// \brief returns the total number of features.
         ///
         tensor_size_t features() const
@@ -160,11 +153,6 @@ namespace nano
             assert(feature >= 0 && feature < features());
             return visit(feature >= m_target ? feature + 1 : feature, op);
         }
-
-        // TODO: move these to the base class of iterators
-        feature_t target() const;
-        tensor3d_dims_t target_dims() const;
-        tensor4d_cmap_t targets(const indices_cmap_t& samples, tensor4d_t& buffer) const;
 
     protected:
 

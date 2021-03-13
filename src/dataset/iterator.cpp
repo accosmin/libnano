@@ -1,27 +1,88 @@
-#include <nano/dataset/memory_iterator.h>
-#include <nano/dataset/dataset.h>
+#include <nano/dataset/iterator.h>
 
 using namespace nano;
 
-template <typename tmapping>
-static void map_component(tmapping& mapping, tensor_size_t& f, tensor_size_t original, tensor_size_t component)
+dataset_iterator_t::dataset_iterator_t(const memory_dataset_t& dataset, indices_t samples) :
+    m_dataset(dataset),
+    m_samples(std::move(samples))
 {
-    mapping(f, 0) = original;
-    mapping(f ++, 1) = component;
 }
 
-template <typename tmapping>
-static void map_components(tmapping& mapping, tensor_size_t& f, tensor_size_t original, tensor_size_t components)
+feature_t dataset_iterator_t::target() const
 {
-    for (tensor_size_t component = 0; component < components; ++ component)
+    switch (m_dataset.type())
     {
-        map_component(mapping, f, original, component);
+    case task_type::unsupervised:
+        return feature_t{};
+
+    default:
+        return m_dataset.visit_target([] (const feature_t& feature, const auto&, const auto&)
+        {
+            return feature;
+        });
     }
 }
 
-memory_feature_dataset_iterator_t::memory_feature_dataset_iterator_t(const memory_dataset_t& dataset, indices_t samples) :
-    m_dataset(dataset),
-    m_samples(std::move(samples))
+tensor3d_dims_t dataset_iterator_t::target_dims() const
+{
+    switch (m_dataset.type())
+    {
+    case task_type::unsupervised:
+        return make_dims(0, 0, 0);
+
+    default:
+        return m_dataset.visit_target([] (const feature_t& feature, const auto&, const auto&)
+        {
+            switch (feature.type())
+            {
+            case feature_type::sclass:  return make_dims(feature.classes(), 1, 1);
+            case feature_type::mclass:  return make_dims(feature.classes(), 1, 1);
+            default:                    return feature.dims();
+            }
+        });
+    }
+}
+
+tensor4d_cmap_t dataset_iterator_t::targets(tensor_range_t range, tensor4d_t& buffer) const
+{
+    const auto samples = m_samples.slice(range);
+
+    return m_dataset.visit_target([&] (const feature_t& feature, const auto& tensor, const auto& mask)
+    {
+        if constexpr (tensor.rank() == 1)
+        {
+            buffer.resize(samples.size(), feature.classes(), 1, 1);
+            buffer.constant(std::numeric_limits<scalar_t>::quiet_NaN());
+            loop_masked(mask, samples, [&] (tensor_size_t i, tensor_size_t sample)
+            {
+                buffer.array(i).setConstant(-1.0);
+                buffer(i, tensor(sample), 0, 0) = +1.0;
+            });
+        }
+        else if constexpr (tensor.rank() == 2)
+        {
+            buffer.resize(samples.size(), feature.classes(), 1, 1);
+            buffer.constant(std::numeric_limits<scalar_t>::quiet_NaN());
+            loop_masked(mask, samples, [&] (tensor_size_t i, tensor_size_t sample)
+            {
+                buffer.array(i) = tensor.array(sample).template cast<scalar_t>() * 2.0 - 1.0;
+            });
+        }
+        else
+        {
+            buffer.resize(cat_dims(samples.size(), feature.dims()));
+            buffer.constant(std::numeric_limits<scalar_t>::quiet_NaN());
+            loop_masked(mask, samples, [&] (tensor_size_t i, tensor_size_t sample)
+            {
+                buffer.array(i) = tensor.array(sample).template cast<scalar_t>();
+            });
+        }
+        return buffer.tensor();
+    });
+}
+
+feature_dataset_iterator_t::feature_dataset_iterator_t(const memory_dataset_t& dataset, indices_t samples) :
+    dataset_iterator_t(dataset, std::move(samples))
 {
     tensor_size_t features = 0;
     for (tensor_size_t i = 0, size = m_dataset.features(); i < size; ++ i)
@@ -58,17 +119,17 @@ memory_feature_dataset_iterator_t::memory_feature_dataset_iterator_t(const memor
         case feature_type::sclass:
             if (feature.classes() <= 2)
             {
-                map_component(m_mapping, f, i, -1);
+                map1(f, i, -1);
             }
             else
             {
-                map_component(m_mapping, f, i, -1);
-                map_components(m_mapping, f, i, feature.classes());
+                map1(f, i, -1);
+                mapN(f, i, feature.classes());
             }
             break;
 
         case feature_type::mclass:
-            map_components(m_mapping, f, i, feature.classes());
+            mapN(f, i, feature.classes());
             break;
 
         default:
@@ -76,29 +137,24 @@ memory_feature_dataset_iterator_t::memory_feature_dataset_iterator_t(const memor
                 const auto values = ::nano::size(feature.dims());
                 if (values == 1)
                 {
-                    map_component(m_mapping, f, i, -1);
+                    map1(f, i, -1);
                 }
                 else
                 {
-                    map_component(m_mapping, f, i, -1);
-                    map_components(m_mapping, f, i, values);
+                    map1(f, i, -1);
+                    mapN(f, i, values);
                 }
             }
         }
     }
 }
 
-const indices_t& memory_feature_dataset_iterator_t::samples() const
-{
-    return m_samples;
-}
-
-tensor_size_t memory_feature_dataset_iterator_t::features() const
+tensor_size_t feature_dataset_iterator_t::features() const
 {
     return m_mapping.size<0>();
 }
 
-feature_t memory_feature_dataset_iterator_t::feature(tensor_size_t f) const
+feature_t feature_dataset_iterator_t::feature(tensor_size_t f) const
 {
     const auto& feature = m_dataset.feature(m_mapping(f, 0));
     const auto component = m_mapping(f, 1);
@@ -130,27 +186,12 @@ feature_t memory_feature_dataset_iterator_t::feature(tensor_size_t f) const
     }
 }
 
-feature_t memory_feature_dataset_iterator_t::original_feature(tensor_size_t f) const
+feature_t feature_dataset_iterator_t::original_feature(tensor_size_t f) const
 {
     return m_dataset.feature(m_mapping(f, 0));
 }
 
-feature_t memory_feature_dataset_iterator_t::target() const
-{
-    return m_dataset.target();
-}
-
-tensor3d_dims_t memory_feature_dataset_iterator_t::target_dims() const
-{
-    return m_dataset.target_dims();
-}
-
-tensor4d_cmap_t memory_feature_dataset_iterator_t::targets(tensor4d_t& buffer) const
-{
-    return m_dataset.targets(m_samples, buffer);
-}
-
-indices_cmap_t memory_feature_dataset_iterator_t::input(tensor_size_t f, indices_t& buffer) const
+indices_cmap_t feature_dataset_iterator_t::input(tensor_size_t f, indices_t& buffer) const
 {
     m_dataset.visit_inputs(m_mapping(f, 0), [&] (const feature_t& feature, const auto& tensor, const auto& mask)
     {
@@ -181,7 +222,7 @@ indices_cmap_t memory_feature_dataset_iterator_t::input(tensor_size_t f, indices
     return buffer.tensor();
 }
 
-tensor1d_cmap_t memory_feature_dataset_iterator_t::input(tensor_size_t f, tensor1d_t& buffer) const
+tensor1d_cmap_t feature_dataset_iterator_t::input(tensor_size_t f, tensor1d_t& buffer) const
 {
     m_dataset.visit_inputs(m_mapping(f, 0), [&] (const feature_t& feature, const auto& tensor, const auto& mask)
     {
@@ -208,7 +249,7 @@ tensor1d_cmap_t memory_feature_dataset_iterator_t::input(tensor_size_t f, tensor
     return buffer.tensor();
 }
 
-tensor4d_cmap_t memory_feature_dataset_iterator_t::input(tensor_size_t f, tensor4d_t& buffer) const
+tensor4d_cmap_t feature_dataset_iterator_t::input(tensor_size_t f, tensor4d_t& buffer) const
 {
     m_dataset.visit_inputs(m_mapping(f, 0), [&] (const feature_t& feature, const auto& tensor, const auto& mask)
     {
@@ -234,9 +275,8 @@ tensor4d_cmap_t memory_feature_dataset_iterator_t::input(tensor_size_t f, tensor
     return buffer.tensor();
 }
 
-memory_flatten_dataset_iterator_t::memory_flatten_dataset_iterator_t(const memory_dataset_t& dataset, indices_t samples) :
-    m_dataset(dataset),
-    m_samples(std::move(samples))
+flatten_dataset_iterator_t::flatten_dataset_iterator_t(const memory_dataset_t& dataset, indices_t samples) :
+    dataset_iterator_t(dataset, std::move(samples))
 {
     tensor_size_t features = 0;
     for (tensor_size_t i = 0, size = m_dataset.features(); i < size; ++ i)
@@ -265,50 +305,30 @@ memory_flatten_dataset_iterator_t::memory_flatten_dataset_iterator_t(const memor
         switch (feature.type())
         {
         case feature_type::sclass:
-            map_components(m_mapping, f, i, feature.classes());
+            mapN(f, i, feature.classes());
             break;
 
         case feature_type::mclass:
-            map_components(m_mapping, f, i, feature.classes());
+            mapN(f, i, feature.classes());
             break;
 
         default:
-            map_components(m_mapping, f, i, ::nano::size(feature.dims()));
+            mapN(f, i, ::nano::size(feature.dims()));
         }
     }
 }
 
-const indices_t& memory_flatten_dataset_iterator_t::samples() const
-{
-    return m_samples;
-}
-
-feature_t memory_flatten_dataset_iterator_t::original_feature(tensor_size_t input) const
+feature_t flatten_dataset_iterator_t::original_feature(tensor_size_t input) const
 {
     return m_dataset.feature(m_mapping(input, 0));
 }
 
-feature_t memory_flatten_dataset_iterator_t::target() const
-{
-    return m_dataset.target();
-}
-
-tensor3d_dims_t memory_flatten_dataset_iterator_t::target_dims() const
-{
-    return m_dataset.target_dims();
-}
-
-tensor4d_cmap_t memory_flatten_dataset_iterator_t::targets(tensor_range_t range, tensor4d_t& buffer) const
-{
-    return m_dataset.targets(m_samples.slice(range), buffer);
-}
-
-tensor1d_dims_t memory_flatten_dataset_iterator_t::inputs_dims() const
+tensor1d_dims_t flatten_dataset_iterator_t::inputs_dims() const
 {
     return make_dims(m_mapping.size<0>());
 }
 
-tensor2d_cmap_t memory_flatten_dataset_iterator_t::inputs(tensor_range_t range, tensor2d_t& buffer) const
+tensor2d_cmap_t flatten_dataset_iterator_t::inputs(tensor_range_t range, tensor2d_t& buffer) const
 {
     buffer.resize(range.size(), m_mapping.size<0>());
     buffer.zero();
@@ -352,7 +372,7 @@ tensor2d_cmap_t memory_flatten_dataset_iterator_t::inputs(tensor_range_t range, 
     return buffer.tensor();
 }
 
-tensor2d_t memory_flatten_dataset_iterator_t::normalize(normalization) const
+tensor2d_t flatten_dataset_iterator_t::normalize(normalization) const
 {
     tensor2d_t weights(m_mapping.size<0>(), 2);
     weights.matrix().col(0).array() = 1.0;

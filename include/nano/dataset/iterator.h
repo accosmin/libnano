@@ -1,92 +1,111 @@
 #pragma once
 
-#include <nano/dataset/dataset.h>
+#include <nano/dataset/mask.h>
 
 namespace nano
 {
     ///
-    /// \brief base class to iterate through a collection of samples of a dataset (e.g. the training samples).
+    /// \brief utility to iterate over the masked feature values of a given set of samples.
     ///
-    /// NB: optional inputs are supported.
-    /// NB: the targets cannot be optional if defined.
-    /// NB: the inputs can be continuous (scalar), structured (3D tensors) or categorical.
-    /// NB: the inputs and the targets are generated on the fly by default, but they can be cached if possible.
-    ///
-    class dataset_iterator_t
+    template <typename tscalar, size_t trank>
+    class feature_iterator_t
     {
     public:
 
-        dataset_iterator_t(const memory_dataset_t& dataset, indices_t samples);
+        using data_cmap_t = tensor_cmap_t<tscalar, trank>;
 
-        feature_t target() const;
-        tensor3d_dims_t target_dims() const;
-        tensor4d_cmap_t targets(tensor_range_t samples_range, tensor4d_t& buffer) const;
+        feature_iterator_t() = default;
 
-        ///
-        /// \brief access functions.
-        ///
-        const auto& samples() const { return m_samples; }
-        const auto& dataset() const { return m_dataset; }
-        const auto& mapping() const { return m_mapping; }
-
-    protected:
-
-        // map to original feature: feature index, component index (if applicable)
-        using feature_mapping_t = tensor_mem_t<tensor_size_t, 2>;
-
-        void map1(tensor_size_t& f, tensor_size_t original, tensor_size_t component)
+        feature_iterator_t(data_cmap_t data, mask_cmap_t mask, indices_cmap_t samples) :
+            m_data(data),
+            m_mask(mask),
+            m_samples(samples)
         {
-            m_mapping(f, 0) = original;
-            m_mapping(f ++, 1) = component;
         }
 
-        void mapN(tensor_size_t& f, tensor_size_t original, tensor_size_t components)
+        feature_iterator_t(data_cmap_t data, mask_cmap_t mask, indices_cmap_t samples, tensor_size_t index) :
+            m_index(index),
+            m_data(data),
+            m_mask(mask),
+            m_samples(samples)
         {
-            for (tensor_size_t component = 0; component < components; ++ component)
+            assert(index >= 0 && index <= m_samples.size());
+        }
+
+        tensor_size_t index() const { return m_index; }
+        tensor_size_t size() const { return m_samples.size(); }
+
+        feature_iterator_t& operator++()
+        {
+            assert(m_index < m_samples.size());
+
+            ++ m_index;
+            return *this;
+        }
+
+        feature_iterator_t operator++(int)
+        {
+            auto tmp = *this;
+            ++(*this);
+            return tmp;
+        }
+
+        operator bool() const
+        {
+            return index() < size();
+        }
+
+        auto operator*() const
+        {
+            assert(m_index < m_samples.size());
+
+            const auto sample = m_samples(m_index);
+            const auto given = getbit(m_mask, sample);
+
+            if constexpr(trank == 1)
             {
-                map1(f, original, component);
+                return std::make_tuple(m_index, sample, given, m_data(sample));
+            }
+            else
+            {
+                return std::make_tuple(m_index, sample, given, m_data.tensor(sample));
             }
         }
 
+    private:
+
         // attributes
-        const memory_dataset_t& m_dataset;  ///<
-        indices_t           m_samples;  ///<
-        feature_mapping_t   m_mapping;  ///<
+        tensor_size_t       m_index{0}; ///<
+        data_cmap_t         m_data;     ///<
+        mask_cmap_t         m_mask;     ///<
+        indices_cmap_t      m_samples;  ///<
     };
 
     ///
-    /// \brief iterate through a collection of samples of a dataset (e.g. the training samples)
-    ///     to train and evaluate machine learning models that perform feature selection (e.g. gradient boosting).
+    /// \brief return true if the two iterators are equivalent.
     ///
-    class feature_dataset_iterator_t : public dataset_iterator_t
+    template <typename tscalar, size_t trank>
+    bool operator!=(const feature_iterator_t<tscalar, trank>& lhs, const feature_iterator_t<tscalar, trank>& rhs)
     {
-    public:
-
-        feature_dataset_iterator_t(const memory_dataset_t& dataset, indices_t samples);
-
-        tensor_size_t features() const;
-        feature_t feature(tensor_size_t feature) const;
-        feature_t original_feature(tensor_size_t feature) const;
-
-        indices_cmap_t input(tensor_size_t feature, indices_t& buffer) const;
-        tensor1d_cmap_t input(tensor_size_t feature, tensor1d_t& buffer) const;
-        tensor4d_cmap_t input(tensor_size_t feature, tensor4d_t& buffer) const;
-    };
+        assert(lhs.size() == rhs.size());
+        return lhs.index() != rhs.index();
+    }
 
     ///
-    /// \brief iterate through a collection of samples of a dataset (e.g. the training samples)
-    ///     to map densely continuous inputs to targets (e.g. linear models, MLPs).
+    /// \brief construct an iterator from the given inputs.
     ///
-    class flatten_dataset_iterator_t : public dataset_iterator_t
+    template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
+    auto make_iterator(const tensor_t<tstorage, tscalar, trank>& data, mask_cmap_t mask, indices_cmap_t samples)
     {
-    public:
+        return feature_iterator_t<tscalar, trank>{data, mask, samples};
+    }
 
-        flatten_dataset_iterator_t(const memory_dataset_t& dataset, indices_t samples);
-
-        tensor2d_t normalize(normalization) const;
-        feature_t original_feature(tensor_size_t feature) const;
-
-        tensor1d_dims_t inputs_dims() const;
-        tensor2d_cmap_t inputs(tensor_range_t samples_range, tensor2d_t& buffer) const;
-    };
+    ///
+    /// \brief construct an invalid (end) iterator from the given inputs.
+    ///
+    template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
+    auto make_end_iterator(const tensor_t<tstorage, tscalar, trank>& data, mask_cmap_t mask, indices_cmap_t samples)
+    {
+        return feature_iterator_t<tscalar, trank>{data, mask, samples, samples.size()};
+    }
 }

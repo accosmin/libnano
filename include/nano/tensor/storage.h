@@ -50,13 +50,13 @@ namespace nano
         {
         }
 
-        explicit tensor_vector_storage_t(const tensor_carray_storage_t<tscalar, trank>& other) :
+        tensor_vector_storage_t(const tensor_carray_storage_t<tscalar, trank>& other) :
             tbase(other.dims()),
             m_data(map_vector(other.data(), other.size()))
         {
         }
 
-        explicit tensor_vector_storage_t(const tensor_marray_storage_t<tscalar, trank>& other) :
+        tensor_vector_storage_t(const tensor_marray_storage_t<tscalar, trank>& other) :
             tbase(other.dims()),
             m_data(map_vector(other.data(), other.size()))
         {
@@ -143,13 +143,13 @@ namespace nano
             assert(data != nullptr || !size());
         }
 
-        explicit tensor_carray_storage_t(const tensor_vector_storage_t<tscalar, trank>& other) :
+        tensor_carray_storage_t(const tensor_vector_storage_t<tscalar, trank>& other) :
             tbase(other.dims()),
             m_data(other.data())
         {
         }
 
-        explicit tensor_carray_storage_t(const tensor_marray_storage_t<tscalar, trank>& other) :
+        tensor_carray_storage_t(const tensor_marray_storage_t<tscalar, trank>& other) :
             tbase(other.dims()),
             m_data(other.data())
         {
@@ -215,7 +215,7 @@ namespace nano
             assert(data != nullptr || !size());
         }
 
-        explicit tensor_marray_storage_t(tensor_vector_storage_t<tscalar, trank>& other) :
+        tensor_marray_storage_t(tensor_vector_storage_t<tscalar, trank>& other) :
             tbase(other.dims()),
             m_data(other.data())
         {

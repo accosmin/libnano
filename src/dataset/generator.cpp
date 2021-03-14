@@ -43,10 +43,9 @@ tensor3d_dims_t dataset_iterator_t::target_dims() const
     }
 }
 
-tensor4d_cmap_t dataset_iterator_t::targets(tensor_range_t range, tensor4d_t& buffer) const
+tensor4d_cmap_t dataset_iterator_t::targets(tensor_range_t samples_range, tensor4d_t& buffer) const
 {
-    const auto samples = m_samples.slice(range);
-
+    const auto samples = m_samples.slice(samples_range);
     return m_dataset.visit_target([&] (const feature_t& feature, const auto& tensor, const auto& mask)
     {
         if constexpr (tensor.rank() == 1)

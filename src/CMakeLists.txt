@@ -12,7 +12,6 @@ target_sources(nano PRIVATE
     stream.cpp
     dataset/dataset.cpp
     dataset/feature.cpp
-    dataset/iterator.cpp
     dataset/imclass.cpp
     dataset/imclass_mnist.cpp
     dataset/tabular.cpp

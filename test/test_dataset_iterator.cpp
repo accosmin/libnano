@@ -105,6 +105,10 @@ UTEST_CASE(data1D)
     }
     {
         const auto samples = arange(4, 16);
+        const auto expected_indices = std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+        const auto expected_samplex = std::vector<int>{4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+        const auto expected_givens = std::vector<int>{1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0};
+        const auto expected_values = std::vector<int>{7, -1, 9, -1, 11, -1, 13, -1, 15, -1, 17, -1};
 
         auto it = make_iterator(data, mask, samples);
         const auto it_end = make_end_iterator(data, mask, samples);
@@ -125,10 +129,23 @@ UTEST_CASE(data1D)
             values.push_back(value);
         }
 
-        const auto expected_indices = std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
-        const auto expected_samplex = std::vector<int>{4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-        const auto expected_givens = std::vector<int>{1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0};
-        const auto expected_values = std::vector<int>{7, -1, 9, -1, 11, -1, 13, -1, 15, -1, 17, -1};
+        UTEST_CHECK_EQUAL(indices, expected_indices);
+        UTEST_CHECK_EQUAL(samplex, expected_samplex);
+        UTEST_CHECK_EQUAL(givens, expected_givens);
+        UTEST_CHECK_EQUAL(values, expected_values);
+
+        indices.clear();
+        samplex.clear();
+        givens.clear();
+        values.clear();
+        for (auto it = make_iterator(data, mask, samples); it; ++ it)
+        {
+            const auto [index, sample, given, value] = *it;
+            indices.push_back(static_cast<int>(index));
+            samplex.push_back(static_cast<int>(sample));
+            givens.push_back(given);
+            values.push_back(value);
+        }
 
         UTEST_CHECK_EQUAL(indices, expected_indices);
         UTEST_CHECK_EQUAL(samplex, expected_samplex);

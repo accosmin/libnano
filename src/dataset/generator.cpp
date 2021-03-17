@@ -1,6 +1,83 @@
 #include <nano/dataset/generator.h>
+#include <nano/dataset/iterator.h>
 
 using namespace nano;
+
+tensor_size_t dataset_generator_t::flatten_size() const
+{
+   return std::accumulate(
+        m_generators.begin(), m_generators.end(), tensor_size_t(0),
+        [] (tensor_size_t acc, const auto& gen) { return acc + gen->flatten_size(); });
+}
+
+tensor2d_dims_t dataset_generator_t::flatten_dims() const
+{
+    return make_dims(m_samples.size(), flatten_size());
+}
+
+tensor2d_cmap_t dataset_generator_t::flatten(tensor_range_t sample_range, tensor2d_t& buffer) const
+{
+    const auto samples = sample_range.size();
+    const auto inputs = this->flatten_size();
+
+    if (buffer.size() < inputs * samples)
+    {
+        buffer.resize(inputs, samples);
+    }
+
+    auto storage = map_tensor(buffer.data(), inputs, samples);
+
+    tensor_size_t offset = 0;
+    for (const auto& generator : m_generators)
+    {
+        const auto size = generator->flatten_size();
+        generator->flatten(sample_range, storage.slice(make_range(offset, offset + size)));
+        offset += size;
+    }
+
+    return storage;
+}
+
+tensor4d_cmap_t dataset_generator_t::targets(tensor_range_t sample_range, tensor4d_t& buffer) const
+{
+    const auto samples = m_samples.slice(sample_range);
+
+    return m_dataset.visit_target([&] (const feature_t& feature, const auto& tensor, const auto& mask)
+    {
+        if constexpr (tensor.rank() == 1)
+        {
+            buffer.resize(samples.size(), feature.classes(), 1, 1);
+            buffer.constant(std::numeric_limits<scalar_t>::quiet_NaN());
+            for (auto it = feature_iterator_t{tensor, mask, samples}; it; ++ it)
+            {
+                const auto [index, sample, given, label] = *it;
+                buffer.array(index).setConstant(-1.0);
+                buffer.array(index)(label) = +1.0;
+            }
+        }
+        else if constexpr (tensor.rank() == 2)
+        {
+            buffer.resize(samples.size(), feature.classes(), 1, 1);
+            buffer.constant(std::numeric_limits<scalar_t>::quiet_NaN());
+            for (auto it = feature_iterator_t{tensor, mask, samples}; it; ++ it)
+            {
+                const auto [index, sample, given, label_hits] = *it;
+                buffer.array(index) = label_hits.array().template cast<scalar_t>() * 2.0 - 1.0;
+            }
+        }
+        else
+        {
+            buffer.resize(cat_dims(samples.size(), feature.dims()));
+            buffer.constant(std::numeric_limits<scalar_t>::quiet_NaN());
+            for (auto it = feature_iterator_t{tensor, mask, samples}; it; ++ it)
+            {
+                const auto [index, sample, given, values] = *it;
+                buffer.array(index) = values.array().template cast<scalar_t>();
+            }
+        }
+        return buffer.tensor();
+    });
+}
 
 /*
 dataset_iterator_t::dataset_iterator_t(const memory_dataset_t& dataset, indices_t samples) :
@@ -42,43 +119,6 @@ tensor3d_dims_t dataset_iterator_t::target_dims() const
             }
         });
     }
-}
-
-tensor4d_cmap_t dataset_iterator_t::targets(tensor_range_t samples_range, tensor4d_t& buffer) const
-{
-    const auto samples = m_samples.slice(samples_range);
-    return m_dataset.visit_target([&] (const feature_t& feature, const auto& tensor, const auto& mask)
-    {
-        if constexpr (tensor.rank() == 1)
-        {
-            buffer.resize(samples.size(), feature.classes(), 1, 1);
-            buffer.constant(std::numeric_limits<scalar_t>::quiet_NaN());
-            loop_masked(mask, samples, [&] (tensor_size_t i, tensor_size_t sample)
-            {
-                buffer.array(i).setConstant(-1.0);
-                buffer(i, tensor(sample), 0, 0) = +1.0;
-            });
-        }
-        else if constexpr (tensor.rank() == 2)
-        {
-            buffer.resize(samples.size(), feature.classes(), 1, 1);
-            buffer.constant(std::numeric_limits<scalar_t>::quiet_NaN());
-            loop_masked(mask, samples, [&] (tensor_size_t i, tensor_size_t sample)
-            {
-                buffer.array(i) = tensor.array(sample).template cast<scalar_t>() * 2.0 - 1.0;
-            });
-        }
-        else
-        {
-            buffer.resize(cat_dims(samples.size(), feature.dims()));
-            buffer.constant(std::numeric_limits<scalar_t>::quiet_NaN());
-            loop_masked(mask, samples, [&] (tensor_size_t i, tensor_size_t sample)
-            {
-                buffer.array(i) = tensor.array(sample).template cast<scalar_t>();
-            });
-        }
-        return buffer.tensor();
-    });
 }
 
 feature_dataset_iterator_t::feature_dataset_iterator_t(const memory_dataset_t& dataset, indices_t samples) :

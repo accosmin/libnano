@@ -59,24 +59,25 @@ namespace nano
         ///
         /// \brief map the given feature index to the original list of features.
         ///
-        virtual void original_features(tensor_size_t feature, cluster_t& original_features) const = 0;
+        virtual void original(tensor_size_t feature, cluster_t& original_features) const = 0;
 
         ///
         /// \brief computes the values of the given feature index for all samples,
         ///     useful for training and evaluating ML models that perform feature selection
         ///     (e.g. gradient boosting).
         ///
-        virtual mclass_cmap_t inputs(tensor_size_t feature, mclass_mem_t&) const = 0;
-        virtual sclass_cmap_t inputs(tensor_size_t feature, sclass_mem_t&) const = 0;
-        virtual scalar_cmap_t inputs(tensor_size_t feature, scalar_mem_t&) const = 0;
-        virtual struct_cmap_t inputs(tensor_size_t feature, struct_mem_t&) const = 0;
+        virtual mclass_cmap_t select(tensor_size_t feature, mclass_mem_t&) const = 0;
+        virtual sclass_cmap_t select(tensor_size_t feature, sclass_mem_t&) const = 0;
+        virtual scalar_cmap_t select(tensor_size_t feature, scalar_mem_t&) const = 0;
+        virtual struct_cmap_t select(tensor_size_t feature, struct_mem_t&) const = 0;
 
         ///
         /// \brief computes the values of all features for the given range of samples,
         ///     useful for training and evaluating ML model that map densely continuous inputs to targets
         ///     (e.g. linear models, MLPs).
         ///
-        virtual tensor4d_cmap_t inputs(tensor_range_t sample_range, tensor4d_cmap_t) const = 0;
+        virtual tensor_size_t flatten_size() const = 0;
+        virtual void flatten(tensor_range_t sample_range, tensor2d_cmap_t) const = 0;
 
     protected:
 
@@ -103,14 +104,15 @@ namespace nano
 
         tensor_size_t features() const override;
         feature_t feature(tensor_size_t feature) const override;
-        void original_features(tensor_size_t feature, cluster_t& original_features) const override;
+        void original(tensor_size_t feature, cluster_t& original_features) const override;
 
-        mclass_cmap_t inputs(tensor_size_t feature, mclass_mem_t&) const override;
-        sclass_cmap_t inputs(tensor_size_t feature, sclass_mem_t&) const override;
-        scalar_cmap_t inputs(tensor_size_t feature, scalar_mem_t&) const override;
-        struct_cmap_t inputs(tensor_size_t feature, struct_mem_t&) const override;
+        mclass_cmap_t select(tensor_size_t feature, mclass_mem_t&) const override;
+        sclass_cmap_t select(tensor_size_t feature, sclass_mem_t&) const override;
+        scalar_cmap_t select(tensor_size_t feature, scalar_mem_t&) const override;
+        struct_cmap_t select(tensor_size_t feature, struct_mem_t&) const override;
 
-        tensor4d_cmap_t inputs(tensor_range_t sample_range, tensor4d_cmap_t) const override;
+        tensor_size_t flatten_size() const override;
+        void flatten(tensor_range_t sample_range, tensor2d_cmap_t) const override;
 
     private:
 
@@ -155,22 +157,27 @@ namespace nano
             static_assert(std::is_base_of<generator_t, tgenerator>::value);
 
             m_generators.push_back(std::make_unique<tgenerator>(m_dataset, m_samples, args...));
+            update();
             return *this;
         }
 
         tensor_size_t features() const;
         feature_t feature(tensor_size_t feature) const;
-        feature_t original_feature(tensor_size_t feature) const;
+        indices_t original_features(const indices_t& features) const;
 
-        mclass_cmap_t inputs(tensor_size_t feature, mclass_mem_t&) const;
-        sclass_cmap_t inputs(tensor_size_t feature, sclass_mem_t&) const;
-        scalar_cmap_t inputs(tensor_size_t feature, scalar_mem_t&) const;
-        struct_cmap_t inputs(tensor_size_t feature, struct_mem_t&) const;
+        mclass_cmap_t select(tensor_size_t feature, mclass_mem_t&) const;
+        sclass_cmap_t select(tensor_size_t feature, sclass_mem_t&) const;
+        scalar_cmap_t select(tensor_size_t feature, scalar_mem_t&) const;
+        struct_cmap_t select(tensor_size_t feature, struct_mem_t&) const;
 
-        tensor4d_cmap_t inputs(tensor_range_t sample_range, tensor4d_t&) const;
+        tensor_size_t flatten_size() const;
+        tensor2d_dims_t flatten_dims() const;
+        tensor2d_cmap_t flatten(tensor_range_t sample_range, tensor2d_t&) const;
         tensor4d_cmap_t targets(tensor_range_t sample_range, tensor4d_t&) const;
 
     private:
+
+        void update();
 
         // attributes
         const memory_dataset_t& m_dataset;      ///<

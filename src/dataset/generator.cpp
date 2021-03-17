@@ -1,7 +1,8 @@
-#include <nano/dataset/iterator.h>
+#include <nano/dataset/generator.h>
 
 using namespace nano;
 
+/*
 dataset_iterator_t::dataset_iterator_t(const memory_dataset_t& dataset, indices_t samples) :
     m_dataset(dataset),
     m_samples(std::move(samples))
@@ -379,3 +380,4 @@ tensor2d_t flatten_dataset_iterator_t::normalize(normalization) const
     // TODO
     return weights;
 }
+*/

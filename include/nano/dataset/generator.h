@@ -1,36 +1,118 @@
 #pragma once
 
 #include <nano/dataset/dataset.h>
+#include <nano/mlearn/cluster.h>
 
 namespace nano
 {
+    // TODO: factory of feature generators!!!
+    class generator_t;
+    using rgenerator_t = std::unique_ptr<generator_t>;
+    using rgenerators_t = std::vector<rgenerator_t>;
+
+    // multi-label categorical feature values: (sample index, label/class index) = {0, 1} if present
+    using mclass_mem_t = tensor_mem_t<int8_t, 2>;
+    using mclass_cmap_t = tensor_cmap_t<int8_t, 2>;
+
+    // single-label categorical feature values: (sample index) = label/class index
+    using sclass_mem_t = tensor_mem_t<int32_t, 1>;
+    using sclass_cmap_t = tensor_cmap_t<int32_t, 1>;
+
+    // scalar continuous feature values: (sample index) = scalar feature value
+    using scalar_mem_t = tensor_mem_t<scalar_t, 1>;
+    using scalar_cmap_t = tensor_cmap_t<scalar_t, 1>;
+
+    // structured continuous feature values: (sample index, dim1, dim2, dim3)
+    using struct_mem_t = tensor_mem_t<scalar_t, 4>;
+    using struct_cmap_t = tensor_cmap_t<scalar_t, 4>;
+
     ///
-    /// \brief base class to iterate through a collection of samples of a dataset (e.g. the training samples).
+    /// \brief generate features from a given collection of samples of a dataset (e.g. the training samples).
     ///
     /// NB: optional inputs are supported.
     /// NB: the targets cannot be optional if defined.
     /// NB: the inputs can be continuous (scalar), structured (3D tensors) or categorical.
     /// NB: the inputs and the targets are generated on the fly by default, but they can be cached if possible.
     ///
-    class dataset_iterator_t
+    class generator_t
     {
     public:
 
-        dataset_iterator_t(const memory_dataset_t& dataset, indices_t samples);
+        generator_t(const memory_dataset_t& dataset, const indices_t& samples) :
+            m_dataset(dataset),
+            m_samples(samples)
+        {
+        }
 
-        feature_t target() const;
-        tensor3d_dims_t target_dims() const;
-        tensor4d_cmap_t targets(tensor4d_t& buffer) const;
-        tensor4d_cmap_t targets(tensor_range_t samples_range, tensor4d_t& buffer) const;
+        virtual ~generator_t() = default;
 
         ///
-        /// \brief access functions.
+        /// \brief returns the total number of generated features.
         ///
-        const auto& samples() const { return m_samples; }
-        const auto& dataset() const { return m_dataset; }
-        const auto& mapping() const { return m_mapping; }
+        virtual tensor_size_t features() const = 0;
+
+        ///
+        /// \brief returns the description of the given feature index.
+        ///
+        virtual feature_t feature(tensor_size_t feature) const = 0;
+
+        ///
+        /// \brief map the given feature index to the original list of features.
+        ///
+        virtual void original_features(tensor_size_t feature, cluster_t& original_features) const = 0;
+
+        ///
+        /// \brief computes the values of the given feature index for all samples,
+        ///     useful for training and evaluating ML models that perform feature selection
+        ///     (e.g. gradient boosting).
+        ///
+        virtual mclass_cmap_t inputs(tensor_size_t feature, mclass_mem_t&) const = 0;
+        virtual sclass_cmap_t inputs(tensor_size_t feature, sclass_mem_t&) const = 0;
+        virtual scalar_cmap_t inputs(tensor_size_t feature, scalar_mem_t&) const = 0;
+        virtual struct_cmap_t inputs(tensor_size_t feature, struct_mem_t&) const = 0;
+
+        ///
+        /// \brief computes the values of all features for the given range of samples,
+        ///     useful for training and evaluating ML model that map densely continuous inputs to targets
+        ///     (e.g. linear models, MLPs).
+        ///
+        virtual tensor4d_cmap_t inputs(tensor_range_t sample_range, tensor4d_cmap_t) const = 0;
 
     protected:
+
+        // attributes
+        const memory_dataset_t& m_dataset;  ///<
+        const indices_t&        m_samples;  ///<
+    };
+
+    ///
+    /// \brief forward the original features as-is.
+    ///
+    /// NB: missing feature values are filled:
+    ///     - with NaN/-1 depending if continuous/categorical respectively,
+    ///         if accessing one feature at a time (e.g. feature selection models)
+    ///
+    ///     - with 0,
+    ///         if accessing all features at once (e.g. linear models).
+    ///
+    class identity_generator_t final : public generator_t
+    {
+    public:
+
+        identity_generator_t(const memory_dataset_t& dataset, const indices_t& samples);
+
+        tensor_size_t features() const override;
+        feature_t feature(tensor_size_t feature) const override;
+        void original_features(tensor_size_t feature, cluster_t& original_features) const override;
+
+        mclass_cmap_t inputs(tensor_size_t feature, mclass_mem_t&) const override;
+        sclass_cmap_t inputs(tensor_size_t feature, sclass_mem_t&) const override;
+        scalar_cmap_t inputs(tensor_size_t feature, scalar_mem_t&) const override;
+        struct_cmap_t inputs(tensor_size_t feature, struct_mem_t&) const override;
+
+        tensor4d_cmap_t inputs(tensor_range_t sample_range, tensor4d_cmap_t) const override;
+
+    private:
 
         // map to original feature: feature index, component index (if applicable)
         using feature_mapping_t = tensor_mem_t<tensor_size_t, 2>;
@@ -50,62 +132,49 @@ namespace nano
         }
 
         // attributes
-        const memory_dataset_t& m_dataset;  ///<
-        indices_t           m_samples;  ///<
         feature_mapping_t   m_mapping;  ///<
     };
 
     ///
-    /// \brief iterate through a collection of samples of a dataset (e.g. the training samples)
-    ///     to train and evaluate machine learning models that perform feature selection (e.g. gradient boosting).
+    /// \brief
     ///
-    class feature_dataset_iterator_t : public dataset_iterator_t
+    class dataset_generator_t
     {
     public:
 
-        using sclass_values_t = tensor_mem_t<tensor_size_t, 1>;
-        using mclass_values_t = tensor_mem_t<tensor_size_t, 2>;
-
-        feature_dataset_iterator_t(const memory_dataset_t& dataset, indices_t samples);
-
-        indices_t sclass_features() const;
-        indices_t mclass_features() const;
-        indices_t scalar_features() const;
-        indices_t struct_features() const;
-
-        indices_t original_features(const indices_cmap_t& features) const;
-
-        void inputs(tensor_size_t feature,
-
-        indices_cmap_t input(tensor_size_t feature, indices_t& buffer) const;
-        tensor1d_cmap_t input(tensor_size_t feature, tensor1d_t& buffer) const;
-        tensor4d_cmap_t input(tensor_size_t feature, tensor4d_t& buffer) const;
-    };
-
-    ///
-    /// \brief iterate through a collection of samples of a dataset (e.g. the training samples)
-    ///     to map densely continuous inputs to targets (e.g. linear models, MLPs).
-    ///
-    class flatten_dataset_iterator_t : public dataset_iterator_t
-    {
-    public:
-
-        flatten_dataset_iterator_t(const memory_dataset_t& dataset, indices_t samples);
-
-        template <typename toperator>
-        void iterate(execution, tensor_size_t batch, const toperator& op)
+        dataset_generator_t(const memory_dataset_t& dataset, const indices_t& samples) :
+            m_dataset(dataset),
+            m_samples(samples)
         {
-            ....
-                op(tensor2d_cmap_t inputs, tensor4d_cmap_t targets)
-                {
-                }
-        };
+            add_generator<identity_generator_t>();
+        }
 
+        template <typename tgenerator, typename... tgenerator_args>
+        dataset_generator_t& add_generator(tgenerator_args... args)
+        {
+            static_assert(std::is_base_of<generator_t, tgenerator>::value);
 
-        tensor2d_t normalize(normalization) const;
+            m_generators.push_back(std::make_unique<tgenerator>(m_dataset, m_samples, args...));
+            return *this;
+        }
+
+        tensor_size_t features() const;
+        feature_t feature(tensor_size_t feature) const;
         feature_t original_feature(tensor_size_t feature) const;
 
-        tensor1d_dims_t inputs_dims() const;
-        tensor2d_cmap_t inputs(tensor_range_t samples_range, tensor2d_t& buffer) const;
+        mclass_cmap_t inputs(tensor_size_t feature, mclass_mem_t&) const;
+        sclass_cmap_t inputs(tensor_size_t feature, sclass_mem_t&) const;
+        scalar_cmap_t inputs(tensor_size_t feature, scalar_mem_t&) const;
+        struct_cmap_t inputs(tensor_size_t feature, struct_mem_t&) const;
+
+        tensor4d_cmap_t inputs(tensor_range_t sample_range, tensor4d_t&) const;
+        tensor4d_cmap_t targets(tensor_range_t sample_range, tensor4d_t&) const;
+
+    private:
+
+        // attributes
+        const memory_dataset_t& m_dataset;      ///<
+        const indices_t&        m_samples;      ///<
+        rgenerators_t           m_generators;   ///<
     };
 }

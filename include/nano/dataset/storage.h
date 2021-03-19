@@ -2,7 +2,6 @@
 
 #include <nano/logger.h>
 #include <nano/dataset/mask.h>
-#include <nano/dataset/stats.h>
 #include <nano/dataset/feature.h>
 
 namespace nano
@@ -127,66 +126,6 @@ namespace nano
             {
                 critical0("in-memory dataset: cannot set scalar feature <", name(), ">!");
             }
-        }
-
-        ///
-        /// \brief compute statistics from single-label categorical feature values.
-        ///
-        template <typename tscalar>
-        auto stats(const tensor_cmap_t<tscalar, 1>& tensor, const indices_cmap_t& samples, const mask_cmap_t& mask) const
-        {
-            feature_sclass_stats_t stats{classes()};
-            loop_masked(mask, samples, [&] (tensor_size_t, tensor_size_t sample)
-            {
-                const auto label = static_cast<tensor_size_t>(tensor(sample));
-
-                stats.m_class_counts(label) ++;
-            });
-            return stats;
-        }
-
-        ///
-        /// \brief compute statistics from multi-label categorical feature values.
-        ///
-        template <typename tscalar>
-        auto stats(const tensor_cmap_t<tscalar, 2>& tensor, const indices_cmap_t& samples, const mask_cmap_t& mask) const
-        {
-            feature_mclass_stats_t stats{classes()};
-            loop_masked(mask, samples, [&] (tensor_size_t, tensor_size_t sample)
-            {
-                stats.m_class_counts.array() += tensor.array(sample).template cast<tensor_size_t>();
-            });
-            return stats;
-        }
-
-        ///
-        /// \brief compute statistics from continuous categorical feature values.
-        ///
-        template <typename tscalar>
-        auto stats(const tensor_cmap_t<tscalar, 4>& tensor, const indices_cmap_t& samples, const mask_cmap_t& mask) const
-        {
-            feature_scalar_stats_t stats{dims()};
-            loop_masked(mask, samples, [&] (tensor_size_t, tensor_size_t sample)
-            {
-                const auto values = tensor.array(sample).template cast<scalar_t>();
-
-                stats.m_count ++;
-                stats.m_mean.array() += values;
-                stats.m_stdev.array() += values.square();
-                stats.m_min.array() = stats.m_min.array().min(values);
-                stats.m_max.array() = stats.m_max.array().max(values);
-            });
-            if (stats.m_count > 1)
-            {
-                const auto N = stats.m_count;
-                stats.m_stdev.array() = ((stats.m_stdev.array() - stats.m_mean.array().square() / N) / (N - 1)).sqrt();
-                stats.m_mean.array() /= static_cast<scalar_t>(N);
-            }
-            else
-            {
-                stats.m_stdev.zero();
-            }
-            return stats;
         }
 
     private:

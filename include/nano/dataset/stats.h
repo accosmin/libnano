@@ -1,6 +1,7 @@
 #pragma once
 
-#include <nano/tensor.h>
+#include <nano/dataset/feature.h>
+#include <nano/dataset/iterator.h>
 
 namespace nano
 {
@@ -26,6 +27,36 @@ namespace nano
             m_max.constant(std::numeric_limits<scalar_t>::lowest());
         }
 
+        template <typename tscalar>
+        static auto make(const feature_t& feature, tensor_cmap_t<tscalar, 4> tensor, indices_cmap_t samples, mask_cmap_t mask)
+        {
+            feature_scalar_stats_t stats{feature.dims()};
+            for (auto it = make_iterator(tensor, mask, samples); it; ++ it)
+            {
+                const auto [index, sample, given, values] = *it;
+                if (given)
+                {
+                    const auto array = values.array().template cast<scalar_t>();
+                    stats.m_count ++;
+                    stats.m_mean.array() += array;
+                    stats.m_stdev.array() += array.square();
+                    stats.m_min.array() = stats.m_min.array().min(array);
+                    stats.m_max.array() = stats.m_max.array().max(array);
+                }
+            }
+            if (stats.m_count > 1)
+            {
+                const auto N = stats.m_count;
+                stats.m_stdev.array() = ((stats.m_stdev.array() - stats.m_mean.array().square() / N) / (N - 1)).sqrt();
+                stats.m_mean.array() /= static_cast<scalar_t>(N);
+            }
+            else
+            {
+                stats.m_stdev.zero();
+            }
+            return stats;
+        }
+
         tensor_size_t   m_count{0};         ///< total number of samples
         tensor3d_t      m_min, m_max;       ///<
         tensor3d_t      m_mean, m_stdev;    ///<
@@ -47,6 +78,21 @@ namespace nano
             m_class_counts.zero();
         }
 
+        template <typename tscalar>
+        static auto make(const feature_t& feature, tensor_cmap_t<tscalar, 1> tensor, indices_cmap_t samples, mask_cmap_t mask)
+        {
+            feature_sclass_stats_t stats{feature.classes()};
+            for (auto it = make_iterator(tensor, mask, samples); it; ++ it)
+            {
+                const auto [index, sample, given, label] = *it;
+                if (given)
+                {
+                    stats.m_class_counts(static_cast<tensor_size_t>(label)) ++;
+                }
+            }
+            return stats;
+        }
+
         indices_t       m_class_counts{0};  ///< number of samples per class (label)
     };
 
@@ -64,6 +110,21 @@ namespace nano
             m_class_counts(classes)
         {
             m_class_counts.zero();
+        }
+
+        template <typename tscalar>
+        static auto make(const feature_t& feature, tensor_cmap_t<tscalar, 2> tensor, indices_cmap_t samples, mask_cmap_t mask)
+        {
+            feature_mclass_stats_t stats{feature.classes()};
+            for (auto it = make_iterator(tensor, mask, samples); it; ++ it)
+            {
+                const auto [index, sample, given, values] = *it;
+                if (given)
+                {
+                    stats.m_class_counts.array() += values.array().template cast<tensor_size_t>();
+                }
+            }
+            return stats;
         }
 
         indices_t       m_class_counts{0};  ///< number of samples per class (label)

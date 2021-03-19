@@ -65,20 +65,4 @@ namespace nano
         }
         return false;
     }
-
-    ///
-    /// \brief call the given operator for all samples that have feature values associated with.
-    ///
-    template <typename toperator>
-    void loop_masked(const mask_cmap_t& mask, const indices_t& samples, const toperator& op)
-    {
-        for (tensor_size_t i = 0; i < samples.size(); ++ i)
-        {
-            const auto sample = samples(i);
-            if (getbit(mask, sample))
-            {
-                op(i, sample);
-            }
-        }
-    }
 }

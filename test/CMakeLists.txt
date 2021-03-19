@@ -31,6 +31,8 @@ make_test(test_mlearn_kfold NANO::nano)
 make_test(test_mlearn_cluster NANO::nano)
 make_test(test_mlearn_elemwise NANO::nano)
 
+make_test(test_dataset_mask NANO::nano)
+make_test(test_dataset_stats NANO::nano)
 make_test(test_dataset_feature NANO::nano)
 make_test(test_dataset_storage NANO::nano)
 make_test(test_dataset_iterator NANO::nano)

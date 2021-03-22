@@ -38,9 +38,8 @@ namespace nano
     {
     public:
 
-        generator_t(const memory_dataset_t& dataset, const indices_t& samples) :
-            m_dataset(dataset),
-            m_samples(samples)
+        generator_t(const memory_dataset_t& dataset) :
+            m_dataset(dataset)
         {
         }
 
@@ -62,28 +61,27 @@ namespace nano
         virtual void original(tensor_size_t feature, cluster_t& original_features) const = 0;
 
         ///
-        /// \brief computes the values of the given feature index for all samples,
+        /// \brief computes the values of the given feature and samples,
         ///     useful for training and evaluating ML models that perform feature selection
         ///     (e.g. gradient boosting).
         ///
-        virtual mclass_cmap_t select(tensor_size_t feature, mclass_mem_t&) const = 0;
-        virtual sclass_cmap_t select(tensor_size_t feature, sclass_mem_t&) const = 0;
-        virtual scalar_cmap_t select(tensor_size_t feature, scalar_mem_t&) const = 0;
-        virtual struct_cmap_t select(tensor_size_t feature, struct_mem_t&) const = 0;
+        virtual mclass_cmap_t select(tensor_size_t feature, indices_cmap_t samples, mclass_mem_t&) const = 0;
+        virtual sclass_cmap_t select(tensor_size_t feature, indices_cmap_t samples, sclass_mem_t&) const = 0;
+        virtual scalar_cmap_t select(tensor_size_t feature, indices_cmap_t samples, scalar_mem_t&) const = 0;
+        virtual struct_cmap_t select(tensor_size_t feature, indices_cmap_t samples, struct_mem_t&) const = 0;
 
         ///
-        /// \brief computes the values of all features for the given range of samples,
+        /// \brief computes the values of all features for the given samples,
         ///     useful for training and evaluating ML model that map densely continuous inputs to targets
         ///     (e.g. linear models, MLPs).
         ///
         virtual tensor_size_t flatten_size() const = 0;
-        virtual void flatten(tensor_range_t sample_range, tensor2d_cmap_t) const = 0;
+        virtual void flatten(indices_cmap_t samples, tensor2d_cmap_t) const = 0;
 
     protected:
 
         // attributes
         const memory_dataset_t& m_dataset;  ///<
-        const indices_t&        m_samples;  ///<
     };
 
     ///
@@ -96,23 +94,23 @@ namespace nano
     ///     - with 0,
     ///         if accessing all features at once (e.g. linear models).
     ///
-    class identity_generator_t final : public generator_t
+    class NANO_PUBLIC identity_generator_t final : public generator_t
     {
     public:
 
-        identity_generator_t(const memory_dataset_t& dataset, const indices_t& samples);
+        identity_generator_t(const memory_dataset_t& dataset);
 
         tensor_size_t features() const override;
-        feature_t feature(tensor_size_t feature) const override;
-        void original(tensor_size_t feature, cluster_t& original_features) const override;
+        feature_t feature(tensor_size_t) const override;
+        void original(tensor_size_t, cluster_t&) const override;
 
-        mclass_cmap_t select(tensor_size_t feature, mclass_mem_t&) const override;
-        sclass_cmap_t select(tensor_size_t feature, sclass_mem_t&) const override;
-        scalar_cmap_t select(tensor_size_t feature, scalar_mem_t&) const override;
-        struct_cmap_t select(tensor_size_t feature, struct_mem_t&) const override;
+        mclass_cmap_t select(tensor_size_t, indices_cmap_t, mclass_mem_t&) const override;
+        sclass_cmap_t select(tensor_size_t, indices_cmap_t, sclass_mem_t&) const override;
+        scalar_cmap_t select(tensor_size_t, indices_cmap_t, scalar_mem_t&) const override;
+        struct_cmap_t select(tensor_size_t, indices_cmap_t, struct_mem_t&) const override;
 
         tensor_size_t flatten_size() const override;
-        void flatten(tensor_range_t sample_range, tensor2d_cmap_t) const override;
+        void flatten(indices_cmap_t, tensor2d_cmap_t) const override;
 
     private:
 
@@ -156,7 +154,7 @@ namespace nano
         {
             static_assert(std::is_base_of<generator_t, tgenerator>::value);
 
-            m_generators.push_back(std::make_unique<tgenerator>(m_dataset, m_samples, args...));
+            m_generators.push_back(std::make_unique<tgenerator>(m_dataset, args...));
             update();
             return *this;
         }

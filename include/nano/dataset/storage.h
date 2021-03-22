@@ -1,8 +1,8 @@
 #pragma once
 
 #include <nano/logger.h>
-#include <nano/dataset/mask.h>
 #include <nano/dataset/feature.h>
+#include <nano/dataset/iterator.h>
 
 namespace nano
 {
@@ -37,7 +37,7 @@ namespace nano
         /// \brief set the feature value of a sample for a single-label categorical feature.
         ///
         template <typename tscalar, typename tvalue>
-        void set(const tensor_map_t<tscalar, 1>& tensor, tensor_size_t sample, const tvalue& value) const
+        void set(const tensor_map_t<tscalar, 1>& data, tensor_size_t sample, const tvalue& value) const
         {
             tensor_size_t label;
             if constexpr (std::is_same<tvalue, string_t>::value)
@@ -58,14 +58,14 @@ namespace nano
                 "in-memory dataset: cannot set single-label feature <", name(),
                 ">: invalid label ", label, " not in [0, ", classes(), ")!");
 
-            tensor(sample) = static_cast<tscalar>(label);
+            data(sample) = static_cast<tscalar>(label);
         }
 
         ///
         /// \brief set the feature value of a sample for a multi-label categorical feature.
         ///
         template <typename tscalar, typename tvalue>
-        void set(const tensor_map_t<tscalar, 2>& tensor, tensor_size_t sample, const tvalue& value) const
+        void set(const tensor_map_t<tscalar, 2>& data, tensor_size_t sample, const tvalue& value) const
         {
             if constexpr (::nano::is_tensor<tvalue>::value)
             {
@@ -76,7 +76,7 @@ namespace nano
                         "in-memory dataset: cannot set multi-label feature <", name(),
                         ">: invalid number of labels ", value.size(), " vs. ", classes(), "!");
 
-                    tensor.vector(sample) = value.vector().template cast<tscalar>();
+                    data.vector(sample) = value.vector().template cast<tscalar>();
                 }
                 else
                 {
@@ -93,7 +93,7 @@ namespace nano
         /// \brief set the feature value of a sample for a continuous scalar or structured feature.
         ///
         template <typename tscalar, typename tvalue>
-        void set(const tensor_map_t<tscalar, 4>& tensor, tensor_size_t sample, const tvalue& value) const
+        void set(const tensor_map_t<tscalar, 4>& data, tensor_size_t sample, const tvalue& value) const
         {
             if constexpr (std::is_same<tvalue, string_t>::value)
             {
@@ -102,7 +102,7 @@ namespace nano
                     "in-memory dataset: cannot set scalar feature <", name(),
                     ">: invalid tensor dimensions ", dims(), "!");
 
-                tensor(sample) = check_from_string<tscalar>("scalar", value);
+                data(sample) = check_from_string<tscalar>("scalar", value);
             }
             else if constexpr (std::is_arithmetic<tvalue>::value)
             {
@@ -111,7 +111,7 @@ namespace nano
                     "in-memory dataset: cannot set scalar feature <", name(),
                     ">: invalid tensor dimensions ", dims(), "!");
 
-                tensor(sample) = static_cast<tscalar>(value);
+                data(sample) = static_cast<tscalar>(value);
             }
             else if constexpr (::nano::is_tensor<tvalue>())
             {
@@ -120,7 +120,7 @@ namespace nano
                     "in-memory dataset: cannot set scalar feature <", name(),
                     ">: invalid tensor dimensions ", dims(), " vs. ", value.dims(), "!");
 
-                tensor.vector(sample) = value.vector().template cast<tscalar>();
+                data.vector(sample) = value.vector().template cast<tscalar>();
             }
             else
             {

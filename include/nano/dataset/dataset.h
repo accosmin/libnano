@@ -181,10 +181,10 @@ namespace nano
             assert(sample >= 0 && sample < m_samples);
             assert(index >= 0 && index < m_storage_range.size<0>());
 
-            this->visit(index, [&] (const feature_t& feature, const auto& tensor, const auto& mask)
+            this->visit(index, [&] (const feature_t& feature, const auto& data, const auto& mask)
             {
                 const auto setter = feature_storage_t{feature};
-                setter.set(tensor, sample, value);
+                setter.set(data, sample, value);
                 setbit(mask, sample);
             });
         }

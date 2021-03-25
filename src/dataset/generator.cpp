@@ -37,25 +37,70 @@ struct_cmap_t generator_t::select(tensor_size_t f, indices_cmap_t, struct_mem_t&
     return buffer.tensor();
 }
 
-generator1_t::generator1_t(const memory_dataset_t& dataset, const indices_t& samples) :
+identity_generator_t::identity_generator_t(const memory_dataset_t& dataset, const indices_t& samples) :
     generator_t(dataset, samples)
 {
+    tensor_size_t count = 0;
+    for (tensor_size_t f = 0, features = dataset.features(); f < features; ++ f)
+    {
+        switch (const auto& feature = dataset.feature(f); feature.type())
+        {
+        case feature_type::sclass:
+            count += 1;
+            m_columns += feature.classes();
+            break;
+
+        case feature_type::mclass:
+            count += feature.classes();
+            m_columns += feature.classes();
+            break;
+
+        default:
+            {
+                const auto size = ::nano::size(feature.dims());
+                count += size;
+                if (size > 1)
+                {
+                    count += 1;
+                }
+                m_columns += size;
+            }
+            break;
+        }
+    }
+
+    m_mapping.resize(count, 2);
+    for (tensor_size_t i = 0, f = 0, features = dataset.features(); f < features; ++ f)
+    {
+        switch (const auto& feature = dataset.feature(f); feature.type())
+        {
+        case feature_type::sclass:
+            map1(i, f, -1);
+            break;
+
+        case feature_type::mclass:
+            mapN(i, f, feature.classes());
+            break;
+
+        default:
+            map1(i, f, -1);
+            if (size(feature.dims()) > 1)
+            {
+                mapN(i, f, size(feature.dims()));
+            }
+            break;
+        }
+    }
 }
 
-feature_t generator1_t::feature(tensor_size_t i) const
+feature_t identity_generator_t::feature(tensor_size_t i) const
 {
     const auto component = mapped_component(i);
     switch (const auto& feature = mapped_feature(i); feature.type())
     {
     case feature_type::sclass:
-        if (component == -1)
-        {
-            return feature;
-        }
-        else
-        {
-            return feature_t{scat(feature.name(), "_", feature.labels()[component])}.sclass(2);
-        }
+        assert(component < 0);
+        return feature;
 
     case feature_type::mclass:
         assert(component >= 0);
@@ -73,7 +118,7 @@ feature_t generator1_t::feature(tensor_size_t i) const
     }
 }
 
-void generator1_t::original(tensor_size_t i, cluster_t& original_features) const
+void identity_generator_t::original(tensor_size_t i, cluster_t& original_features) const
 {
     assert(original_features.groups() == 1);
     assert(original_features.samples() == dataset().features());
@@ -81,31 +126,7 @@ void generator1_t::original(tensor_size_t i, cluster_t& original_features) const
     original_features.assign(mapped_index(i), 0);
 }
 
-sclass_generator_t::sclass_generator_t(const memory_dataset_t& dataset, const indices_t& samples) :
-    generator1_t(dataset, samples)
-{
-    tensor_size_t features = 0, columns = 0;
-    for (tensor_size_t f = 0, features = dataset.features(); f < features; ++ f)
-    {
-        switch (const auto& feature = dataset.feature(f); feature.type())
-        {
-        case feature_type::sclass:  features += 1; columns += feature.classes(); break;
-        default:                    break;
-        }
-    }
-
-    resize(features, columns);
-    for (tensor_size_t i = 0, f = 0, features = dataset.features(); f < features; ++ f)
-    {
-        switch (const auto& feature = dataset.feature(f); feature.type())
-        {
-        case feature_type::sclass:  map1(i, f, -1); break;
-        default:                    break;
-        }
-    }
-}
-
-sclass_cmap_t sclass_generator_t::select(tensor_size_t i, indices_cmap_t samples, sclass_mem_t& buffer) const
+sclass_cmap_t identity_generator_t::select(tensor_size_t i, indices_cmap_t samples, sclass_mem_t& buffer) const
 {
     return dataset().visit_inputs(mapped_index(i), [&] (const auto&, const auto& data, const auto& mask)
     {
@@ -125,123 +146,7 @@ sclass_cmap_t sclass_generator_t::select(tensor_size_t i, indices_cmap_t samples
             }
             return sclass_cmap_t{storage};
         }
-        else
-        {
-            return generator_t::select(i, samples, buffer);
-        }
-    });
-}
-
-void sclass_generator_t::flatten(indices_cmap_t samples, tensor2d_map_t buffer, tensor_size_t column_offset) const
-{
-    auto storage = buffer.matrix();
-    for (tensor_size_t i = 0, features = this->features(); i < features; ++ i)
-    {
-        dataset().visit_inputs(mapped_index(i), [&] (const auto& feature, const auto& data, const auto& mask)
-        {
-            if constexpr (data.rank() == 1)
-            {
-                for (auto it = make_iterator(data, mask, samples); it; ++ it)
-                {
-                    if (const auto [index, sample, given, label] = *it; given)
-                    {
-                        auto segment = storage.row(index).segment(column_offset, feature.classes());
-                        segment.setConstant(+0.0);
-                        segment(label) = +1.0;
-                    }
-                    else
-                    {
-                        auto segment = storage.row(index).segment(column_offset, feature.classes());
-                        segment.setConstant(+0.0);
-                    }
-                }
-                column_offset += feature.classes();
-            }
-        });
-    }
-}
-
-sclass2binary_generator_t::sclass2binary_generator_t(const memory_dataset_t& dataset, const indices_t& samples) :
-    sclass_generator_t(dataset, samples)
-{
-    tensor_size_t features = 0, columns = 0;
-    for (tensor_size_t f = 0, features = dataset.features(); f < features; ++ f)
-    {
-        switch (const auto& feature = dataset.feature(f); feature.type())
-        {
-        case feature_type::sclass:  features += feature.classes(); columns += feature.classes(); break;
-        default:                    break;
-        }
-    }
-
-    resize(features, columns);
-    for (tensor_size_t i = 0, f = 0, features = dataset.features(); f < features; ++ f)
-    {
-        switch (const auto& feature = dataset.feature(f); feature.type())
-        {
-        case feature_type::sclass:  mapN(i, f, feature.classes()); break;
-        default:                    break;
-        }
-    }
-}
-
-sclass_cmap_t sclass2binary_generator_t::select(tensor_size_t i, indices_cmap_t samples, sclass_mem_t& buffer) const
-{
-    return dataset().visit_inputs(mapped_index(i), [&] (const auto&, const auto& data, const auto& mask)
-    {
-        if constexpr (data.rank() == 1)
-        {
-            const auto component = mapped_component(i);
-            const auto storage = resize_and_map(buffer, samples.size());
-            for (auto it = make_iterator(data, mask, samples); it; ++ it)
-            {
-                if (const auto [index, sample, given, label] = *it; given)
-                {
-                    storage(index) = (static_cast<tensor_size_t>(label) == component) ? 0 : 1;
-                }
-                else
-                {
-                    storage(index) = -1;
-                }
-            }
-            return sclass_cmap_t{storage};
-        }
-        else
-        {
-            return generator_t::select(i, samples, buffer);
-        }
-    });
-}
-
-mclass_generator_t::mclass_generator_t(const memory_dataset_t& dataset, const indices_t& samples) :
-    generator1_t(dataset, samples)
-{
-    tensor_size_t features = 0, columns = 0;
-    for (tensor_size_t f = 0, features = dataset.features(); f < features; ++ f)
-    {
-        switch (const auto& feature = dataset.feature(f); feature.type())
-        {
-        case feature_type::mclass:  features += feature.classes(); columns += feature.classes(); break;
-        default:                    break;
-        }
-    }
-
-    resize(features, columns);
-    for (tensor_size_t i = 0, f = 0, features = dataset.features(); f < features; ++ f)
-    {
-        switch (const auto& feature = dataset.feature(f); feature.type())
-        {
-        case feature_type::mclass:  mapN(i, f, feature.classes()); break;
-        default:                    break;
-        }
-    }
-}
-
-sclass_cmap_t mclass_generator_t::select(tensor_size_t i, indices_cmap_t samples, sclass_mem_t& buffer) const
-{
-    return dataset().visit_inputs(mapped_index(i), [&] (const auto&, const auto& data, const auto& mask)
-    {
-        if constexpr (data.rank() == 2)
+        else if constexpr (data.rank() == 2)
         {
             const auto component = mapped_component(i);
             const auto storage = resize_and_map(buffer, samples.size());
@@ -265,169 +170,17 @@ sclass_cmap_t mclass_generator_t::select(tensor_size_t i, indices_cmap_t samples
     });
 }
 
-void mclass_generator_t::flatten(indices_cmap_t samples, tensor2d_map_t buffer, tensor_size_t column_offset) const
+scalar_cmap_t identity_generator_t::select(tensor_size_t i, indices_cmap_t samples, scalar_mem_t& buffer) const
 {
-    auto storage = buffer.matrix();
-    for (tensor_size_t i = 0, features = this->features(); i < features; ++ i)
+    return dataset().visit_inputs(mapped_index(i), [&] (const auto&, const auto& data, const auto& mask)
     {
-        dataset().visit_inputs(mapped_index(i), [&] (const auto& feature, const auto& data, const auto& mask)
+        if constexpr (data.rank() == 4)
         {
-            if constexpr (data.rank() == 2)
+            const auto component = mapped_component(i);
+            if (component < 0)
             {
-                for (auto it = make_iterator(data, mask, samples); it; ++ it)
-                {
-                    if (const auto [index, sample, given, hits] = *it; given)
-                    {
-                        auto segment = storage.row(index).segment(column_offset, feature.classes());
-                        segment.array() = hits.array().template cast<scalar_t>();
-                    }
-                    else
-                    {
-                        auto segment = storage.row(index).segment(column_offset, feature.classes());
-                        segment.setConstant(+0.0);
-                    }
-                }
-                column_offset += feature.classes();
+                return generator_t::select(i, samples, buffer);
             }
-        });
-    }
-}
-
-/*
-identity_generator_t::identity_generator_t(const memory_dataset_t& dataset) :
-    generator_t(dataset)
-{
-    tensor_size_t count = 0;
-    for (tensor_size_t i = 0, size = m_dataset.features(); i < size; ++ i)
-    {
-        const auto& feature = m_dataset.feature(i);
-        switch (feature.type())
-        {
-        case feature_type::sclass:  count += 1; break;
-        case feature_type::mclass:  count += feature.classes(); break;
-        default:                    count += 1 + size(feature.dims()); break;
-        }
-    }
-
-    m_mapping.resize(count);
-    for (tensor_size_t i = 0, f = 0, size = m_dataset.features(); i < size; ++ i)
-    {
-        const auto& feature = m_dataset.feature(i);
-        switch (feature.type())
-        {
-        case feature_type::sclass:  map1(f, i, -1); break;
-        case feature_type::mclass:  mapN(f, i, feature.classes()); break;
-        default:                    mapN(f, i, size(feature.dims())); map1(f, i, -1); break;
-        }
-    }
-}
-
-tensor_size_t identity_generator_t::features() const
-{
-    return m_mapping.size<0>();
-}
-
-feature_t identity_generator_t::feature(tensor_size_t f) const
-{
-    const auto& feature = m_dataset.feature(m_mapping(f, 0));
-    const auto component = m_mapping(f, 1);
-
-    switch (feature.type())
-    {
-    case feature_type::sclass:
-        return feature;
-
-    case feature_type::mclass:
-        return feature_t{scat(feature.name(), "_", component)}.sclass(2);
-
-    default:
-        if (component == -1)
-        {
-            return feature;
-        }
-        else
-        {
-            return feature_t{scat(feature.name(), "_", component)}.scalar(feature.type(), make_dims(1, 1, 1));
-        }
-    }
-}
-
-void identity_generator_t::original(tensor_size_t f, cluster_t& original_features) const
-{
-    assert(original_features.groups() == 1);
-    assert(original_features.samples() == m_dataset.features());
-
-    original_features.assign(m_mapping(f, 0), 0);
-}
-
-sclass_cmap_t identity_generator_t::select(tensor_size_t f, indices_cmap_t samples, sclass_mem_t& buffer) const
-{
-    return m_dataset.visit_inputs(m_mapping(f, 0), [&] (const feature_t& feature, const auto& data, const auto& mask)
-    {
-        if constexpr (data.rank() == 1)
-        {
-            const auto storage = resize_and_map(buffer, samples.size());
-            for (auto it = make_iterator(data, mask, samples); it; ++ it)
-            {
-                if (const auto [index, sample, given, label] = *it; given)
-                {
-                    storage(index) = static_cast<int32_t>(label);
-                }
-                else
-                {
-                    storage(index) = -1;
-                }
-            }
-            return storage;
-        }
-        else if constexpr (data.rank() == 2)
-        {
-            const auto component = m_mapping(f, 1);
-            const auto storage = resize_and_map(buffer, samples.size());
-            for (auto it = make_iterator(data, mask, samples); it; ++ it)
-            {
-                if (const auto [index, sample, given, labels] = *it; given)
-                {
-                    storage(index) = static_cast<int32_t>(labels(component));
-                }
-                else
-                {
-                    storage(index) = -1;
-                }
-            }
-            return storage;
-        }
-        else
-        {
-            critical0("identity_generator_t: selected invalid feature type <", feature, ">!");
-            return buffer.tensor();
-        }
-    });
-}
-
-scalar_cmap_t identity_generator_t::select(tensor_size_t f, indices_cmap_t samples, scalar_mem_t& buffer) const
-{
-    return m_dataset.visit_inputs(m_mapping(f, 0), [&] (const feature_t& feature, const auto& data, const mask_cmap_t& mask)
-    {
-        if constexpr (data.rank() == 1)
-        {
-            const auto storage = resize_and_map(buffer, samples.size());
-            for (auto it = make_iterator(data, mask, samples); it; ++ it)
-            {
-                if (const auto [index, sample, given, value] = *it; given)
-                {
-                    storage(index) = static_cast<scalar_t>(value);
-                }
-                else
-                {
-                    storage(index) = std::numeric_limits<scalar_t>::quiet_NaN();
-                }
-            }
-            return storage;
-        }
-        else if constexpr (data.rank() == 4)
-        {
-            const auto component = m_mapping(f, 1);
             const auto storage = resize_and_map(buffer, samples.size());
             for (auto it = make_iterator(data, mask, samples); it; ++ it)
             {
@@ -440,96 +193,113 @@ scalar_cmap_t identity_generator_t::select(tensor_size_t f, indices_cmap_t sampl
                     storage(index) = std::numeric_limits<scalar_t>::quiet_NaN();
                 }
             }
-            return storage;
+            return scalar_cmap_t{storage};
         }
         else
         {
-            critical0("identity_generator_t: selected invalid feature type <", feature, ">!");
-            return buffer.tensor();
+            return generator_t::select(i, samples, buffer);
         }
     });
 }
 
-struct_cmap_t identity_generator_t::select(tensor_size_t feature, indices_cmap_t samples, struct_mem_t& buffer) const
+struct_cmap_t identity_generator_t::select(tensor_size_t i, indices_cmap_t samples, struct_mem_t& buffer) const
 {
-    return m_dataset.visit_inputs(feature, [&] (const feature_t& feature, const auto& data, const mask_cmap_t& mask)
+    return dataset().visit_inputs(mapped_index(i), [&] (const auto& feature, const auto& data, const auto& mask)
     {
         if constexpr (data.rank() == 4)
         {
+            const auto component = mapped_component(i);
+            if (component >= 0)
+            {
+                return generator_t::select(i, samples, buffer);
+            }
             const auto [dim1, dim2, dim3] = feature.dims();
             const auto storage = resize_and_map(buffer, samples.size(), dim1, dim2, dim3);
             for (auto it = make_iterator(data, mask, samples); it; ++ it)
             {
                 if (const auto [index, sample, given, values] = *it; given)
                 {
-                    storage.vector(index) = values.vector().template cast<scalar_t>();
+                    storage.array(index) = values.array().template cast<scalar_t>();
                 }
                 else
                 {
                     storage.tensor(index).constant(std::numeric_limits<scalar_t>::quiet_NaN());
                 }
             }
-            return storage;
+            return struct_cmap_t{storage};
         }
         else
         {
-            critical0("identity_generator_t: selected invalid feature type <", feature, ">!");
-            return buffer.tensor();
+            return generator_t::select(i, samples, buffer);
         }
     });
 }
 
-tensor_size_t identity_generator_t::flatten_size() const
+void identity_generator_t::flatten(indices_cmap_t samples, tensor2d_map_t buffer, tensor_size_t column_offset) const
 {
-    tensor_size_t size = 0;
-    for (tensor_size_t i = 0; i < m_dataset.features(); ++ f)
+    auto storage = buffer.matrix();
+    for (tensor_size_t i = 0, features = this->features(); i < features; ++ i)
     {
-        const auto& feature = m_dataset.feature(i);
-        switch (feature.type())
+        dataset().visit_inputs(mapped_index(i), [&] (const auto& feature, const auto& data, const auto& mask)
         {
-        case feature::sclass:   size += feature.classes(); break;
-        case feature::mclass:   size += feature.classes(); break;
-        default:                size += ::nano::size(feature.dims()); break;
-        }
-    }
-    return size;
-}
+            const auto classes = feature.classes();
+            const auto scalars = size(feature.dims());
 
-void identity_generator_t::flatten(indices_cmap_t samples, tensor2d_cmap_t inputs) const
-{
-    assert(inputs.dims() == make_dims(samples.size(), flatten_size()));
-
-    for (tensor_size_t i = 0, offset = 0; i < m_dataset.features(); ++ f)
-    {
-        m_dataset.visit_inputs(i, [&] (const feature_t& feature, const auto& data, const mask_cmap_t& mask)
-        {
             if constexpr (data.rank() == 1)
+            {
+                for (auto it = make_iterator(data, mask, samples); it; ++ it)
+                {
+                    if (const auto [index, sample, given, label] = *it; given)
+                    {
+                        auto segment = storage.row(index).segment(column_offset, classes);
+                        segment.setConstant(+0.0);
+                        segment(label) = +1.0;
+                    }
+                    else
+                    {
+                        auto segment = storage.row(index).segment(column_offset, classes);
+                        segment.setConstant(+0.0);
+                    }
+                }
+                column_offset += classes;
+            }
+            else if constexpr (data.rank() == 2)
+            {
+                for (auto it = make_iterator(data, mask, samples); it; ++ it)
+                {
+                    if (const auto [index, sample, given, hits] = *it; given)
+                    {
+                        auto segment = storage.row(index).segment(column_offset, classes);
+                        segment.array() = hits.array().template cast<scalar_t>();
+                    }
+                    else
+                    {
+                        auto segment = storage.row(index).segment(column_offset, classes);
+                        segment.setConstant(+0.0);
+                    }
+                }
+                column_offset += classes;
+            }
+            else
             {
                 for (auto it = make_iterator(data, mask, samples); it; ++ it)
                 {
                     if (const auto [index, sample, given, values] = *it; given)
                     {
-                        storage.vector(index) = values.vector().template cast<scalar_t>();
+                        auto segment = storage.row(index).segment(column_offset, scalars);
+                        storage.array() = values.array().template cast<scalar_t>();
                     }
                     else
                     {
-                        storage.tensor(index).constant(std::numeric_limits<scalar_t>::quiet_NaN());
+                        auto segment = storage.row(index).segment(column_offset, scalars);
+                        segment.setConstant(+0.0);
+                    }
                 }
-                offset += feature.classes();
+                column_offset += size(feature.dims());
             }
-            return storage;
-            }
-        const auto& feature = m_dataset.feature(i);
-        switch (feature.type())
-        {
-        case feature::sclass:   size += feature.classes(); break;
-        case feature::mclass:   size += feature.classes(); break;
-        default:                size += ::nano::size(feature.dims()); break;
-        }
+        });
     }
-    return size;
 }
-*/
 
 dataset_generator_t::dataset_generator_t(const memory_dataset_t& dataset, indices_t samples) :
     m_dataset(dataset),

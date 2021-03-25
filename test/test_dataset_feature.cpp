@@ -127,9 +127,9 @@ UTEST_CASE(discrete)
 
 UTEST_CASE(compare)
 {
-    const auto make_feature_cont = [] (const string_t& name, feature_type type = feature_type::float32)
+    const auto make_feature_cont = [] (const string_t& name, feature_type type = feature_type::float32, tensor3d_dims_t dims = make_dims(1, 1, 1))
     {
-        auto feature = feature_t{name}.scalar(type);
+        auto feature = feature_t{name}.scalar(type, dims);
         UTEST_CHECK(!feature.discrete());
         UTEST_CHECK(!feature.optional());
         UTEST_CHECK_EQUAL(feature.type(), type);
@@ -200,20 +200,21 @@ UTEST_CASE(compare)
     UTEST_CHECK_EQUAL(make_feature_cont("f"), make_feature_cont("f"));
     UTEST_CHECK_NOT_EQUAL(make_feature_cont("f"), make_feature_cont("gf"));
     UTEST_CHECK_NOT_EQUAL(make_feature_cont("f"), make_feature_cont("f", feature_type::float64));
-    UTEST_CHECK_EQUAL(to_string(make_feature_cont("f")), "name=f,type=float32,labels[],mandatory");
+    UTEST_CHECK_NOT_EQUAL(make_feature_cont("f"), make_feature_cont("f", feature_type::float32, make_dims(1, 2, 2)));
+    UTEST_CHECK_EQUAL(to_string(make_feature_cont("f")), "name=f,type=float32,dims=1x1x1,labels[],mandatory");
 
     UTEST_CHECK_EQUAL(make_feature_cont_opt("f"), make_feature_cont_opt("f"));
     UTEST_CHECK_NOT_EQUAL(make_feature_cont_opt("f"), make_feature_cont_opt("ff"));
-    UTEST_CHECK_EQUAL(to_string(make_feature_cont_opt("f")), "name=f,type=float32,labels[],optional");
+    UTEST_CHECK_EQUAL(to_string(make_feature_cont_opt("f")), "name=f,type=float32,dims=1x1x1,labels[],optional");
 
     UTEST_CHECK_EQUAL(make_feature_cate("f"), make_feature_cate("f"));
     UTEST_CHECK_NOT_EQUAL(make_feature_cate("f"), make_feature_cate("x"));
-    UTEST_CHECK_EQUAL(to_string(make_feature_cate("f")), "name=f,type=sclass,labels[cate0,cate1,cate2],mandatory");
+    UTEST_CHECK_EQUAL(to_string(make_feature_cate("f")), "name=f,type=sclass,dims=1x1x1,labels[cate0,cate1,cate2],mandatory");
 
     UTEST_CHECK_EQUAL(make_feature_cate_opt("f"), make_feature_cate_opt("f"));
     UTEST_CHECK_NOT_EQUAL(make_feature_cate_opt("f"), make_feature_cate_opt("x"));
     UTEST_CHECK_NOT_EQUAL(make_feature_cate_opt("f"), make_feature_cate_opt("f", feature_type::mclass));
-    UTEST_CHECK_EQUAL(to_string(make_feature_cate_opt("f")), "name=f,type=sclass,labels[cate_opt0,cate_opt1],optional");
+    UTEST_CHECK_EQUAL(to_string(make_feature_cate_opt("f")), "name=f,type=sclass,dims=1x1x1,labels[cate_opt0,cate_opt1],optional");
 
     UTEST_CHECK_NOT_EQUAL(make_feature_cont("f"), make_feature_cate("f"));
     UTEST_CHECK_NOT_EQUAL(make_feature_cont("f"), make_feature_cont_opt("f"));

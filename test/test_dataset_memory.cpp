@@ -198,12 +198,6 @@ static auto make_dataset(tensor_size_t samples, const features_t& features, size
     return dataset;
 }
 
-// TODO: check feature indices selection
-// TODO: check feature access with both iterators
-// TODO: check that the flatten & the feature iterators work as expected
-// TODO: check that feature normalization works
-// TODO: check that feature extraction works (e.g sign(x), sign(x)*log(1+x^2), polynomial expansion)
-
 UTEST_BEGIN_MODULE(test_dataset_memory)
 
 UTEST_CASE(check_samples)

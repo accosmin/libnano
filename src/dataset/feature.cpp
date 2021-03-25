@@ -109,6 +109,7 @@ bool ::nano::operator==(const feature_t& f1, const feature_t& f2)
 {
     return  f1.type() == f2.type() &&
             f1.name() == f2.name() &&
+            f1.dims() == f2.dims() &&
             f1.labels() == f2.labels() &&
             f1.optional() == f2.optional();
 }
@@ -117,13 +118,14 @@ bool ::nano::operator!=(const feature_t& f1, const feature_t& f2)
 {
     return  f1.type() != f2.type() ||
             f1.name() != f2.name() ||
+            f1.dims() != f2.dims() ||
             f1.labels() != f2.labels() ||
             f1.optional() != f2.optional();
 }
 
 std::ostream& ::nano::operator<<(std::ostream& stream, const feature_t& feature)
 {
-    stream << "name=" << feature.name() << ",type=" << feature.type() << ",labels[";
+    stream << "name=" << feature.name() << ",type=" << feature.type() << ",dims=" << feature.dims() << ",labels[";
     for (const auto& label : feature.labels())
     {
         stream << label;

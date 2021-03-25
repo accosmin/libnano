@@ -90,16 +90,22 @@ namespace nano
         const indices_t&        m_samples;  ///<
     };
 
-    class NANO_PUBLIC generator1_t : public generator_t
+    class NANO_PUBLIC identity_generator_t : public generator_t
     {
     public:
 
-        generator1_t(const memory_dataset_t& dataset, const indices_t& samples);
+        identity_generator_t(const memory_dataset_t& dataset, const indices_t& samples);
 
-        tensor_size_t columns() const override { return m_columns; }
-        tensor_size_t features() const override { return m_mapping.size<0>(); }
         feature_t feature(tensor_size_t) const override;
         void original(tensor_size_t, cluster_t&) const override;
+        tensor_size_t features() const override { return m_mapping.size<0>(); }
+
+        tensor_size_t columns() const override { return m_columns; }
+        void flatten(indices_cmap_t, tensor2d_map_t, tensor_size_t) const override;
+
+        sclass_cmap_t select(tensor_size_t, indices_cmap_t, sclass_mem_t&) const override;
+        scalar_cmap_t select(tensor_size_t, indices_cmap_t, scalar_mem_t&) const override;
+        struct_cmap_t select(tensor_size_t, indices_cmap_t, struct_mem_t&) const override;
 
     protected:
 
@@ -119,12 +125,6 @@ namespace nano
         {
             assert(i >= 0 && i <= m_mapping.size<0>());
             return dataset().feature(m_mapping(i, 0));
-        }
-
-        void resize(tensor_size_t features, tensor_size_t columns)
-        {
-            m_columns = columns;
-            m_mapping.resize(features, 2);
         }
 
         void map1(tensor_size_t& i, tensor_size_t original, tensor_size_t component)
@@ -150,35 +150,8 @@ namespace nano
         feature_mapping_t   m_mapping;      ///< (original feature index, component index or -1 if using it all)
     };
 
-    class NANO_PUBLIC sclass_generator_t : public generator1_t
-    {
-    public:
-
-        sclass_generator_t(const memory_dataset_t& dataset, const indices_t& samples);
-
-        void flatten(indices_cmap_t samples, tensor2d_map_t, tensor_size_t column_offset) const override;
-
-        sclass_cmap_t select(tensor_size_t feature, indices_cmap_t samples, sclass_mem_t&) const override;
-    };
-
-    class NANO_PUBLIC sclass2binary_generator_t : public sclass_generator_t
-    {
-    public:
-
-        sclass2binary_generator_t(const memory_dataset_t& dataset, const indices_t& samples);
-
-        sclass_cmap_t select(tensor_size_t feature, indices_cmap_t samples, sclass_mem_t&) const override;
-    };
-
-    class NANO_PUBLIC mclass_generator_t : public generator1_t
-    {
-    public:
-
-        mclass_generator_t(const memory_dataset_t& dataset, const indices_t& samples);
-
-        sclass_cmap_t select(tensor_size_t feature, indices_cmap_t samples, sclass_mem_t&) const override;
-        void flatten(indices_cmap_t samples, tensor2d_map_t, tensor_size_t column_offset) const override;
-    };
+    // TODO: feature-wise non-linear transformations of scalar features - sign(x)*log(1+x*x), x/sqrt(1+x*x)
+    // TODO: polynomial features
 
     ///
     /// \brief
@@ -214,8 +187,9 @@ namespace nano
         tensor3d_dims_t target_dims() const;
         tensor4d_cmap_t targets(tensor_range_t sample_range, tensor4d_t&) const;
 
-        // TODO: support for normalization!
+        // TODO: support for feature scaling (rename normalization to scaling)!
         // TODO: support for class-based weighting of samples!
+        // TODO: support for drop column and sample permutation!
 
     private:
 

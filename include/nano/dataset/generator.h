@@ -190,6 +190,7 @@ namespace nano
         // TODO: support for feature scaling (rename normalization to scaling)!
         // TODO: support for class-based weighting of samples!
         // TODO: support for drop column and sample permutation!
+        // TODO: support for caching - all or selection of features
 
     private:
 

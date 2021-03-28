@@ -172,14 +172,21 @@ sclass_cmap_t identity_generator_t::select(tensor_size_t i, indices_cmap_t sampl
 
 scalar_cmap_t identity_generator_t::select(tensor_size_t i, indices_cmap_t samples, scalar_mem_t& buffer) const
 {
-    return dataset().visit_inputs(mapped_index(i), [&] (const auto&, const auto& data, const auto& mask)
+    return dataset().visit_inputs(mapped_index(i), [&] (const auto& feature, const auto& data, const auto& mask)
     {
         if constexpr (data.rank() == 4)
         {
-            const auto component = mapped_component(i);
+            auto component = mapped_component(i);
             if (component < 0)
             {
-                return generator_t::select(i, samples, buffer);
+                if (size(feature.dims()) > 1)
+                {
+                    return generator_t::select(i, samples, buffer);
+                }
+                else
+                {
+                    component = 0;
+                }
             }
             const auto storage = resize_and_map(buffer, samples.size());
             for (auto it = make_iterator(data, mask, samples); it; ++ it)
@@ -238,9 +245,9 @@ struct_cmap_t identity_generator_t::select(tensor_size_t i, indices_cmap_t sampl
 void identity_generator_t::flatten(indices_cmap_t samples, tensor2d_map_t buffer, tensor_size_t column_offset) const
 {
     auto storage = buffer.matrix();
-    for (tensor_size_t i = 0, features = this->features(); i < features; ++ i)
+    for (tensor_size_t f = 0, features = dataset().features(); f < features; ++ f)
     {
-        dataset().visit_inputs(mapped_index(i), [&] (const auto& feature, const auto& data, const auto& mask)
+        dataset().visit_inputs(f, [&] (const auto& feature, const auto& data, const auto& mask)
         {
             const auto classes = feature.classes();
             const auto scalars = size(feature.dims());
@@ -252,7 +259,7 @@ void identity_generator_t::flatten(indices_cmap_t samples, tensor2d_map_t buffer
                     if (const auto [index, sample, given, label] = *it; given)
                     {
                         auto segment = storage.row(index).segment(column_offset, classes);
-                        segment.setConstant(+0.0);
+                        segment.setConstant(-1.0);
                         segment(label) = +1.0;
                     }
                     else
@@ -270,7 +277,7 @@ void identity_generator_t::flatten(indices_cmap_t samples, tensor2d_map_t buffer
                     if (const auto [index, sample, given, hits] = *it; given)
                     {
                         auto segment = storage.row(index).segment(column_offset, classes);
-                        segment.array() = hits.array().template cast<scalar_t>();
+                        segment.array() = 2.0 * hits.array().template cast<scalar_t>() - 1.0;
                     }
                     else
                     {
@@ -287,7 +294,7 @@ void identity_generator_t::flatten(indices_cmap_t samples, tensor2d_map_t buffer
                     if (const auto [index, sample, given, values] = *it; given)
                     {
                         auto segment = storage.row(index).segment(column_offset, scalars);
-                        storage.array() = values.array().template cast<scalar_t>();
+                        segment.array() = values.array().template cast<scalar_t>();
                     }
                     else
                     {
@@ -295,7 +302,7 @@ void identity_generator_t::flatten(indices_cmap_t samples, tensor2d_map_t buffer
                         segment.setConstant(+0.0);
                     }
                 }
-                column_offset += size(feature.dims());
+                column_offset += scalars;
             }
         });
     }

@@ -182,25 +182,25 @@ catch (...) \
     UTEST_EVALUATE_LESS_EQUAL(left, right, true)
 
 #define UTEST_EVALUATE_GREATER(left, right, critical) \
-    UTEST_EVALUATE_BINARY_OP(left, right, >, critical)
+    UTEST_EVALUATE_BINARY_OP(left, right, >, critical);
 #define UTEST_CHECK_GREATER(left, right) \
-    UTEST_EVALUATE_GREATER(left, right, false)
+    UTEST_EVALUATE_GREATER(left, right, false);
 #define UTEST_REQUIRE_GREATER(left, right) \
-    UTEST_EVALUATE_GREATER(left, right, true)
+    UTEST_EVALUATE_GREATER(left, right, true);
 
 #define UTEST_EVALUATE_GREATER_EQUAL(left, right, critical) \
-    UTEST_EVALUATE_BINARY_OP(left, right, >=, critical)
+    UTEST_EVALUATE_BINARY_OP(left, right, >=, critical);
 #define UTEST_CHECK_GREATER_EQUAL(left, right) \
-    UTEST_EVALUATE_GREATER_EQUAL(left, right, false)
+    UTEST_EVALUATE_GREATER_EQUAL(left, right, false);
 #define UTEST_REQUIRE_GREATER_EQUAL(left, right) \
-    UTEST_EVALUATE_GREATER_EQUAL(left, right, true)
+    UTEST_EVALUATE_GREATER_EQUAL(left, right, true);
 
 #define UTEST_EVALUATE_CLOSE(left, right, epsilon, critical) \
     UTEST_EVALUATE_LESS(std::fabs((left) - (right)), epsilon * (1 + std::fabs((left)) + std::fabs((right))), critical)
 #define UTEST_CHECK_CLOSE(left, right, epsilon) \
-    UTEST_EVALUATE_CLOSE(left, right, epsilon, false)
+    UTEST_EVALUATE_CLOSE(left, right, epsilon, false);
 #define UTEST_REQUIRE_CLOSE(left, right, epsilon) \
-    UTEST_EVALUATE_CLOSE(left, right, epsilon, true)
+    UTEST_EVALUATE_CLOSE(left, right, epsilon, true);
 
 #ifdef UTEST_WITH_EIGEN
 
@@ -210,18 +210,18 @@ catch (...) \
         epsilon * (1 + (left).array().abs().maxCoeff() + (right).array().abs().maxCoeff()), critical)
 
 #define UTEST_CHECK_EIGEN_CLOSE(left, right, epsilon) \
-    UTEST_EVALUATE_EIGEN_CLOSE(left, right, epsilon, false)
+    UTEST_EVALUATE_EIGEN_CLOSE(left, right, epsilon, false);
 #define UTEST_REQUIRE_EIGEN_CLOSE(left, right, epsilon) \
-    UTEST_EVALUATE_EIGEN_CLOSE(left, right, epsilon, true)
+    UTEST_EVALUATE_EIGEN_CLOSE(left, right, epsilon, true);
 
 #define UTEST_EVALUATE_EIGEN_EQUAL(left, right, critical) \
     UTEST_REQUIRE_EQUAL((left).size(), (right).size()); \
     UTEST_EVALUATE_EQUAL((left), (right), critical);
 
 #define UTEST_CHECK_EIGEN_EQUAL(left, right) \
-    UTEST_EVALUATE_EIGEN_EQUAL(left, right, false)
+    UTEST_EVALUATE_EIGEN_EQUAL(left, right, false);
 #define UTEST_REQUIRE_EIGEN_EQUAL(left, right) \
-    UTEST_EVALUATE_EIGEN_EQUAL(left, right, true)
+    UTEST_EVALUATE_EIGEN_EQUAL(left, right, true);
 
 #endif
 
@@ -230,20 +230,20 @@ catch (...) \
 #define UTEST_EVALUATE_TENSOR_CLOSE(left, right, epsilon, critical) \
     UTEST_REQUIRE_EQUAL((left).dims(), (right).dims()); \
     UTEST_EVALUATE_LESS((((left).array() - (right).array()).abs().maxCoeff()), \
-        epsilon * (1 + (left).array().abs().maxCoeff() + (right).array().abs().maxCoeff()), critical)
+        epsilon * (1 + (left).array().abs().maxCoeff() + (right).array().abs().maxCoeff()), critical);
 
 #define UTEST_CHECK_TENSOR_CLOSE(left, right, epsilon) \
-    UTEST_EVALUATE_TENSOR_CLOSE(left, right, epsilon, false)
+    UTEST_EVALUATE_TENSOR_CLOSE(left, right, epsilon, false);
 #define UTEST_REQUIRE_TENSOR_CLOSE(left, right, epsilon) \
-    UTEST_EVALUATE_TENSOR_CLOSE(left, right, epsilon, true)
+    UTEST_EVALUATE_TENSOR_CLOSE(left, right, epsilon, true);
 
 #define UTEST_EVALUATE_TENSOR_EQUAL(left, right, critical) \
     UTEST_REQUIRE_EQUAL((left).dims(), (right).dims()); \
     UTEST_EVALUATE_EQUAL((left), (right), critical);
 
 #define UTEST_CHECK_TENSOR_EQUAL(left, right) \
-    UTEST_EVALUATE_TENSOR_EQUAL(left, right, false)
+    UTEST_EVALUATE_TENSOR_EQUAL(left, right, false);
 #define UTEST_REQUIRE_TENSOR_EQUAL(left, right) \
-    UTEST_EVALUATE_TENSOR_EQUAL(left, right, true)
+    UTEST_EVALUATE_TENSOR_EQUAL(left, right, true);
 
 #endif

@@ -229,8 +229,14 @@ catch (...) \
 
 #define UTEST_EVALUATE_TENSOR_CLOSE(left, right, epsilon, critical) \
     UTEST_REQUIRE_EQUAL((left).dims(), (right).dims()); \
-    UTEST_EVALUATE_LESS((((left).array() - (right).array()).abs().maxCoeff()), \
-        epsilon * (1 + (left).array().abs().maxCoeff() + (right).array().abs().maxCoeff()), critical);
+    ++ utest_n_checks; \
+    if (!close((left), (right), epsilon)) \
+    { \
+        UTEST_HANDLE_FAILURE() \
+            << "]: check {" << UTEST_STRINGIFY(left <> right) \
+            << "} failed {" << (left) << " <> " << (right) << "}!" << std::endl; \
+        UTEST_HANDLE_CRITICAL(critical) \
+    }
 
 #define UTEST_CHECK_TENSOR_CLOSE(left, right, epsilon) \
     UTEST_EVALUATE_TENSOR_CLOSE(left, right, epsilon, false);

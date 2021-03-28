@@ -568,4 +568,33 @@ UTEST_CASE(tensor3d_minmax)
     UTEST_CHECK_EQUAL(tensor.tensor(0, 1).max(), 24);
 }
 
+UTEST_CASE(tensor_close)
+{
+    constexpr auto epsilon = 1e-12;
+    constexpr auto nan = std::numeric_limits<double>::quiet_NaN();
+
+    tensor_mem_t<double, 2> tensor1(10, 2);
+    tensor_mem_t<double, 2> tensor2(10, 3);
+
+    UTEST_CHECK(!close(tensor1, tensor2, epsilon));
+    tensor2.resize(tensor1.dims());
+
+    tensor1.zero();
+    tensor2.zero();
+    UTEST_CHECK(close(tensor1, tensor2, epsilon));
+
+    tensor1(11) = 11.0;
+    UTEST_CHECK(!close(tensor1, tensor2, epsilon));
+
+    tensor1(11) = nan;
+    UTEST_CHECK(!close(tensor1, tensor2, epsilon));
+
+    tensor2(11) = nan;
+    UTEST_CHECK(close(tensor1, tensor2, epsilon));
+
+    tensor1(7) = 42.42;
+    tensor2(7) = 42.42 + 1e-15;
+    UTEST_CHECK(close(tensor1, tensor2, epsilon));
+}
+
 UTEST_END_MODULE()

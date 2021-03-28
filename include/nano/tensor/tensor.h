@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nano/random.h>
+#include <nano/numeric.h>
 #include <nano/tensor/vector.h>
 #include <nano/tensor/matrix.h>
 #include <nano/tensor/storage.h>
@@ -627,7 +628,7 @@ namespace nano
     ///
     /// \brief construct consecutive tensor indices in the range [min, max).
     ///
-    inline auto arange(const tensor_size_t min, const tensor_size_t max)
+    inline auto arange(tensor_size_t min, tensor_size_t max)
     {
         assert(min <= max);
 
@@ -687,5 +688,39 @@ namespace nano
         tensor_mem_t<tscalar, trank> tensor(dims);
         std::transform(list.begin(), list.end(), tensor.begin(), [] (auto value) { return static_cast<tscalar>(value); });
         return tensor;
+    }
+
+    ///
+    /// \brief returns true if the two tensors are close, ignoring not-finite values if present.
+    ///
+    template
+    <
+        template <typename, size_t> class tstorage1,
+        template <typename, size_t> class tstorage2,
+        typename tscalar, size_t trank
+    >
+    bool close(
+        const tensor_t<tstorage1, tscalar, trank>& lhs,
+        const tensor_t<tstorage2, tscalar, trank>& rhs,
+        double epsilon)
+    {
+        if (lhs.dims() != rhs.dims())
+        {
+            return false;
+        }
+        for (nano::tensor_size_t i = 0, size = lhs.size(); i < size; ++ i)
+        {
+            const auto lhs_finite = std::isfinite(lhs(i));
+            const auto rhs_finite = std::isfinite(rhs(i));
+            if (lhs_finite != rhs_finite)
+            {
+                return false;
+            }
+            else if (lhs_finite && !close(static_cast<double>(lhs(i)), static_cast<double>(rhs(i)), epsilon))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 }

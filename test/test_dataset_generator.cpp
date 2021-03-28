@@ -75,13 +75,24 @@ public:
 
     static constexpr auto nan = std::numeric_limits<scalar_t>::quiet_NaN();
 
-    static auto expected_feature0() { return make_tensor<int32_t>(make_dims(10), 0, -1, -1, 1, -1, -1, 0, -1, -1, 1); }
-    static auto expected_feature1() { return make_tensor<int32_t>(make_dims(10), 1, -1, -1, 0, -1, -1, 1, -1, -1, 0); }
-    static auto expected_feature2() { return make_tensor<int32_t>(make_dims(10), 1, -1, -1, 0, -1, -1, 1, -1, -1, 0); }
-    static auto expected_feature3() { return make_tensor<int32_t>(make_dims(10), 0, 1, 0, 1, 0, 1, 0, 1, 0, 1); }
-    static auto expected_feature4() { return make_tensor<int32_t>(make_dims(10), 0, -1, 2, -1, 4, -1, 6, -1, 8, -1); }
-    static auto expected_feature5() { return make_tensor<scalar_t>(make_dims(10), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9); }
-    static auto expected_feature6() { return make_tensor<scalar_t>(make_dims(10), 7.0, nan, nan, 10.0, nan, nan, 13.0, nan, nan, 16.0); }
+    static auto expected_select0() { return make_tensor<int32_t>(make_dims(10), 0, -1, -1, 1, -1, -1, 0, -1, -1, 1); }
+    static auto expected_select1() { return make_tensor<int32_t>(make_dims(10), 1, -1, -1, 0, -1, -1, 1, -1, -1, 0); }
+    static auto expected_select2() { return make_tensor<int32_t>(make_dims(10), 1, -1, -1, 0, -1, -1, 1, -1, -1, 0); }
+    static auto expected_select3() { return make_tensor<int32_t>(make_dims(10), 0, 1, 0, 1, 0, 1, 0, 1, 0, 1); }
+    static auto expected_select4() { return make_tensor<int32_t>(make_dims(10), 0, -1, 2, -1, 4, -1, 6, -1, 8, -1); }
+    static auto expected_select5() { return make_tensor<scalar_t>(make_dims(10), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9); }
+    static auto expected_select6() { return make_tensor<scalar_t>(make_dims(10), 7.0, nan, nan, 10.0, nan, nan, 13.0, nan, nan, 16.0); }
+    static auto expected_select7() { return make_tensor<scalar_t>(make_dims(10, 2, 1, 2),
+        1.0, 0.0, 0.0, 0.0, nan, nan, nan, nan,
+        3.0, 2.0, 2.0, 2.0, nan, nan, nan, nan,
+        5.0, 4.0, 4.0, 4.0, nan, nan, nan, nan,
+        7.0, 6.0, 6.0, 6.0, nan, nan, nan, nan,
+        9.0, 8.0, 8.0, 8.0, nan, nan, nan, nan); }
+    static auto expected_select8() { return make_tensor<scalar_t>(make_dims(10), 1.0, nan, 3.0, nan, 5.0, nan, 7.0, nan, 9.0, nan); }
+    static auto expected_select9() { return make_tensor<scalar_t>(make_dims(10), 0.0, nan, 2.0, nan, 4.0, nan, 6.0, nan, 8.0, nan); }
+    static auto expected_select10() { return make_tensor<scalar_t>(make_dims(10), 0.0, nan, 2.0, nan, 4.0, nan, 6.0, nan, 8.0, nan); }
+    static auto expected_select11() { return make_tensor<scalar_t>(make_dims(10), 0.0, nan, 2.0, nan, 4.0, nan, 6.0, nan, 8.0, nan); }
+    static auto expected_select12() { return make_tensor<scalar_t>(make_dims(10), 1.0, nan, 3.0, nan, 5.0, nan, 7.0, nan, 9.0, nan); }
 
     static auto expected_flatten()
     {
@@ -137,6 +148,18 @@ static void check_scalar(const generator_t& generator, tensor_size_t feature, in
     UTEST_CHECK_TENSOR_CLOSE(scalar_buffer, expected, 1e-12);
 }
 
+static void check_struct(const generator_t& generator, tensor_size_t feature, indices_cmap_t samples, const struct_mem_t& expected)
+{
+    sclass_mem_t sclass_buffer;
+    scalar_mem_t scalar_buffer;
+    struct_mem_t struct_buffer;
+
+    UTEST_CHECK_THROW(generator.select(feature, samples, sclass_buffer), std::runtime_error);
+    UTEST_CHECK_THROW(generator.select(feature, samples, scalar_buffer), std::runtime_error);
+    UTEST_CHECK_NOTHROW(generator.select(feature, samples, struct_buffer));
+    UTEST_CHECK_TENSOR_CLOSE(struct_buffer, expected, 1e-12);
+}
+
 // TODO: check that the flatten & the feature iterators work as expected
 // TODO: check that feature scaling scaling works
 // TODO: check that feature extraction works (e.g sign(x), sign(x)*log(1+x^2), polynomial expansion)
@@ -164,15 +187,19 @@ UTEST_CASE(identity)
     UTEST_CHECK_EQUAL(generator.feature(11), feature_t{"u8_struct_3"}.scalar(feature_type::uint8, make_dims(1, 1, 1)));
     UTEST_CHECK_EQUAL(generator.feature(12), feature_t{"u16_struct"}.scalar(feature_type::uint16, make_dims(1, 1, 1)));
 
-    check_sclass(generator, 0, samples, dataset.expected_feature0());
-    check_sclass(generator, 1, samples, dataset.expected_feature1());
-    check_sclass(generator, 2, samples, dataset.expected_feature2());
-    check_sclass(generator, 3, samples, dataset.expected_feature3());
-    check_sclass(generator, 4, samples, dataset.expected_feature4());
-    check_scalar(generator, 5, samples, dataset.expected_feature5());
-    //check_scalar(generator, 6, samples, dataset.expected_feature6());
-
-    //TODO: check_sclass and similar functions with expected values!!!
+    check_sclass(generator, 0, samples, dataset.expected_select0());
+    check_sclass(generator, 1, samples, dataset.expected_select1());
+    check_sclass(generator, 2, samples, dataset.expected_select2());
+    check_sclass(generator, 3, samples, dataset.expected_select3());
+    check_sclass(generator, 4, samples, dataset.expected_select4());
+    check_scalar(generator, 5, samples, dataset.expected_select5());
+    check_scalar(generator, 6, samples, dataset.expected_select6());
+    check_struct(generator, 7, samples, dataset.expected_select7());
+    check_scalar(generator, 8, samples, dataset.expected_select8());
+    check_scalar(generator, 9, samples, dataset.expected_select9());
+    check_scalar(generator, 10, samples, dataset.expected_select10());
+    check_scalar(generator, 11, samples, dataset.expected_select11());
+    check_scalar(generator, 12, samples, dataset.expected_select12());
 
     tensor2d_t flatten_buffer(samples.size(), 22);
     UTEST_CHECK_EQUAL(generator.columns(), 22);

@@ -81,7 +81,11 @@ namespace nano
     ///
     /// \brief check if two scalars are almost equal
     ///
-    template <typename tscalar>
+    template
+    <
+        typename tscalar,
+        typename = typename std::enable_if<std::is_arithmetic<tscalar>::value>::type
+    >
     bool close(const tscalar x, const tscalar y, const tscalar epsilon)
     {
         return nano::abs(x - y) <= (tscalar(1) + (nano::abs(x) + nano::abs(y) / 2)) * epsilon;
@@ -90,7 +94,11 @@ namespace nano
     ///
     /// \brief round to the closest power of 10
     ///
-    template <typename tscalar>
+    template
+    <
+        typename tscalar,
+        typename = typename std::enable_if<std::is_floating_point<tscalar>::value>::type
+    >
     inline auto roundpow10(const tscalar v)
     {
         return std::pow(tscalar(10), std::floor(std::log10(v)));
@@ -99,32 +107,52 @@ namespace nano
     ///
     /// \brief precision level [0=very precise, 1=quite precise, 2=precise, 3=loose] for different scalars
     ///
-    template <typename tscalar>
+    template
+    <
+        typename tscalar,
+        typename = typename std::enable_if<std::is_floating_point<tscalar>::value>::type
+    >
     tscalar epsilon()
     {
         return std::numeric_limits<tscalar>::epsilon();
     }
 
-    template <typename tscalar>
+    template
+    <
+        typename tscalar,
+        typename = typename std::enable_if<std::is_floating_point<tscalar>::value>::type
+    >
     tscalar epsilon0()
     {
         return roundpow10(10 * epsilon<tscalar>());
     }
 
-    template <typename tscalar>
+    template
+    <
+        typename tscalar,
+        typename = typename std::enable_if<std::is_floating_point<tscalar>::value>::type
+    >
     tscalar epsilon1()
     {
         const auto cb = std::cbrt(epsilon<tscalar>());
         return roundpow10(cb * cb);
     }
 
-    template <typename tscalar>
+    template
+    <
+        typename tscalar,
+        typename = typename std::enable_if<std::is_floating_point<tscalar>::value>::type
+    >
     tscalar epsilon2()
     {
         return roundpow10(std::sqrt(epsilon<tscalar>()));
     }
 
-    template <typename tscalar>
+    template
+    <
+        typename tscalar,
+        typename = typename std::enable_if<std::is_floating_point<tscalar>::value>::type
+    >
     tscalar epsilon3()
     {
         return roundpow10(std::cbrt(epsilon<tscalar>()));

@@ -216,7 +216,7 @@ struct_cmap_t identity_generator_t::select(tensor_size_t i, indices_cmap_t sampl
         if constexpr (data.rank() == 4)
         {
             const auto component = mapped_component(i);
-            if (component >= 0)
+            if (component >= 0 || size(feature.dims()) <= 1)
             {
                 return generator_t::select(i, samples, buffer);
             }

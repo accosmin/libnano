@@ -8,8 +8,12 @@ namespace nano
     ///
     /// \brief square: x^2
     ///
-    template <typename tscalar>
-    tscalar square(const tscalar value)
+    template
+    <
+        typename tscalar,
+        typename = typename std::enable_if<std::is_arithmetic<tscalar>::value>::type
+    >
+    tscalar square(tscalar value)
     {
         return value * value;
     }
@@ -17,8 +21,12 @@ namespace nano
     ///
     /// \brief cube: x^3
     ///
-    template <typename tscalar>
-    tscalar cube(const tscalar value)
+    template
+    <
+        typename tscalar,
+        typename = typename std::enable_if<std::is_arithmetic<tscalar>::value>::type
+    >
+    tscalar cube(tscalar value)
     {
         return value * square(value);
     }
@@ -26,56 +34,42 @@ namespace nano
     ///
     /// \brief quartic: x^4
     ///
-    template <typename tscalar>
-    tscalar quartic(const tscalar value)
+    template
+    <
+        typename tscalar,
+        typename = typename std::enable_if<std::is_arithmetic<tscalar>::value>::type
+    >
+    tscalar quartic(tscalar value)
     {
         return square(square(value));
     }
 
     ///
-    /// \brief integer division with rounding
+    /// \brief integer division with rounding.
     ///
-    template <typename tinteger, typename tinteger2>
-    tinteger idiv(const tinteger nominator, const tinteger2 denominator)
+    template
+    <
+        typename tnominator, typename tdenominator,
+        typename = typename std::enable_if<std::is_integral<tnominator>::value>::type,
+        typename = typename std::enable_if<std::is_integral<tdenominator>::value>::type
+    >
+    tnominator idiv(tnominator nominator, tdenominator denominator)
     {
-        return (nominator + static_cast<tinteger>(denominator) / 2) / static_cast<tinteger>(denominator);
+        return (nominator + static_cast<tnominator>(denominator) / 2) / static_cast<tnominator>(denominator);
     }
 
     ///
-    /// \brief integer rounding
+    /// \brief integer rounding.
     ///
-    template <typename tinteger, typename tinteger2>
-    tinteger iround(const tinteger value, const tinteger2 modulo)
+    template
+    <
+        typename tvalue, typename tmodulo,
+        typename = typename std::enable_if<std::is_integral<tvalue>::value>::type,
+        typename = typename std::enable_if<std::is_integral<tmodulo>::value>::type
+    >
+    tvalue iround(tvalue value, tmodulo modulo)
     {
         return idiv(value, modulo) * modulo;
-    }
-
-    ///
-    /// \brief absolute value
-    ///
-    // fixme: this won't be needed in C++17 as std::abs is doing the right thing!
-    template <typename tscalar>
-    tscalar abs(const tscalar v)
-    {
-        return std::abs(v);
-    }
-
-    template <>
-    inline float abs(const float v)
-    {
-        return std::fabs(v);
-    }
-
-    template <>
-    inline double abs(const double v)
-    {
-        return std::fabs(v);
-    }
-
-    template <>
-    inline long double abs(const long double v)
-    {
-        return std::fabs(v);
     }
 
     ///
@@ -86,9 +80,9 @@ namespace nano
         typename tscalar,
         typename = typename std::enable_if<std::is_arithmetic<tscalar>::value>::type
     >
-    bool close(const tscalar x, const tscalar y, const tscalar epsilon)
+    bool close(tscalar x, tscalar y, tscalar epsilon)
     {
-        return nano::abs(x - y) <= (tscalar(1) + (nano::abs(x) + nano::abs(y) / 2)) * epsilon;
+        return std::abs(x - y) <= (tscalar(1) + (std::abs(x) + std::abs(y) / 2)) * epsilon;
     }
 
     ///
@@ -99,7 +93,7 @@ namespace nano
         typename tscalar,
         typename = typename std::enable_if<std::is_floating_point<tscalar>::value>::type
     >
-    inline auto roundpow10(const tscalar v)
+    inline auto roundpow10(tscalar v)
     {
         return std::pow(tscalar(10), std::floor(std::log10(v)));
     }

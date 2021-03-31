@@ -156,11 +156,10 @@ namespace nano
             }
         }
 
-        template <typename tvalue, typename... tvalues>
-        void scat(std::ostringstream& stream, const tvalue& value, const tvalues&... values)
+        template <typename... tvalues>
+        void scat(std::ostringstream& stream, const tvalues&... values)
         {
-            scat(stream, value);
-            scat(stream, values...);
+            (scat(stream, values), ...);
         }
     }
 

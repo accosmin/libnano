@@ -71,11 +71,10 @@ namespace nano
             m_values.push_back(static_cast<value_t>(value));
         }
 
-        template <typename tscalar, typename... tscalars>
-        void operator()(tscalar value, tscalars... values)
+        template <typename... tscalars>
+        void operator()(tscalars... values)
         {
-            operator()(value);
-            operator()(values...);
+            (operator()(values), ...);
         }
 
         ///

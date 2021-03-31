@@ -65,7 +65,7 @@ namespace nano
     /// \brief stores a scalar parameter and enforces its value to be within the given range:
     ///     min LE/LT value LE/LT max.
     ///
-    template <typename tscalar, typename = typename std::enable_if<std::is_arithmetic<tscalar>::value>::type>
+    template <typename tscalar, typename = typename std::enable_if<std::is_arithmetic_v<tscalar>>::type>
     class param1_t
     {
     public:
@@ -131,7 +131,7 @@ namespace nano
     /// \brief stores two ordered scalar parameters and enforces their values to be within the given range:
     ///     min LE/LT value1 LE/LT value2 LE/LT max
     ///
-    template <typename tscalar, typename = typename std::enable_if<std::is_arithmetic<tscalar>::value>::type>
+    template <typename tscalar, typename = typename std::enable_if<std::is_arithmetic_v<tscalar>>::type>
     class param2_t
     {
     public:
@@ -212,14 +212,14 @@ namespace nano
         {
         }
 
-        template <typename tenum, typename = typename std::enable_if<std::is_enum<tenum>::value>::type>
+        template <typename tenum, typename = typename std::enable_if<std::is_enum_v<tenum>>::type>
         eparam1_t(string_t name, tenum value) :
             m_name(std::move(name))
         {
             set(value);
         }
 
-        template <typename tenum, typename = typename std::enable_if<std::is_enum<tenum>::value>::type>
+        template <typename tenum, typename = typename std::enable_if<std::is_enum_v<tenum>>::type>
         eparam1_t& operator=(tenum value)
         {
             set(value);
@@ -231,7 +231,7 @@ namespace nano
             m_value = value;
         }
 
-        template <typename tenum, typename = typename std::enable_if<std::is_enum<tenum>::value>::type>
+        template <typename tenum, typename = typename std::enable_if<std::is_enum_v<tenum>>::type>
         void set(tenum value)
         {
             m_value = checked(value);
@@ -240,12 +240,12 @@ namespace nano
         const auto& name() const { return m_name; }
         auto get() const { return m_value; }
 
-        template <typename tenum, typename = typename std::enable_if<std::is_enum<tenum>::value>::type>
+        template <typename tenum, typename = typename std::enable_if<std::is_enum_v<tenum>>::type>
         auto as() const { return static_cast<tenum>(m_value); }
 
     private:
 
-        template <typename tenum, typename = typename std::enable_if<std::is_enum<tenum>::value>::type>
+        template <typename tenum, typename = typename std::enable_if<std::is_enum_v<tenum>>::type>
         auto checked(tenum value) const
         {
             const auto values = enum_values<tenum>();

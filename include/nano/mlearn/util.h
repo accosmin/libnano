@@ -45,7 +45,7 @@ namespace nano
     /// \brief generate all combinations of the given number of elements per dimension
     ///     (e.g. number of distinct values per parameter).
     ///
-    template <typename tindex, typename = typename std::enable_if<std::is_integral<tindex>::value>::type>
+    template <typename tindex, typename = typename std::enable_if<std::is_integral_v<tindex>>::type>
     class combinatorial_iterator_t
     {
     public:

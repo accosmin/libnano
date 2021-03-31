@@ -165,7 +165,7 @@ namespace nano
         template <typename tgenerator, typename... tgenerator_args>
         dataset_generator_t& add_generator(tgenerator_args... args)
         {
-            static_assert(std::is_base_of<generator_t, tgenerator>::value);
+            static_assert(std::is_base_of_v<generator_t, tgenerator>);
 
             m_generators.push_back(std::make_unique<tgenerator>(m_dataset, args...));
             update();

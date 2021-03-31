@@ -13,7 +13,7 @@ namespace nano
     template
     <
         typename tscalar,
-        typename = typename std::enable_if<std::is_pod<tscalar>::value>::type
+        typename = typename std::enable_if<std::is_pod_v<tscalar>>::type
     >
     // NOLINTNEXTLINE(readability-avoid-const-params-in-decls)
     std::ostream& write(std::ostream& stream, const tscalar scalar)
@@ -25,7 +25,7 @@ namespace nano
     template
     <
         typename tscalar, typename tcount,
-        typename = typename std::enable_if<std::is_pod<tscalar>::value>::type
+        typename = typename std::enable_if<std::is_pod_v<tscalar>>::type
     >
     std::ostream& write(std::ostream& stream, const tscalar* data, const tcount count)
     {
@@ -36,7 +36,7 @@ namespace nano
     template
     <
         typename twscalar, typename tscalar, typename tcount,
-        typename = typename std::enable_if<std::is_pod<tscalar>::value>::type
+        typename = typename std::enable_if<std::is_pod_v<tscalar>>::type
     >
     std::ostream& write_cast(std::ostream& stream, const tscalar* data, const tcount count)
     {
@@ -74,7 +74,7 @@ namespace nano
     template
     <
         typename tscalar,
-        typename = typename std::enable_if<std::is_pod<tscalar>::value>::type
+        typename = typename std::enable_if<std::is_pod_v<tscalar>>::type
     >
     std::istream& read(std::istream& stream, tscalar& scalar)
     {
@@ -85,7 +85,7 @@ namespace nano
     template
     <
         typename tscalar, typename tcount,
-        typename = typename std::enable_if<std::is_pod<tscalar>::value>::type
+        typename = typename std::enable_if<std::is_pod_v<tscalar>>::type
     >
     std::istream& read(std::istream& stream, tscalar* data, const tcount count)
     {
@@ -96,7 +96,7 @@ namespace nano
     template
     <
         typename trscalar, typename tscalar,
-        typename = typename std::enable_if<std::is_pod<tscalar>::value>::type
+        typename = typename std::enable_if<std::is_pod_v<tscalar>>::type
     >
     std::istream& read_cast(std::istream& stream, tscalar& scalar)
     {
@@ -109,7 +109,7 @@ namespace nano
     template
     <
         typename trscalar, typename tscalar, typename tcount,
-        typename = typename std::enable_if<std::is_pod<tscalar>::value>::type
+        typename = typename std::enable_if<std::is_pod_v<tscalar>>::type
     >
     std::istream& read_cast(std::istream& stream, tscalar* data, const tcount count)
     {
@@ -227,7 +227,7 @@ namespace nano
     <
         typename tobject,
         typename trobject = std::unique_ptr<tobject>,
-        typename = typename std::enable_if<std::is_base_of<serializable_t, tobject>::value>::type
+        typename = typename std::enable_if<std::is_base_of_v<serializable_t, tobject>>::type
     >
     class NANO_PUBLIC identifiable_t
     {

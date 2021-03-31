@@ -24,7 +24,7 @@ namespace nano
         right
     };
 
-    template <typename tenum, typename = typename std::enable_if<std::is_enum<tenum>::value>::type>
+    template <typename tenum, typename = typename std::enable_if<std::is_enum_v<tenum>>::type>
     using enum_map_t = std::vector<std::pair<tenum, const char*>>;
 
     ///
@@ -36,7 +36,7 @@ namespace nano
     ///
     /// \brief collect all the values of an enum type, optionally filtered by the given regular expression.
     ///
-    template <typename tenum, typename = typename std::enable_if<std::is_enum<tenum>::value>::type>
+    template <typename tenum, typename = typename std::enable_if<std::is_enum_v<tenum>>::type>
     auto enum_values(const std::regex& enum_regex = std::regex(".+"))
     {
         std::vector<tenum> enums;
@@ -56,9 +56,9 @@ namespace nano
     template <typename tvalue>
     tvalue from_string(const string_t& str)
     {
-        if constexpr (std::is_integral<tvalue>::value)
+        if constexpr (std::is_integral_v<tvalue>)
         {
-            if constexpr (std::is_signed<tvalue>::value)
+            if constexpr (std::is_signed_v<tvalue>)
             {
                 return static_cast<tvalue>(std::stoll(str));
             }
@@ -67,11 +67,11 @@ namespace nano
                 return static_cast<tvalue>(std::stoull(str));
             }
         }
-        else if constexpr (std::is_floating_point<tvalue>::value)
+        else if constexpr (std::is_floating_point_v<tvalue>)
         {
             return static_cast<tvalue>(std::stold(str));
         }
-        else if constexpr (std::is_same<tvalue, string_t>::value)
+        else if constexpr (std::is_same_v<tvalue, string_t>)
         {
             return str;
         }

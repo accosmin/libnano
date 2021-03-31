@@ -35,7 +35,7 @@ namespace nano
         template <typename tobject_impl, typename... targs>
         bool add(const string_t& id, const string_t& description, targs&&... args)
         {
-            static_assert(std::is_base_of<tobject, tobject_impl>::value);
+            static_assert(std::is_base_of_v<tobject, tobject_impl>);
             const auto maker = [=] () { return std::make_unique<tobject_impl>(args...); };
             return m_protos.emplace(id, proto_t{maker, description}).second;
         }

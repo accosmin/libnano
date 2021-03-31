@@ -58,7 +58,7 @@ namespace nano
         template
         <
             typename twlearner,
-            typename = typename std::enable_if<std::is_base_of<wlearner_t, twlearner>::value>::type
+            typename = typename std::enable_if<std::is_base_of_v<wlearner_t, twlearner>>::type
         >
         void add(const twlearner& wlearner)
         {

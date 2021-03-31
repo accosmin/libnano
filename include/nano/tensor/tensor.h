@@ -676,6 +676,9 @@ namespace nano
     {
     };
 
+    template <class T>
+    inline constexpr bool is_tensor_v = is_tensor<T>::value;
+
     ///
     /// \brief create a tensor from an initializer list.
     ///

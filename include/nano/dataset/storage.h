@@ -40,11 +40,11 @@ namespace nano
         void set(const tensor_map_t<tscalar, 1>& data, tensor_size_t sample, const tvalue& value) const
         {
             tensor_size_t label;
-            if constexpr (std::is_same<tvalue, string_t>::value)
+            if constexpr (std::is_same_v<tvalue, string_t>)
             {
                 label = check_from_string<tensor_size_t>("single-label", value);
             }
-            else if constexpr (std::is_arithmetic<tvalue>::value)
+            else if constexpr (std::is_arithmetic_v<tvalue>)
             {
                 label = static_cast<tensor_size_t>(value);
             }
@@ -67,7 +67,7 @@ namespace nano
         template <typename tscalar, typename tvalue>
         void set(const tensor_map_t<tscalar, 2>& data, tensor_size_t sample, const tvalue& value) const
         {
-            if constexpr (::nano::is_tensor<tvalue>::value)
+            if constexpr (::nano::is_tensor_v<tvalue>)
             {
                 if constexpr (tvalue::rank() == 1)
                 {
@@ -95,7 +95,7 @@ namespace nano
         template <typename tscalar, typename tvalue>
         void set(const tensor_map_t<tscalar, 4>& data, tensor_size_t sample, const tvalue& value) const
         {
-            if constexpr (std::is_same<tvalue, string_t>::value)
+            if constexpr (std::is_same_v<tvalue, string_t>)
             {
                 critical(
                     ::nano::size(dims()) != 1,
@@ -104,7 +104,7 @@ namespace nano
 
                 data(sample) = check_from_string<tscalar>("scalar", value);
             }
-            else if constexpr (std::is_arithmetic<tvalue>::value)
+            else if constexpr (std::is_arithmetic_v<tvalue>)
             {
                 critical(
                     ::nano::size(dims()) != 1,

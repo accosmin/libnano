@@ -12,7 +12,7 @@ namespace nano
     template
     <
         typename tscalar, size_t trank,
-        typename = typename std::enable_if<std::is_arithmetic<tscalar>::value>::type
+        typename = typename std::enable_if<std::is_arithmetic_v<tscalar>>::type
     >
     class tensor_base_t
     {
@@ -24,7 +24,7 @@ namespace nano
 
         using tscalar_remove_cvref = typename std::remove_cv<typename std::remove_reference<tscalar>::type>::type;
         static_assert(
-            std::is_same<tscalar, tscalar_remove_cvref>::value,
+            std::is_same_v<tscalar, tscalar_remove_cvref>,
             "cannot create tensors with cvref scalars");
 
         using tdims = tensor_dims_t<trank>;

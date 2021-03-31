@@ -43,7 +43,7 @@ namespace nano
         void set(int64_t);
         void set(scalar_t);
 
-        template <typename tenum, typename = typename std::enable_if<std::is_enum<tenum>::value>::type>
+        template <typename tenum, typename = typename std::enable_if<std::is_enum_v<tenum>>::type>
         void set(tenum value)
         {
             eparam().set(value);
@@ -55,7 +55,7 @@ namespace nano
         int64_t ivalue() const;
         scalar_t svalue() const;
 
-        template <typename tenum, typename = typename std::enable_if<std::is_enum<tenum>::value>::type>
+        template <typename tenum, typename = typename std::enable_if<std::is_enum_v<tenum>>::type>
         tenum evalue() const
         {
             return eparam().as<tenum>();
@@ -217,7 +217,7 @@ namespace nano
         void set(const string_t& name, int64_t value) { find(name).set(value); }
         void set(const string_t& name, scalar_t value) { find(name).set(value); }
 
-        template <typename tenum, typename = typename std::enable_if<std::is_enum<tenum>::value>::type>
+        template <typename tenum, typename = typename std::enable_if<std::is_enum_v<tenum>>::type>
         void set(const string_t& name, tenum value) { find(name).set(value); }
 
         ///
@@ -226,7 +226,7 @@ namespace nano
         int64_t ivalue(const string_t& name) const { return find(name).ivalue(); }
         scalar_t svalue(const string_t& name) const { return find(name).svalue(); }
 
-        template <typename tenum, typename = typename std::enable_if<std::is_enum<tenum>::value>::type>
+        template <typename tenum, typename = typename std::enable_if<std::is_enum_v<tenum>>::type>
         tenum evalue(const string_t& name) const { return find(name).evalue<tenum>(); }
 
         ///

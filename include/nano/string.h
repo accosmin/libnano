@@ -51,70 +51,6 @@ namespace nano
     }
 
     ///
-    /// \brief cast string to value.
-    ///
-    template <typename tvalue>
-    tvalue from_string(const string_t& str)
-    {
-        if constexpr (std::is_integral_v<tvalue>)
-        {
-            if constexpr (std::is_signed_v<tvalue>)
-            {
-                return static_cast<tvalue>(std::stoll(str));
-            }
-            else
-            {
-                return static_cast<tvalue>(std::stoull(str));
-            }
-        }
-        else if constexpr (std::is_floating_point_v<tvalue>)
-        {
-            return static_cast<tvalue>(std::stold(str));
-        }
-        else if constexpr (std::is_same_v<tvalue, string_t>)
-        {
-            return str;
-        }
-        else if constexpr (std::is_enum<typename std::remove_reference<tvalue>::type>::value)
-        {
-            for (const auto& elem : enum_string<tvalue>())
-            {
-                if (elem.second == str)
-                {
-                    return elem.first;
-                }
-            }
-
-            for (const auto& elem : enum_string<tvalue>())
-            {
-                if (str.find(elem.second) == 0)
-                {
-                    return elem.first;
-                }
-            }
-
-            const auto msg = string_t("invalid ") + typeid(tvalue).name() + " <" + str + ">!";
-            throw std::invalid_argument(msg);
-        }
-    }
-
-    ///
-    /// \brief cast string to value and use the given default value if casting fails.
-    ///
-    template <typename tvalue>
-    tvalue from_string(const string_t& str, const tvalue& default_value)
-    {
-        try
-        {
-            return from_string<tvalue>(str);
-        }
-        catch (std::exception&)
-        {
-            return default_value;
-        }
-    }
-
-    ///
     /// \brief concatenate a list of potentially heterogeneous values into a formatted string.
     ///
     namespace detail
@@ -122,7 +58,7 @@ namespace nano
         template <typename tvalue>
         void scat(std::ostringstream& stream, const tvalue& value)
         {
-            if constexpr (std::is_enum<typename std::remove_reference<tvalue>::type>::value)
+            if constexpr (std::is_enum_v<typename std::remove_reference<tvalue>::type>)
             {
                 for (const auto& elem : enum_string<tvalue>())
                 {
@@ -169,6 +105,68 @@ namespace nano
         std::ostringstream stream;
         detail::scat(stream, values...);
         return stream.str();
+    }
+
+    ///
+    /// \brief cast string to value.
+    ///
+    template <typename tvalue>
+    tvalue from_string(const string_t& str)
+    {
+        if constexpr (std::is_integral_v<tvalue>)
+        {
+            if constexpr (std::is_signed_v<tvalue>)
+            {
+                return static_cast<tvalue>(std::stoll(str));
+            }
+            else
+            {
+                return static_cast<tvalue>(std::stoull(str));
+            }
+        }
+        else if constexpr (std::is_floating_point_v<tvalue>)
+        {
+            return static_cast<tvalue>(std::stold(str));
+        }
+        else if constexpr (std::is_same_v<tvalue, string_t>)
+        {
+            return str;
+        }
+        else if constexpr (std::is_enum_v<typename std::remove_reference<tvalue>::type>)
+        {
+            const auto options = enum_string<tvalue>();
+            for (const auto& option : options)
+            {
+                if (option.second == str)
+                {
+                    return option.first;
+                }
+            }
+            for (const auto& option : options)
+            {
+                if (str.find(option.second) == 0)
+                {
+                    return option.first;
+                }
+            }
+            throw std::invalid_argument(scat("invalid ", typeid(tvalue).name(), " <", ">!"));
+        }
+    }
+
+    ///
+    /// \brief cast string to value and use the given default value if casting fails.
+    ///
+    template <typename tvalue>
+    tvalue from_string(const string_t& str, const tvalue& default_value)
+    {
+        try
+        {
+            return from_string<tvalue>(str);
+        }
+        catch (std::exception&)
+        {
+            return default_value;
+        }
     }
 
     ///

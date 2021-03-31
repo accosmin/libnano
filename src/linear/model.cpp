@@ -12,7 +12,7 @@ linear_model_t::linear_model_t()
     model_t::register_param(sparam1_t{"linear::l1reg", 0, LE, 0, LE, 1e+10});
     model_t::register_param(sparam1_t{"linear::l2reg", 0, LE, 0, LE, 1e+10});
     model_t::register_param(sparam1_t{"linear::vAreg", 0, LE, 0, LE, 1e+10});
-    model_t::register_param(eparam1_t{"linear::normalization", ::nano::normalization::standard});
+    model_t::register_param(eparam1_t{"linear::scaling", feature_scaling::standard});
 }
 
 rmodel_t linear_model_t::clone() const
@@ -43,15 +43,15 @@ scalar_t linear_model_t::fit(
     function.l1reg(l1reg());
     function.l2reg(l2reg());
     function.vAreg(vAreg());
-    function.normalization(normalization());
+    function.scaling(scaling());
 
     const auto state = solver.minimize(function, vector_t::Zero(function.size()));
     m_bias = function.bias(state.x);
     m_weights = function.weights(state.x);
 
-    // NB: rescale the bias and the weights to match the normalization of the inputs!
+    // NB: rescale the bias and the weights to match the scaling of the inputs!
     const auto& istats = function.istats();
-    istats.upscale(function.normalization(), m_weights, m_bias);
+    istats.upscale(function.scaling(), m_weights, m_bias);
 
     tensor1d_t errors(samples.size());
     tensor4d_t outputs(cat_dims(samples.size(), dataset.tdims()));

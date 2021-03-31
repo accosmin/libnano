@@ -89,9 +89,9 @@ namespace nano
     }
 
     ///
-    /// \brief input normalization (feature scaling) methods.
+    /// \brief input feature scaling methods.
     ///
-    enum class normalization : int32_t
+    enum class feature_scaling : int32_t
     {
         none = 0,       ///< no normalization, use the feature values as is
         mean,           ///< mean normalization: x = (x - mean(x)) / (max(x) - min(x))
@@ -100,14 +100,14 @@ namespace nano
     };
 
     template <>
-    inline enum_map_t<normalization> enum_string<normalization>()
+    inline enum_map_t<feature_scaling> enum_string<feature_scaling>()
     {
         return
         {
-            { normalization::none,      "none" },
-            { normalization::mean,      "mean" },
-            { normalization::minmax,    "minmax" },
-            { normalization::standard,  "standard" }
+            { feature_scaling::none,    "none" },
+            { feature_scaling::mean,    "mean" },
+            { feature_scaling::minmax,  "minmax" },
+            { feature_scaling::standard,"standard" }
         };
     }
 

@@ -23,7 +23,7 @@ namespace nano
     ///     - elastic net (the L1-norm and the L2-norm of the weights) by tuning ::l1reg() and ::l2reg() accordingly,
     ///     - variance (of the loss values across samples) by tuning ::vAreg() accordingly.
     ///
-    /// NB: the inputs should be normalized during training to speed-up convergence (@see nano::normalization).
+    /// NB: the inputs should be normalized during training to speed-up convergence (@see nano::feature_scaling).
     ///
     /// see "Regression Shrinkage and Selection via the lasso", by R. Tibshirani
     /// see "Empirical Bernstein Boosting", by Pannagadatta K. Shivaswamy & Tony Jebara
@@ -70,13 +70,13 @@ namespace nano
         void l1reg(scalar_t l1reg) { set("linear::l1reg", l1reg); }
         void l2reg(scalar_t l2reg) { set("linear::l2reg", l2reg); }
         void vAreg(scalar_t vAreg) { set("linear::vAreg", vAreg); }
-        void normalization(::nano::normalization normalization) { set("linear::normalization", normalization); }
+        void scaling(feature_scaling scaling) { set("linear::scaling", scaling); }
 
         auto batch() const { return ivalue("linear::batch"); }
         auto l1reg() const { return svalue("linear::l1reg"); }
         auto l2reg() const { return svalue("linear::l2reg"); }
         auto vAreg() const { return svalue("linear::vAreg"); }
-        auto normalization() const { return evalue<::nano::normalization>("linear::normalization"); }
+        auto scaling() const { return evalue<feature_scaling>("linear::scaling"); }
 
         const auto& bias() const { return m_bias; }
         const auto& weights() const { return m_weights; }

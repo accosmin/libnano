@@ -97,9 +97,9 @@ UTEST_CASE(gradient)
 
     const vector_t x = vector_t::Random(function.size());
 
-    for (const auto normalization : enum_values<::nano::normalization>())
+    for (const auto scaling : enum_values<feature_scaling>())
     {
-        UTEST_REQUIRE_NOTHROW(function.normalization(normalization));
+        UTEST_REQUIRE_NOTHROW(function.scaling(scaling));
         UTEST_CHECK_LESS(function.grad_accuracy(x), 10 * epsilon2<scalar_t>());
     }
 }
@@ -132,23 +132,18 @@ UTEST_CASE(train)
     const auto dataset = make_dataset(3, 2);
     const auto samples = make_samples();
 
-    for (const auto normalization : enum_values<::nano::normalization>())
+    for (const auto scaling : enum_values<feature_scaling>())
     {
         auto model = linear_model_t{};
         UTEST_REQUIRE_NOTHROW(model.batch(16));
-        if (normalization == ::nano::normalization::mean)
+        switch (scaling)
         {
-            UTEST_REQUIRE_NOTHROW(model.l1reg(1e-6));
+        case feature_scaling::mean:     UTEST_REQUIRE_NOTHROW(model.l1reg(1e-6)); break;
+        case feature_scaling::minmax:   UTEST_REQUIRE_NOTHROW(model.l2reg(1e-6)); break;
+        case feature_scaling::standard: UTEST_REQUIRE_NOTHROW(model.vAreg(1e-6)); break;
+        default:                        break;
         }
-        if (normalization == ::nano::normalization::minmax)
-        {
-            UTEST_REQUIRE_NOTHROW(model.l2reg(1e-6));
-        }
-        if (normalization == ::nano::normalization::standard)
-        {
-            UTEST_REQUIRE_NOTHROW(model.vAreg(1e-6));
-        }
-        UTEST_REQUIRE_NOTHROW(model.normalization(normalization));
+        UTEST_REQUIRE_NOTHROW(model.scaling(scaling));
 
         tensor4d_t outputs;
         UTEST_REQUIRE_NOTHROW(model.fit(*loss, dataset, samples, *solver));

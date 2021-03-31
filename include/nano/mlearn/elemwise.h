@@ -98,35 +98,35 @@ namespace nano
 
         ///
         /// \brief scale element-wise the given 4D tensor,
-        ///     where the first dimension is the sample index and the rest being the elements/features to normalize.
+        ///     where the first dimension is the sample index and the rest being the elements/features to scale.
         ///
         template <template <typename, size_t> class tstorage>
-        void scale(normalization norm, tensor_t<tstorage, scalar_t, 4>& inputs) const
+        void scale(feature_scaling scaling, tensor_t<tstorage, scalar_t, 4>& inputs) const
         {
             const auto samples = this->samples(inputs);
             const auto epsilon = epsilon2<scalar_t>();
 
             // FIXME: write these operations as single Eigen calls!
-            switch (norm)
+            switch (scaling)
             {
-            case normalization::none:
+            case feature_scaling::none:
                 break;
 
-            case normalization::mean:
+            case feature_scaling::mean:
                 for (tensor_size_t s = 0; s < samples; ++ s)
                 {
                     inputs.array(s) = (inputs.array(s) - m_mean.array()) / (m_max.array() - m_min.array()).max(epsilon);
                 }
                 break;
 
-            case normalization::minmax:
+            case feature_scaling::minmax:
                 for (tensor_size_t s = 0; s < samples; ++ s)
                 {
                     inputs.array(s) = (inputs.array(s) - m_min.array()) / (m_max.array() - m_min.array()).max(epsilon);
                 }
                 break;
 
-            case normalization::standard:
+            case feature_scaling::standard:
                 for (tensor_size_t s = 0; s < samples; ++ s)
                 {
                     inputs.array(s) = (inputs.array(s) - m_mean.array()) / (m_stdev.array()).max(epsilon);
@@ -134,18 +134,16 @@ namespace nano
                 break;
 
             default:
-                throw std::runtime_error("unhandled normalization method when scaling inputs");
+                throw std::runtime_error("unhandled feature_scaling method when scaling inputs");
                 break;
             }
         }
 
         ///
-        /// \brief adjust the weights and the bias of a linear transformation to work with the
-        ///     the un-scaled/un-normalized inputs.
+        /// \brief adjust the weights and the bias of a linear transformation to work with the un-scaled inputs.
         ///
         template <template <typename, size_t> class tstorage>
-        void upscale(
-            normalization norm, tensor_t<tstorage, scalar_t, 2>& weights, tensor_t<tstorage, scalar_t, 1>& bias) const
+        void upscale(feature_scaling scaling, tensor_t<tstorage, scalar_t, 2>& weights, tensor_t<tstorage, scalar_t, 1>& bias) const
         {
             const auto epsilon = epsilon2<scalar_t>();
 
@@ -153,24 +151,24 @@ namespace nano
             auto b = bias.vector();
 
             // FIXME: rewrite these operations to be more intelligible!
-            switch (norm)
+            switch (scaling)
             {
-            case ::nano::normalization::none:
+            case ::nano::feature_scaling::none:
                 break;
 
-            case ::nano::normalization::mean:
+            case ::nano::feature_scaling::mean:
                 // cppcheck-suppress unreadVariable
                 b -= w.transpose() * (m_mean.array() / (m_max.array() - m_min.array()).max(epsilon)).matrix();
                 w.array().colwise() /= (m_max.array() - m_min.array()).max(epsilon);
                 break;
 
-            case ::nano::normalization::minmax:
+            case ::nano::feature_scaling::minmax:
                 // cppcheck-suppress unreadVariable
                 b -= w.transpose() * (m_min.array() / (m_max.array() - m_min.array()).max(epsilon)).matrix();
                 w.array().colwise() /= (m_max.array() - m_min.array()).max(epsilon);
                 break;
 
-            case ::nano::normalization::standard:
+            case ::nano::feature_scaling::standard:
                 // cppcheck-suppress unreadVariable
                 b -= w.transpose() * (m_mean.array() / m_stdev.array().max(epsilon)).matrix();
                 w.array().colwise() /= m_stdev.array().max(epsilon);

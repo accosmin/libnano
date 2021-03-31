@@ -85,11 +85,11 @@ namespace nano
         ///
         /// \brief change parameters
         ///
-        void l1reg(const scalar_t l1reg) { m_l1reg.set(l1reg); }
-        void l2reg(const scalar_t l2reg) { m_l2reg.set(l2reg); }
-        void vAreg(const scalar_t vAreg) { m_vAreg.set(vAreg); }
-        void batch(const tensor_size_t batch) { m_batch.set(batch); }
-        void normalization(const normalization n) { m_normalization = n; }
+        void l1reg(scalar_t l1reg) { m_l1reg.set(l1reg); }
+        void l2reg(scalar_t l2reg) { m_l2reg.set(l2reg); }
+        void vAreg(scalar_t vAreg) { m_vAreg.set(vAreg); }
+        void batch(tensor_size_t batch) { m_batch.set(batch); }
+        void scaling(feature_scaling scaling) { m_scaling = scaling; }
 
         ///
         /// \brief access functions
@@ -104,7 +104,7 @@ namespace nano
         const auto& istats() const { return m_istats; }
         const auto& dataset() const { return m_dataset; }
         const auto& samples() const { return m_samples; }
-        auto normalization() const { return m_normalization; }
+        auto scaling() const { return m_scaling; }
 
     private:
 
@@ -118,7 +118,7 @@ namespace nano
         sparam1_t           m_l2reg{"linear::L2", 0, LE, 0, LE, 1e+8};  ///< regularization factor - see (2), (3)
         sparam1_t           m_vAreg{"linear::VA", 0, LE, 0, LE, 1e+8};  ///< regularization factor - see (4)
         iparam1_t           m_batch{"linear::batch", 1, LE, 32, LE, 4092};///< batch size in number of samples
-        ::nano::normalization m_normalization{::nano::normalization::none};///<
-        elemwise_stats_t    m_istats;       ///< element-wise statistics to be used for normalization
+        feature_scaling     m_scaling{feature_scaling::none};///<
+        elemwise_stats_t    m_istats;       ///< element-wise statistics to be used for feature_scaling
     };
 }

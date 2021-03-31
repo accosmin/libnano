@@ -36,7 +36,7 @@ scalar_t linear_function_t::vgrad(const vector_t& x, vector_t* gx) const
         auto inputs = m_dataset.inputs(m_samples.slice(range));
         const auto targets = m_dataset.targets(m_samples.slice(range));
 
-        m_istats.scale(normalization(), inputs);
+        m_istats.scale(scaling(), inputs);
         ::nano::linear::predict(inputs, W, b, cache.m_outputs);
         m_loss.value(targets, cache.m_outputs, cache.m_values);
 

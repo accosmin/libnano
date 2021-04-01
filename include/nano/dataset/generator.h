@@ -1,5 +1,6 @@
 #pragma once
 
+#include <variant>
 #include <nano/dataset/dataset.h>
 #include <nano/mlearn/cluster.h>
 
@@ -156,25 +157,46 @@ namespace nano
     ///
     /// \brief
     ///
-    class dataset_generator_t
+    class NANO_PUBLIC dataset_generator_t
     {
     public:
+
+        struct select_stats_t
+        {
+            indices_t       m_sclass_features;  ///< indices of the single-class features
+            indices_t       m_scalar_features;  ///< indices of the scalar features
+            indices_t       m_struct_features;  ///< indices of structured features
+        };
+
+        struct scalar_stats_t
+        {
+            tensor_size_t   m_count{0};         ///<
+            tensor1d_t      m_min, m_max;       ///<
+            tensor1d_t      m_mean, m_stdev;    ///<
+        };
+
+        struct sclass_stats_t
+        {
+            indices_t       m_class_counts;     ///<
+        };
+
+        using target_stats_t = std::variant<scalar_stats_t, sclass_stats_t>;
 
         dataset_generator_t(const memory_dataset_t& dataset, indices_t samples);
 
         template <typename tgenerator, typename... tgenerator_args>
-        dataset_generator_t& add_generator(tgenerator_args... args)
+        dataset_generator_t& add(tgenerator_args... args)
         {
             static_assert(std::is_base_of_v<generator_t, tgenerator>);
 
-            m_generators.push_back(std::make_unique<tgenerator>(m_dataset, args...));
+            m_generators.push_back(std::make_unique<tgenerator>(m_dataset, m_samples, args...));
             update();
             return *this;
         }
 
         tensor_size_t features() const;
         feature_t feature(tensor_size_t feature) const;
-        indices_t original_features(const indices_t& features) const;
+        indices_t original(const indices_t& features) const;
 
         sclass_cmap_t select(tensor_size_t feature, indices_cmap_t samples, sclass_mem_t&) const;
         scalar_cmap_t select(tensor_size_t feature, indices_cmap_t samples, scalar_mem_t&) const;
@@ -186,6 +208,10 @@ namespace nano
         feature_t target() const;
         tensor3d_dims_t target_dims() const;
         tensor4d_cmap_t targets(tensor_range_t sample_range, tensor4d_t&) const;
+
+        select_stats_t select_stats(execution) const;
+        target_stats_t target_stats(execution) const;
+        scalar_stats_t flatten_stats(execution) const;
 
         // TODO: support for feature scaling (rename normalization to scaling)!
         // TODO: support for class-based weighting of samples!

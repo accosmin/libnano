@@ -351,7 +351,7 @@ feature_t dataset_generator_t::feature(tensor_size_t feature) const
     return generator->feature(m_mapping(feature, 1));
 }
 
-indices_t dataset_generator_t::original_features(const indices_t& features) const
+indices_t dataset_generator_t::original(const indices_t& features) const
 {
     cluster_t original_features(m_dataset.features(), 1);
 

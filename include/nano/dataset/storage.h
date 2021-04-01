@@ -113,7 +113,7 @@ namespace nano
 
                 data(sample) = static_cast<tscalar>(value);
             }
-            else if constexpr (::nano::is_tensor<tvalue>())
+            else if constexpr (::nano::is_tensor_v<tvalue>)
             {
                 critical(
                     ::nano::size(dims()) != value.size(),

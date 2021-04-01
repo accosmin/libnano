@@ -109,6 +109,8 @@ namespace nano
 
     ///
     /// \brief cast string to value.
+    /// FIXME: use std::string_view instead of std::string (more efficient when used with tokenizer) when
+    ///        gcc (and clang) supports properly std::from_chars.
     ///
     template <typename tvalue>
     tvalue from_string(const string_t& str)

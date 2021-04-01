@@ -597,4 +597,15 @@ UTEST_CASE(tensor_close)
     UTEST_CHECK(close(tensor1, tensor2, epsilon));
 }
 
+UTEST_CASE(is_tensor)
+{
+    static_assert(is_tensor_v<tensor_mem_t<double, 1>>);
+    static_assert(is_tensor_v<tensor_map_t<double, 2>>);
+    static_assert(is_tensor_v<tensor_cmap_t<double, 3>>);
+
+    static_assert(!is_tensor_v<int>);
+    static_assert(!is_tensor_v<double>);
+    static_assert(!is_tensor_v<std::vector<int>>);
+}
+
 UTEST_END_MODULE()

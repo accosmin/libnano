@@ -1,14 +1,15 @@
 #pragma once
 
 #include <variant>
+#include <nano/factory.h>
 #include <nano/dataset/dataset.h>
 #include <nano/mlearn/cluster.h>
 
 namespace nano
 {
-    // TODO: factory of feature generators!!!
     class generator_t;
-    using rgenerator_t = std::unique_ptr<generator_t>;
+    using generator_factory_t = factory_t<generator_t>;
+    using rgenerator_t = generator_factory_t::trobject;
     using rgenerators_t = std::vector<rgenerator_t>;
 
     // single-label categorical feature values: (sample index) = label/class index
@@ -42,9 +43,14 @@ namespace nano
     {
     public:
 
-        generator_t(const memory_dataset_t& dataset, const indices_t& samples);
+        generator_t(const memory_dataset_t& dataset);
 
         virtual ~generator_t() = default;
+
+        ///
+        /// \brief prepare the given samples to generate features fast when needed.
+        ///
+        virtual void preprocess(execution, indices_cmap_t samples);
 
         ///
         /// \brief returns the total number of generated features.
@@ -82,20 +88,18 @@ namespace nano
         /// \brief access functions
         ///
         const auto& dataset() const { return m_dataset; }
-        const auto& samples() const { return m_samples; }
 
     private:
 
         // attributes
         const memory_dataset_t& m_dataset;  ///<
-        const indices_t&        m_samples;  ///<
     };
 
     class NANO_PUBLIC identity_generator_t : public generator_t
     {
     public:
 
-        identity_generator_t(const memory_dataset_t& dataset, const indices_t& samples);
+        identity_generator_t(const memory_dataset_t& dataset);
 
         feature_t feature(tensor_size_t) const override;
         void original(tensor_size_t, cluster_t&) const override;
@@ -161,35 +165,16 @@ namespace nano
     {
     public:
 
-        struct select_stats_t
-        {
-            indices_t       m_sclass_features;  ///< indices of the single-class features
-            indices_t       m_scalar_features;  ///< indices of the scalar features
-            indices_t       m_struct_features;  ///< indices of structured features
-        };
-
-        struct scalar_stats_t
-        {
-            tensor_size_t   m_count{0};         ///<
-            tensor1d_t      m_min, m_max;       ///<
-            tensor1d_t      m_mean, m_stdev;    ///<
-        };
-
-        struct sclass_stats_t
-        {
-            indices_t       m_class_counts;     ///<
-        };
-
-        using target_stats_t = std::variant<scalar_stats_t, sclass_stats_t>;
-
         dataset_generator_t(const memory_dataset_t& dataset, indices_t samples);
 
         template <typename tgenerator, typename... tgenerator_args>
-        dataset_generator_t& add(tgenerator_args... args)
+        dataset_generator_t& add(execution ex, tgenerator_args... args)
         {
             static_assert(std::is_base_of_v<generator_t, tgenerator>);
 
-            m_generators.push_back(std::make_unique<tgenerator>(m_dataset, m_samples, args...));
+            auto generator = std::make_unique<tgenerator>(m_dataset, args...);
+            generator->preprocess(ex, m_samples);
+            m_generators.push_back(std::move(generator));
             update();
             return *this;
         }
@@ -209,14 +194,13 @@ namespace nano
         tensor3d_dims_t target_dims() const;
         tensor4d_cmap_t targets(tensor_range_t sample_range, tensor4d_t&) const;
 
-        select_stats_t select_stats(execution) const;
-        target_stats_t target_stats(execution) const;
-        scalar_stats_t flatten_stats(execution) const;
-
-        // TODO: support for feature scaling (rename normalization to scaling)!
+        // TODO: support for feature scaling
         // TODO: support for class-based weighting of samples!
         // TODO: support for drop column and sample permutation!
         // TODO: support for caching - all or selection of features
+
+        const auto& dataset() const { return m_dataset; }
+        const auto& samples() const { return m_samples; }
 
     private:
 
@@ -230,4 +214,102 @@ namespace nano
         rgenerators_t           m_generators;   ///<
         feature_mapping_t       m_mapping;      ///<
     };
+
+    struct select_stats_t
+    {
+        indices_t       m_sclass_features;  ///< indices of the single-class features
+        indices_t       m_scalar_features;  ///< indices of the scalar features
+        indices_t       m_struct_features;  ///< indices of structured features
+    };
+
+    struct scalar_stats_t
+    {
+        scalar_stats_t() = default;
+
+        scalar_stats_t(tensor_size_t dims) :
+            m_min(dims),
+            m_max(dims),
+            m_mean(dims),
+            m_stdev(dims)
+        {
+            m_mean.zero();
+            m_stdev.zero();
+            m_min.constant(std::numeric_limits<scalar_t>::max());
+            m_max.constant(std::numeric_limits<scalar_t>::lowest());
+        }
+
+        template <typename tarray>
+        auto& operator+=(const tarray& array)
+        {
+            m_count ++;
+            m_mean.array() += array;
+            m_stdev.array() += array.square();
+            m_min.array() = m_min.array().min(array);
+            m_max.array() = m_max.array().max(array);
+            return *this;
+        }
+
+        auto& operator+=(const scalar_stats_t& other)
+        {
+            m_count += other.m_count;
+            m_mean.array() += other.m_mean.array();
+            m_stdev.array() += other.m_stdev.array();
+            m_min.array() = m_min.array().min(other.m_min.array());
+            m_max.array() = m_max.array().max(other.m_max.array());
+            return *this;
+        }
+
+        auto& done()
+        {
+            if (m_count > 1)
+            {
+                const auto N = m_count;
+                m_stdev.array() = ((m_stdev.array() - m_mean.array().square() / N) / (N - 1)).sqrt();
+                m_mean.array() /= static_cast<scalar_t>(N);
+            }
+            else
+            {
+                m_stdev.zero();
+            }
+            return *this;
+        }
+
+        tensor_size_t   m_count{0};         ///<
+        tensor1d_t      m_min, m_max;       ///<
+        tensor1d_t      m_mean, m_stdev;    ///<
+    };
+
+    struct sclass_stats_t
+    {
+        sclass_stats_t() = default;
+
+        sclass_stats_t(tensor_size_t classes) :
+            m_class_counts(classes)
+        {
+            m_class_counts.zero();
+        }
+
+        template <typename tscalar>
+        auto& operator+=(tscalar label)
+        {
+            m_class_counts(static_cast<tensor_size_t>(label)) ++;
+            return *this;
+        }
+
+        template <template <typename, size_t> class tstorage, typename tscalar>
+        auto& operator+=(const tensor_t<tstorage, tscalar, 1>& class_hits)
+        {
+            m_class_counts.array() += class_hits.array().template cast<tensor_size_t>();
+            return *this;
+        }
+
+        indices_t       m_class_counts;     ///<
+    };
+
+    using flatten_stats_t = scalar_stats_t;
+    using targets_stats_t = std::variant<scalar_stats_t, sclass_stats_t>;
+
+    NANO_PUBLIC select_stats_t make_select_stats(const dataset_generator_t&, execution);
+    NANO_PUBLIC flatten_stats_t make_flatten_stats(const dataset_generator_t&, execution, tensor_size_t batch);
+    NANO_PUBLIC targets_stats_t make_targets_stats(const dataset_generator_t&, execution, tensor_size_t batch);
 }

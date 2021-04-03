@@ -1,3 +1,4 @@
+#include <nano/tpool.h>
 #include <nano/dataset/generator.h>
 #include <nano/dataset/iterator.h>
 
@@ -13,9 +14,12 @@ static auto resize_and_map(tensor_mem_t<tscalar, trank>& buffer, tindices... dim
     return map_tensor(buffer.data(), dims...);
 }
 
-generator_t::generator_t(const memory_dataset_t& dataset, const indices_t& samples) :
-    m_dataset(dataset),
-    m_samples(samples)
+generator_t::generator_t(const memory_dataset_t& dataset) :
+    m_dataset(dataset)
+{
+}
+
+void generator_t::preprocess(execution, indices_cmap_t)
 {
 }
 
@@ -37,8 +41,8 @@ struct_cmap_t generator_t::select(tensor_size_t f, indices_cmap_t, struct_mem_t&
     return buffer.tensor();
 }
 
-identity_generator_t::identity_generator_t(const memory_dataset_t& dataset, const indices_t& samples) :
-    generator_t(dataset, samples)
+identity_generator_t::identity_generator_t(const memory_dataset_t& dataset) :
+    generator_t(dataset)
 {
     tensor_size_t count = 0;
     for (tensor_size_t f = 0, features = dataset.features(); f < features; ++ f)
@@ -439,6 +443,11 @@ tensor3d_dims_t dataset_generator_t::target_dims() const
 
 tensor4d_cmap_t dataset_generator_t::targets(tensor_range_t sample_range, tensor4d_t& buffer) const
 {
+    if (m_dataset.type() == task_type::unsupervised)
+    {
+        critical0("dataset_generator_t: targets are not available for unsupervised datasets!");
+    }
+
     const auto samples = m_samples.slice(sample_range);
 
     return m_dataset.visit_target([&] (const feature_t& feature, const auto& tensor, const auto& mask)
@@ -492,6 +501,118 @@ tensor4d_cmap_t dataset_generator_t::targets(tensor_range_t sample_range, tensor
                 }
             }
             return tensor4d_cmap_t{storage};
+        }
+    });
+}
+
+select_stats_t nano::make_select_stats(const dataset_generator_t& generator, execution)
+{
+    std::vector<tensor_size_t> sclasss, scalars, structs;
+    for (tensor_size_t i = 0, size = generator.features(); i < size; ++ i)
+    {
+        switch (const auto& feature = generator.feature(i); feature.type())
+        {
+        case feature_type::sclass:
+            sclasss.push_back(i);
+            break;
+
+        default:
+            (::nano::size(feature.dims()) > 1 ? structs : scalars).push_back(i);
+            break;
+        }
+    }
+
+    select_stats_t stats;
+    stats.m_sclass_features = map_tensor(sclasss.data(), make_dims(static_cast<tensor_size_t>(sclasss.size())));
+    stats.m_scalar_features = map_tensor(scalars.data(), make_dims(static_cast<tensor_size_t>(scalars.size())));
+    stats.m_struct_features = map_tensor(structs.data(), make_dims(static_cast<tensor_size_t>(structs.size())));
+    return stats;
+}
+
+flatten_stats_t nano::make_flatten_stats(const dataset_generator_t& generator, execution ex, tensor_size_t batch)
+{
+    const auto columns = generator.columns();
+
+    std::vector<tensor2d_t> buffers(tpool_t::size());
+    std::vector<flatten_stats_t> stats(tpool_t::size(), flatten_stats_t{columns});
+
+    switch (ex)
+    {
+    case execution::par:
+        loopr(generator.samples().size(), batch, [&] (tensor_size_t begin, tensor_size_t end, size_t tnum)
+        {
+            const auto data = generator.flatten(make_range(begin, end), buffers[tnum]);
+            for (tensor_size_t i = begin; i < end; ++ i)
+            {
+                stats[tnum] += data.array(i - begin);
+            }
+        });
+        break;
+
+    default:
+        for (tensor_size_t begin = 0, size = generator.samples().size(); begin < size; begin += batch)
+        {
+            const auto end = std::min(begin + batch, size);
+            const auto data = generator.flatten(make_range(begin, end), buffers[0]);
+            for (tensor_size_t i = begin; i < end; ++ i)
+            {
+                stats[0] += data.array(i - begin);
+            }
+        }
+        break;
+    }
+
+    for (size_t i = 1; i < stats.size(); ++ i)
+    {
+        stats[0] += stats[i];
+    }
+    return stats[0].done();
+}
+
+targets_stats_t nano::make_targets_stats(const dataset_generator_t& generator, execution, tensor_size_t)
+{
+    if (generator.dataset().type() == task_type::unsupervised)
+    {
+        critical0("dataset_generator_t: target statistics are not available for unsupervised datasets!");
+    }
+
+    return generator.dataset().visit_target([&] (const feature_t& feature, const auto& tensor, const auto& mask)
+    {
+        if constexpr (tensor.rank() == 1)
+        {
+            sclass_stats_t stats{feature.classes()};
+            for (auto it = feature_iterator_t{tensor, mask, generator.samples()}; it; ++ it)
+            {
+                if (const auto [index, sample, given, label] = *it; given)
+                {
+                    stats += label;
+                }
+            }
+            return targets_stats_t{stats};
+        }
+        else if constexpr (tensor.rank() == 2)
+        {
+            sclass_stats_t stats{feature.classes()};
+            for (auto it = feature_iterator_t{tensor, mask, generator.samples()}; it; ++ it)
+            {
+                if (const auto [index, sample, given, hits] = *it; given)
+                {
+                    stats += hits;
+                }
+            }
+            return targets_stats_t{stats};
+        }
+        else
+        {
+            scalar_stats_t stats{nano::size(feature.dims())};
+            for (auto it = feature_iterator_t{tensor, mask, generator.samples()}; it; ++ it)
+            {
+                if (const auto [index, sample, given, values] = *it; given)
+                {
+                    stats += values.array().template cast<scalar_t>();
+                }
+            }
+            return targets_stats_t{stats.done()};
         }
     });
 }

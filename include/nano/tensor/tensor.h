@@ -685,7 +685,7 @@ namespace nano
     template <typename tscalar, size_t trank, typename... tvalues>
     auto make_tensor(const tensor_dims_t<trank>& dims, tvalues... values)
     {
-        const auto list = {values...};
+        const auto list = {static_cast<tscalar>(values)...};
         assert(::nano::size(dims) == static_cast<tensor_size_t>(list.size()));
 
         tensor_mem_t<tscalar, trank> tensor(dims);

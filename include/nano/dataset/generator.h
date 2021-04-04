@@ -158,63 +158,6 @@ namespace nano
     // TODO: feature-wise non-linear transformations of scalar features - sign(x)*log(1+x*x), x/sqrt(1+x*x)
     // TODO: polynomial features
 
-    ///
-    /// \brief
-    ///
-    class NANO_PUBLIC dataset_generator_t
-    {
-    public:
-
-        dataset_generator_t(const memory_dataset_t& dataset, indices_t samples);
-
-        template <typename tgenerator, typename... tgenerator_args>
-        dataset_generator_t& add(execution ex, tgenerator_args... args)
-        {
-            static_assert(std::is_base_of_v<generator_t, tgenerator>);
-
-            auto generator = std::make_unique<tgenerator>(m_dataset, args...);
-            generator->preprocess(ex, m_samples);
-            m_generators.push_back(std::move(generator));
-            update();
-            return *this;
-        }
-
-        tensor_size_t features() const;
-        feature_t feature(tensor_size_t feature) const;
-        indices_t original(const indices_t& features) const;
-
-        sclass_cmap_t select(tensor_size_t feature, indices_cmap_t samples, sclass_mem_t&) const;
-        scalar_cmap_t select(tensor_size_t feature, indices_cmap_t samples, scalar_mem_t&) const;
-        struct_cmap_t select(tensor_size_t feature, indices_cmap_t samples, struct_mem_t&) const;
-
-        tensor_size_t columns() const;
-        tensor2d_cmap_t flatten(tensor_range_t sample_range, tensor2d_t&) const;
-
-        feature_t target() const;
-        tensor3d_dims_t target_dims() const;
-        tensor4d_cmap_t targets(tensor_range_t sample_range, tensor4d_t&) const;
-
-        // TODO: support for feature scaling
-        // TODO: support for class-based weighting of samples!
-        // TODO: support for drop column and sample permutation!
-        // TODO: support for caching - all or selection of features
-
-        const auto& dataset() const { return m_dataset; }
-        const auto& samples() const { return m_samples; }
-
-    private:
-
-        void update();
-
-        using feature_mapping_t = tensor_mem_t<tensor_size_t, 2>;
-
-        // attributes
-        const memory_dataset_t& m_dataset;      ///<
-        indices_t               m_samples;      ///<
-        rgenerators_t           m_generators;   ///<
-        feature_mapping_t       m_mapping;      ///<
-    };
-
     struct select_stats_t
     {
         indices_t       m_sclass_features;  ///< indices of the single-class features
@@ -309,7 +252,65 @@ namespace nano
     using flatten_stats_t = scalar_stats_t;
     using targets_stats_t = std::variant<scalar_stats_t, sclass_stats_t>;
 
-    NANO_PUBLIC select_stats_t make_select_stats(const dataset_generator_t&, execution);
-    NANO_PUBLIC flatten_stats_t make_flatten_stats(const dataset_generator_t&, execution, tensor_size_t batch);
-    NANO_PUBLIC targets_stats_t make_targets_stats(const dataset_generator_t&, execution, tensor_size_t batch);
+    ///
+    /// \brief
+    ///
+    class NANO_PUBLIC dataset_generator_t
+    {
+    public:
+
+        dataset_generator_t(const memory_dataset_t& dataset, indices_t samples);
+
+        template <typename tgenerator, typename... tgenerator_args>
+        dataset_generator_t& add(execution ex, tgenerator_args... args)
+        {
+            static_assert(std::is_base_of_v<generator_t, tgenerator>);
+
+            auto generator = std::make_unique<tgenerator>(m_dataset, args...);
+            generator->preprocess(ex, m_samples);
+            m_generators.push_back(std::move(generator));
+            update();
+            return *this;
+        }
+
+        tensor_size_t features() const;
+        feature_t feature(tensor_size_t feature) const;
+        indices_t original(const indices_t& features) const;
+
+        select_stats_t select_stats(execution) const;
+        sclass_cmap_t select(tensor_size_t feature, indices_cmap_t samples, sclass_mem_t&) const;
+        scalar_cmap_t select(tensor_size_t feature, indices_cmap_t samples, scalar_mem_t&) const;
+        struct_cmap_t select(tensor_size_t feature, indices_cmap_t samples, struct_mem_t&) const;
+
+        tensor_size_t columns() const;
+        flatten_stats_t flatten_stats(execution, tensor_size_t batch) const;
+        tensor2d_cmap_t flatten(tensor_range_t sample_range, tensor2d_t&) const;
+
+        feature_t target() const;
+        tensor3d_dims_t target_dims() const;
+        targets_stats_t targets_stats(execution, tensor_size_t batch) const;
+        tensor4d_cmap_t targets(tensor_range_t sample_range, tensor4d_t&) const;
+
+        // TODO: support for feature scaling
+        // TODO: support for class-based weighting of samples!
+        // TODO: support for drop column and sample permutation!
+        // TODO: support for caching - all or selection of features
+
+        tensor1d_t sample_weights(const targets_stats_t&) const;
+
+        const auto& dataset() const { return m_dataset; }
+        const auto& samples() const { return m_samples; }
+
+    private:
+
+        void update();
+
+        using feature_mapping_t = tensor_mem_t<tensor_size_t, 2>;
+
+        // attributes
+        const memory_dataset_t& m_dataset;      ///<
+        indices_t               m_samples;      ///<
+        rgenerators_t           m_generators;   ///<
+        feature_mapping_t       m_mapping;      ///<
+    };
 }

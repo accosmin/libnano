@@ -199,7 +199,13 @@ static void check_targets_stats(const dataset_generator_t& generator,
         UTEST_REQUIRE_NOTHROW(std::get<sclass_stats_t>(stats));
         UTEST_CHECK_TENSOR_EQUAL(std::get<sclass_stats_t>(stats).m_class_counts, expected_class_counts);
         UTEST_CHECK_TENSOR_CLOSE(generator.sample_weights(stats), expected_sample_weights, eps);
-        UTEST_CHECK_THROW(generator.sample_weights(targets_stats_t{}), std::runtime_error);
+
+        std::get<sclass_stats_t>(stats).m_class_counts(0) = 0;
+        UTEST_CHECK_NOTHROW(generator.sample_weights(stats));
+
+        std::get<sclass_stats_t>(stats).m_class_counts.resize(42);
+        std::get<sclass_stats_t>(stats).m_class_counts.zero();
+        UTEST_CHECK_THROW(generator.sample_weights(stats), std::runtime_error);
     }
 }
 

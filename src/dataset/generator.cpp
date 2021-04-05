@@ -668,7 +668,7 @@ tensor1d_t dataset_generator_t::sample_weights(const targets_stats_t& targets_st
                 feature.classes(), " classes, got ",
                 pstats == nullptr ? tensor_size_t(0) : pstats->m_class_counts.size(), " instead!");
 
-            // TODO
+            // TODO: is it possible to weight samples similarly to the single-label multi-class case?!
             return weights;
         }
         else

@@ -664,7 +664,7 @@ namespace nano
     }
 
     ///
-    /// \brief check if a given type is a tensor.
+    /// \brief traits to check if a given type is a tensor.
     ///
     template <class T>
     struct is_tensor : std::false_type

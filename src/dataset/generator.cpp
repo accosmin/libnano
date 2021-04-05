@@ -108,7 +108,7 @@ feature_t identity_generator_t::feature(tensor_size_t i) const
 
     case feature_type::mclass:
         assert(component >= 0);
-        return feature_t{scat(feature.name(), "_", feature.labels()[component])}.sclass(2);
+        return  feature_t{scat(feature.name(), "_", feature.labels()[component])}.sclass(strings_t{"off", "on"});
 
     default:
         if (component == -1)
@@ -339,7 +339,6 @@ void dataset_generator_t::update()
         ++ index;
         offset += features;
     }
-
 }
 
 tensor_size_t dataset_generator_t::features() const

@@ -291,8 +291,11 @@ namespace nano
         targets_stats_t targets_stats(execution, tensor_size_t batch) const;
         tensor4d_cmap_t targets(tensor_range_t sample_range, tensor4d_t&) const;
 
-        // TODO: support for feature scaling
-        // TODO: support for class-based weighting of samples!
+        void undrop();
+        void unshuffle();
+        void drop(tensor_size_t feature);
+        void shuffle(tensor_size_t feature);
+
         // TODO: support for drop column and sample permutation!
         // TODO: support for caching - all or selection of features
 

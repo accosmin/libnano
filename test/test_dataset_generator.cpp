@@ -252,9 +252,9 @@ UTEST_CASE(unsupervised)
     generator.add<identity_generator_t>(execution::par);
 
     UTEST_CHECK_EQUAL(generator.features(), 10);
-    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"mclass3_m0"}.sclass(2));
-    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"mclass3_m1"}.sclass(2));
-    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"mclass3_m2"}.sclass(2));
+    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"mclass3_m0"}.sclass(strings_t{"off", "on"}));
+    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"mclass3_m1"}.sclass(strings_t{"off", "on"}));
+    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"mclass3_m2"}.sclass(strings_t{"off", "on"}));
     UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"sclass2"}.sclass(strings_t{"s0", "s1"}));
     UTEST_CHECK_EQUAL(generator.feature(4), feature_t{"f32"}.scalar(feature_type::float32, make_dims(1, 1, 1)));
     UTEST_CHECK_EQUAL(generator.feature(5), feature_t{"u8_struct"}.scalar(feature_type::uint8, make_dims(2, 1, 2)));
@@ -324,9 +324,9 @@ UTEST_CASE(sclassification)
     generator.add<identity_generator_t>(execution::par);
 
     UTEST_CHECK_EQUAL(generator.features(), 9);
-    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"mclass3_m0"}.sclass(2));
-    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"mclass3_m1"}.sclass(2));
-    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"mclass3_m2"}.sclass(2));
+    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"mclass3_m0"}.sclass(strings_t{"off", "on"}));
+    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"mclass3_m1"}.sclass(strings_t{"off", "on"}));
+    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"mclass3_m2"}.sclass(strings_t{"off", "on"}));
     UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"f32"}.scalar(feature_type::float32, make_dims(1, 1, 1)));
     UTEST_CHECK_EQUAL(generator.feature(4), feature_t{"u8_struct"}.scalar(feature_type::uint8, make_dims(2, 1, 2)));
     UTEST_CHECK_EQUAL(generator.feature(5), feature_t{"u8_struct_0"}.scalar(feature_type::uint8, make_dims(1, 1, 1)));
@@ -459,9 +459,9 @@ UTEST_CASE(regression)
     generator.add<identity_generator_t>(execution::par);
 
     UTEST_CHECK_EQUAL(generator.features(), 9);
-    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"mclass3_m0"}.sclass(2));
-    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"mclass3_m1"}.sclass(2));
-    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"mclass3_m2"}.sclass(2));
+    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"mclass3_m0"}.sclass(strings_t{"off", "on"}));
+    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"mclass3_m1"}.sclass(strings_t{"off", "on"}));
+    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"mclass3_m2"}.sclass(strings_t{"off", "on"}));
     UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"sclass2"}.sclass(strings_t{"s0", "s1"}));
     UTEST_CHECK_EQUAL(generator.feature(4), feature_t{"u8_struct"}.scalar(feature_type::uint8, make_dims(2, 1, 2)));
     UTEST_CHECK_EQUAL(generator.feature(5), feature_t{"u8_struct_0"}.scalar(feature_type::uint8, make_dims(1, 1, 1)));
@@ -522,9 +522,9 @@ UTEST_CASE(mvregression)
     generator.add<identity_generator_t>(execution::par);
 
     UTEST_CHECK_EQUAL(generator.features(), 5);
-    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"mclass3_m0"}.sclass(2));
-    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"mclass3_m1"}.sclass(2));
-    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"mclass3_m2"}.sclass(2));
+    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"mclass3_m0"}.sclass(strings_t{"off", "on"}));
+    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"mclass3_m1"}.sclass(strings_t{"off", "on"}));
+    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"mclass3_m2"}.sclass(strings_t{"off", "on"}));
     UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"sclass2"}.sclass(strings_t{"s0", "s1"}));
     UTEST_CHECK_EQUAL(generator.feature(4), feature_t{"f32"}.scalar(feature_type::float32, make_dims(1, 1, 1)));
 

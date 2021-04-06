@@ -6,6 +6,8 @@
 #include <nano/tensor/matrix.h>
 #include <nano/tensor/storage.h>
 
+#include <iostream>
+
 namespace nano
 {
     template <template <typename, size_t> class, typename, size_t>

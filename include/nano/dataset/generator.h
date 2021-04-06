@@ -86,7 +86,7 @@ namespace nano
         /// \brief toggle sample permutation of features, useful for feature importance analysis.
         ///
         virtual void unshuffle() = 0;
-        virtual void shuffle(tensor_size_t feature) = 0;
+        virtual indices_t shuffle(tensor_size_t feature) = 0;
 
         ///
         /// \brief computes the values of the given feature and samples,
@@ -260,9 +260,8 @@ namespace nano
         void undrop() const;
         void unshuffle() const;
         void drop(tensor_size_t feature) const;
-        void shuffle(tensor_size_t feature) const;
+        indices_t shuffle(tensor_size_t feature) const;
 
-        // TODO: support for drop column and sample permutation!
         // TODO: support for caching - all or selection of features
 
         tensor1d_t sample_weights(const targets_stats_t&) const;

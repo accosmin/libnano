@@ -455,7 +455,7 @@ void dataset_generator_t::drop(tensor_size_t feature) const
     byfeature(feature)->drop(m_feature_mapping(feature, 1));
 }
 
-void dataset_generator_t::shuffle(tensor_size_t feature) const
+indices_t dataset_generator_t::shuffle(tensor_size_t feature) const
 {
-    byfeature(feature)->shuffle(m_feature_mapping(feature, 1));
+    return byfeature(feature)->shuffle(m_feature_mapping(feature, 1));
 }

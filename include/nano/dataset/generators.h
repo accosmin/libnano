@@ -30,7 +30,7 @@ namespace nano
         void undrop() override;
         void unshuffle() override;
         void drop(tensor_size_t feature) override;
-        void shuffle(tensor_size_t feature) override;
+        indices_t shuffle(tensor_size_t feature) override;
 
     private:
 
@@ -46,9 +46,13 @@ namespace nano
         //  - flags: 0 - default, 1 - to drop, 2 - to shuffle
         using feature_mapping_t = tensor_mem_t<tensor_size_t, 2>;
 
+        // fixed sample indices for the features to shuffle
+        using shuffle_indices_t = std::map<tensor_size_t, indices_t>;
+
         // attributes
         column_mapping_t    m_column_mapping;   ///<
         feature_mapping_t   m_feature_mapping;  ///<
+        shuffle_indices_t   m_shuffle_indices;  ///<
     };
 
     // TODO: feature-wise non-linear transformations of scalar features - sign(x)*log(1+x*x), x/sqrt(1+x*x)

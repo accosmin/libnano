@@ -88,25 +88,4 @@ namespace nano
             *begin += udist(rng);
         }
     }
-
-    ///
-    /// \brief std::shuffle -like for data indexed in the range [0, size)
-    ///     and for which appropriate iterators are not available.
-    ///
-    template <typename tsize, typename tswapper, typename = typename std::enable_if<std::is_arithmetic_v<tsize>>::type>
-    static void ishuffle(tsize size, const tswapper& swapper)
-    {
-        auto rng = make_rng();
-        auto udist = make_udist<tsize>(0, size - 1);
-        using udist_param_t = typename decltype(udist)::param_type;
-
-        for (tsize i = size - 1; i > 0; -- i)
-        {
-            const auto j = udist(rng, udist_param_t(0, i));
-            if (i != j)
-            {
-                swapper(i, j);
-            }
-        }
-    }
 }

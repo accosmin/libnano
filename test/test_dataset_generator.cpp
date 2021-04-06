@@ -59,19 +59,33 @@ public:
         }
     }
 
-    static auto expected_select0() { return make_tensor<int8_t>(make_dims(10, 3),
-        0, 1, 1, -1, -1, -1, -1, -1, -1,
-        1, 0, 0, -1, -1, -1, -1, -1, -1,
-        0, 1, 1, -1, -1, -1, -1, -1, -1,
-        1, 0, 0); }
-    static auto expected_select1() { return make_tensor<int32_t>(make_dims(10), 0, 1, 1, 0, 1, 1, 0, 1, 1, 0); }
-    static auto expected_select2() { return make_tensor<scalar_t>(make_dims(10), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9); }
-    static auto expected_select3() { return make_tensor<scalar_t>(make_dims(10, 2, 1, 2),
-        1.0, 0.0, 0.0, 0.0, NaN, NaN, NaN, NaN,
-        3.0, 2.0, 2.0, 2.0, NaN, NaN, NaN, NaN,
-        5.0, 4.0, 4.0, 4.0, NaN, NaN, NaN, NaN,
-        7.0, 6.0, 6.0, 6.0, NaN, NaN, NaN, NaN,
-        9.0, 8.0, 8.0, 8.0, NaN, NaN, NaN, NaN); }
+    static auto expected_select0()
+    {
+        return make_tensor<int8_t>(make_dims(10, 3),
+            0, 1, 1, -1, -1, -1, -1, -1, -1,
+            1, 0, 0, -1, -1, -1, -1, -1, -1,
+            0, 1, 1, -1, -1, -1, -1, -1, -1,
+            1, 0, 0);
+    }
+    static auto expected_select1()
+    {
+        return make_tensor<int32_t>(make_dims(10),
+            0, 1, 1, 0, 1, 1, 0, 1, 1, 0);
+    }
+    static auto expected_select2()
+    {
+        return make_tensor<scalar_t>(make_dims(10),
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+    }
+    static auto expected_select3()
+    {
+        return make_tensor<scalar_t>(make_dims(10, 2, 1, 2),
+            1.0, 0.0, 0.0, 0.0, NaN, NaN, NaN, NaN,
+            3.0, 2.0, 2.0, 2.0, NaN, NaN, NaN, NaN,
+            5.0, 4.0, 4.0, 4.0, NaN, NaN, NaN, NaN,
+            7.0, 6.0, 6.0, 6.0, NaN, NaN, NaN, NaN,
+            9.0, 8.0, 8.0, 8.0, NaN, NaN, NaN, NaN);
+    }
 
 private:
 
@@ -277,6 +291,14 @@ UTEST_CASE(unsupervised)
     check_scalar(generator, 2, samples, dataset.expected_select2());
     check_struct(generator, 3, samples, dataset.expected_select3());
     check_select_stats(generator, make_indices(1), make_indices(0), make_indices(2), make_indices(3));
+
+    /*generator.drop(0);
+    check_mclass(generator, 0, samples, dataset.expected_select0());
+    generator.undrop();
+
+    generator.shuffle(0);
+    check_mclass(generator, 0, samples, dataset.expected_select0());
+    generator.unshuffle();*/
 
     check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 10),
         -1, +1, +1, +1, -1, 0, 1, 0, 0, 0,

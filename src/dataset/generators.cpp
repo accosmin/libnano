@@ -12,33 +12,6 @@ static auto resize_and_map(tensor_mem_t<tscalar, trank>& buffer, tindices... dim
     return map_tensor(buffer.data(), dims...);
 }
 
-template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
-static void shuffle(tensor_t<tstorage, tscalar, trank>& tensor)
-{
-    if constexpr (trank == 1)
-    {
-        auto rng = make_rng();
-        std::shuffle(tensor.begin(), tensor.end(), rng);
-    }
-    else
-    {
-        ishuffle(tensor.template size<0>(), [&] (tensor_size_t i, tensor_size_t j)
-        {
-            tensor.array(i).swap(tensor.array(j));
-        });
-    }
-}
-
-template <template <typename, size_t> class tstorage, typename tscalar>
-static void shuffle(tensor_t<tstorage, tscalar, 2>& tensor, tensor_size_t column_offset, tensor_size_t column_size)
-{
-    ishuffle(tensor.template size<0>(), [&] (tensor_size_t i, tensor_size_t j)
-    {
-        tensor.array(i).segment(column_offset, column_size).swap(
-        tensor.array(j).segment(column_offset, column_size));
-    });
-}
-
 identity_generator_t::identity_generator_t(const memory_dataset_t& dataset) :
     generator_t(dataset)
 {
@@ -112,7 +85,9 @@ sclass_cmap_t identity_generator_t::select(tensor_size_t f, indices_cmap_t sampl
             }
             else
             {
-                for (auto it = make_iterator(data, mask, samples); it; ++ it)
+                for (auto it = !should_shuffle(f) ?
+                    make_iterator(data, mask, samples) :
+                    make_iterator(data, mask, samples, m_shuffle_indices.find(f)->second); it; ++ it)
                 {
                     if (const auto [index, sample, given, label] = *it; given)
                     {
@@ -122,10 +97,6 @@ sclass_cmap_t identity_generator_t::select(tensor_size_t f, indices_cmap_t sampl
                     {
                         storage(index) = -1;
                     }
-                }
-                if (should_shuffle(f))
-                {
-                    ::shuffle(storage);
                 }
             }
             return sclass_cmap_t{storage};
@@ -150,7 +121,9 @@ mclass_cmap_t identity_generator_t::select(tensor_size_t f, indices_cmap_t sampl
             }
             else
             {
-                for (auto it = make_iterator(data, mask, samples); it; ++ it)
+                for (auto it = !should_shuffle(f) ?
+                    make_iterator(data, mask, samples) :
+                    make_iterator(data, mask, samples, m_shuffle_indices.find(f)->second); it; ++ it)
                 {
                     if (const auto [index, sample, given, hits] = *it; given)
                     {
@@ -160,10 +133,6 @@ mclass_cmap_t identity_generator_t::select(tensor_size_t f, indices_cmap_t sampl
                     {
                         storage.vector(index).setConstant(-1);
                     }
-                }
-                if (should_shuffle(f))
-                {
-                    ::shuffle(storage);
                 }
             }
             return mclass_cmap_t{storage};
@@ -203,10 +172,6 @@ scalar_cmap_t identity_generator_t::select(tensor_size_t f, indices_cmap_t sampl
                         storage(index) = std::numeric_limits<scalar_t>::quiet_NaN();
                     }
                 }
-                if (should_shuffle(f))
-                {
-                    ::shuffle(storage);
-                }
             }
             return scalar_cmap_t{storage};
         }
@@ -227,6 +192,7 @@ struct_cmap_t identity_generator_t::select(tensor_size_t f, indices_cmap_t sampl
             {
                 return generator_t::select(f, samples, buffer);
             }
+
             const auto [dim1, dim2, dim3] = feature.dims();
             auto storage = resize_and_map(buffer, samples.size(), dim1, dim2, dim3);
             if (should_drop(f))
@@ -235,7 +201,9 @@ struct_cmap_t identity_generator_t::select(tensor_size_t f, indices_cmap_t sampl
             }
             else
             {
-                for (auto it = make_iterator(data, mask, samples); it; ++ it)
+                for (auto it = !should_shuffle(f) ?
+                    make_iterator(data, mask, samples) :
+                    make_iterator(data, mask, samples, m_shuffle_indices.find(f)->second); it; ++ it)
                 {
                     if (const auto [index, sample, given, values] = *it; given)
                     {
@@ -245,10 +213,6 @@ struct_cmap_t identity_generator_t::select(tensor_size_t f, indices_cmap_t sampl
                     {
                         storage.tensor(index).constant(std::numeric_limits<scalar_t>::quiet_NaN());
                     }
-                }
-                if (should_shuffle(f))
-                {
-                    ::shuffle(storage);
                 }
             }
             return struct_cmap_t{storage};
@@ -269,7 +233,9 @@ void identity_generator_t::flatten(indices_cmap_t samples, tensor2d_map_t storag
             if constexpr (data.rank() == 1)
             {
                 column_size = feature.classes();
-                for (auto it = make_iterator(data, mask, samples); it; ++ it)
+                for (auto it = !should_shuffle(f) ?
+                    make_iterator(data, mask, samples) :
+                    make_iterator(data, mask, samples, m_shuffle_indices.find(f)->second); it; ++ it)
                 {
                     if (const auto [index, sample, given, label] = *it; given)
                     {
@@ -294,7 +260,9 @@ void identity_generator_t::flatten(indices_cmap_t samples, tensor2d_map_t storag
             else if constexpr (data.rank() == 2)
             {
                 column_size = feature.classes();
-                for (auto it = make_iterator(data, mask, samples); it; ++ it)
+                for (auto it = !should_shuffle(f) ?
+                    make_iterator(data, mask, samples) :
+                    make_iterator(data, mask, samples, m_shuffle_indices.find(f)->second); it; ++ it)
                 {
                     if (const auto [index, sample, given, hits] = *it; given)
                     {
@@ -318,7 +286,9 @@ void identity_generator_t::flatten(indices_cmap_t samples, tensor2d_map_t storag
             else
             {
                 column_size = size(feature.dims());
-                for (auto it = make_iterator(data, mask, samples); it; ++ it)
+                for (auto it = !should_shuffle(f) ?
+                    make_iterator(data, mask, samples) :
+                    make_iterator(data, mask, samples, m_shuffle_indices.find(f)->second); it; ++ it)
                 {
                     if (const auto [index, sample, given, values] = *it; given)
                     {
@@ -338,11 +308,6 @@ void identity_generator_t::flatten(indices_cmap_t samples, tensor2d_map_t storag
                         segment.setConstant(+0.0);
                     }
                 }
-            }
-
-            if (should_shuffle(f))
-            {
-                ::shuffle(storage, column_offset, column_size);
             }
             column_offset += column_size;
         });
@@ -364,7 +329,12 @@ void identity_generator_t::drop(tensor_size_t feature)
     m_feature_mapping(feature, 1) = 1;
 }
 
-void identity_generator_t::shuffle(tensor_size_t feature)
+indices_t identity_generator_t::shuffle(tensor_size_t feature)
 {
     m_feature_mapping(feature, 1) = 2;
+
+    indices_t indices = arange(0, dataset().samples());
+    std::shuffle(indices.begin(), indices.end(), make_rng());
+    m_shuffle_indices[feature] = indices;
+    return indices;
 }

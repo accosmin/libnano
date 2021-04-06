@@ -4,7 +4,6 @@
 #include <nano/tensor.h>
 #include <nano/random.h>
 #include <nano/cmdline.h>
-#include <nano/tensor/numeric.h>
 
 namespace
 {

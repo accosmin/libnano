@@ -13,6 +13,7 @@ target_sources(nano PRIVATE
     dataset/dataset.cpp
     dataset/feature.cpp
     dataset/generator.cpp
+    dataset/generators.cpp
     dataset/imclass.cpp
     dataset/imclass_mnist.cpp
     dataset/tabular.cpp

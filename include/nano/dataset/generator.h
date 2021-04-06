@@ -3,7 +3,6 @@
 #include <variant>
 #include <nano/factory.h>
 #include <nano/dataset/dataset.h>
-#include <nano/mlearn/cluster.h>
 
 namespace nano
 {
@@ -15,6 +14,10 @@ namespace nano
     // single-label categorical feature values: (sample index) = label/class index
     using sclass_mem_t = tensor_mem_t<int32_t, 1>;
     using sclass_cmap_t = tensor_cmap_t<int32_t, 1>;
+
+    // multi-label categorical feature values: (sample index, label/class index) = 0 or 1
+    using mclass_mem_t = tensor_mem_t<int8_t, 2>;
+    using mclass_cmap_t = tensor_cmap_t<int8_t, 2>;
 
     // scalar continuous feature values: (sample index) = scalar feature value
     using scalar_mem_t = tensor_mem_t<scalar_t, 1>;
@@ -43,8 +46,19 @@ namespace nano
     {
     public:
 
+        ///
+        /// \brief returns the available implementations.
+        ///
+        static generator_factory_t& all();
+
+        ///
+        /// \brief constructor.
+        ///
         generator_t(const memory_dataset_t& dataset);
 
+        ///
+        /// \brief default destructor.
+        ///
         virtual ~generator_t() = default;
 
         ///
@@ -63,9 +77,16 @@ namespace nano
         virtual feature_t feature(tensor_size_t feature) const = 0;
 
         ///
-        /// \brief map the given feature index to the original list of features.
+        /// \brief toggle dropping of features, useful for feature importance analysis.
         ///
-        virtual void original(tensor_size_t feature, cluster_t& original_features) const = 0;
+        virtual void undrop() = 0;
+        virtual void drop(tensor_size_t feature) = 0;
+
+        ///
+        /// \brief toggle sample permutation of features, useful for feature importance analysis.
+        ///
+        virtual void unshuffle() = 0;
+        virtual void shuffle(tensor_size_t feature) = 0;
 
         ///
         /// \brief computes the values of the given feature and samples,
@@ -73,6 +94,7 @@ namespace nano
         ///     (e.g. gradient boosting).
         ///
         virtual sclass_cmap_t select(tensor_size_t feature, indices_cmap_t samples, sclass_mem_t&) const;
+        virtual mclass_cmap_t select(tensor_size_t feature, indices_cmap_t samples, mclass_mem_t&) const;
         virtual scalar_cmap_t select(tensor_size_t feature, indices_cmap_t samples, scalar_mem_t&) const;
         virtual struct_cmap_t select(tensor_size_t feature, indices_cmap_t samples, struct_mem_t&) const;
 
@@ -85,6 +107,11 @@ namespace nano
         virtual void flatten(indices_cmap_t samples, tensor2d_map_t, tensor_size_t column_offset) const = 0;
 
         ///
+        /// \brief map the given column to its feature index.
+        ///
+        virtual tensor_size_t column2feature(tensor_size_t column) const = 0;
+
+        ///
         /// \brief access functions
         ///
         const auto& dataset() const { return m_dataset; }
@@ -95,72 +122,10 @@ namespace nano
         const memory_dataset_t& m_dataset;  ///<
     };
 
-    class NANO_PUBLIC identity_generator_t : public generator_t
-    {
-    public:
-
-        identity_generator_t(const memory_dataset_t& dataset);
-
-        feature_t feature(tensor_size_t) const override;
-        void original(tensor_size_t, cluster_t&) const override;
-        tensor_size_t features() const override { return m_mapping.size<0>(); }
-
-        tensor_size_t columns() const override { return m_columns; }
-        void flatten(indices_cmap_t, tensor2d_map_t, tensor_size_t) const override;
-
-        sclass_cmap_t select(tensor_size_t, indices_cmap_t, sclass_mem_t&) const override;
-        scalar_cmap_t select(tensor_size_t, indices_cmap_t, scalar_mem_t&) const override;
-        struct_cmap_t select(tensor_size_t, indices_cmap_t, struct_mem_t&) const override;
-
-    protected:
-
-        auto mapped_index(tensor_size_t i) const
-        {
-            assert(i >= 0 && i <= m_mapping.size<0>());
-            return m_mapping(i, 0);
-        }
-
-        auto mapped_component(tensor_size_t i) const
-        {
-            assert(i >= 0 && i <= m_mapping.size<0>());
-            return m_mapping(i, 1);
-        }
-
-        const auto& mapped_feature(tensor_size_t i) const
-        {
-            assert(i >= 0 && i <= m_mapping.size<0>());
-            return dataset().feature(m_mapping(i, 0));
-        }
-
-        void map1(tensor_size_t& i, tensor_size_t original, tensor_size_t component)
-        {
-            m_mapping(i, 0) = original;
-            m_mapping(i ++, 1) = component;
-        }
-
-        void mapN(tensor_size_t& i, tensor_size_t original, tensor_size_t components)
-        {
-            for (tensor_size_t component = 0; component < components; ++ component)
-            {
-                map1(i, original, component);
-            }
-        }
-
-    private:
-
-        using feature_mapping_t = tensor_mem_t<tensor_size_t, 2>;
-
-        // attributes
-        tensor_size_t       m_columns{0};   ///< total number of columns if flatten
-        feature_mapping_t   m_mapping;      ///< (original feature index, component index or -1 if using it all)
-    };
-
-    // TODO: feature-wise non-linear transformations of scalar features - sign(x)*log(1+x*x), x/sqrt(1+x*x)
-    // TODO: polynomial features
-
     struct select_stats_t
     {
-        indices_t       m_sclass_features;  ///< indices of the single-class features
+        indices_t       m_sclass_features;  ///< indices of the single-label features
+        indices_t       m_mclass_features;  ///< indices of the multi-label features
         indices_t       m_scalar_features;  ///< indices of the scalar features
         indices_t       m_struct_features;  ///< indices of structured features
     };
@@ -275,14 +240,15 @@ namespace nano
 
         tensor_size_t features() const;
         feature_t feature(tensor_size_t feature) const;
-        indices_t original(const indices_t& features) const;
 
         select_stats_t select_stats(execution) const;
         sclass_cmap_t select(tensor_size_t feature, indices_cmap_t samples, sclass_mem_t&) const;
+        mclass_cmap_t select(tensor_size_t feature, indices_cmap_t samples, mclass_mem_t&) const;
         scalar_cmap_t select(tensor_size_t feature, indices_cmap_t samples, scalar_mem_t&) const;
         struct_cmap_t select(tensor_size_t feature, indices_cmap_t samples, struct_mem_t&) const;
 
         tensor_size_t columns() const;
+        tensor_size_t column2feature(tensor_size_t column) const;
         flatten_stats_t flatten_stats(execution, tensor_size_t batch) const;
         tensor2d_cmap_t flatten(tensor_range_t sample_range, tensor2d_t&) const;
 
@@ -291,10 +257,10 @@ namespace nano
         targets_stats_t targets_stats(execution, tensor_size_t batch) const;
         tensor4d_cmap_t targets(tensor_range_t sample_range, tensor4d_t&) const;
 
-        void undrop();
-        void unshuffle();
-        void drop(tensor_size_t feature);
-        void shuffle(tensor_size_t feature);
+        void undrop() const;
+        void unshuffle() const;
+        void drop(tensor_size_t feature) const;
+        void shuffle(tensor_size_t feature) const;
 
         // TODO: support for drop column and sample permutation!
         // TODO: support for caching - all or selection of features
@@ -308,12 +274,26 @@ namespace nano
 
         void update();
 
+        const auto& bycolumn(tensor_size_t column) const
+        {
+            assert(column >= 0 && column < columns());
+            return m_generators[static_cast<size_t>(m_column_mapping(column, 0))];
+        }
+
+        const auto& byfeature(tensor_size_t feature) const
+        {
+            assert(feature >= 0 && feature < features());
+            return m_generators[static_cast<size_t>(m_feature_mapping(feature, 0))];
+        }
+
+        using column_mapping_t = tensor_mem_t<tensor_size_t, 2>;
         using feature_mapping_t = tensor_mem_t<tensor_size_t, 2>;
 
         // attributes
-        const memory_dataset_t& m_dataset;      ///<
-        indices_t               m_samples;      ///<
-        rgenerators_t           m_generators;   ///<
-        feature_mapping_t       m_mapping;      ///<
+        const memory_dataset_t& m_dataset;          ///<
+        indices_t               m_samples;          ///<
+        rgenerators_t           m_generators;       ///<
+        column_mapping_t        m_column_mapping;   ///<
+        feature_mapping_t       m_feature_mapping;  ///<
     };
 }

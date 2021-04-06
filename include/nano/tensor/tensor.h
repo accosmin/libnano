@@ -478,7 +478,19 @@ namespace nano
 
             if constexpr (trank == 1)
             {
-                sprint('[', prefix_delim + 1) << vector().transpose();
+                sprint('[', prefix_delim + 1);
+                if constexpr (std::is_same_v<tscalar, int8_t>)
+                {
+                    stream << vector().transpose().template cast<int16_t>();
+                }
+                else if constexpr (std::is_same_v<tscalar, uint8_t>)
+                {
+                    stream << vector().transpose().template cast<uint16_t>();
+                }
+                else
+                {
+                    stream << vector().transpose();
+                }
                 sprint(']', suffix + 1);
             }
             else if constexpr (trank == 2)
@@ -496,7 +508,19 @@ namespace nano
                         sprint(' ', prefix_space + prefix_delim + 1);
                         sprint('[', 1);
                     }
-                    stream << matrix.row(row);
+
+                    if constexpr (std::is_same_v<tscalar, int8_t>)
+                    {
+                        stream << matrix.row(row).template cast<int16_t>();
+                    }
+                    else if constexpr (std::is_same_v<tscalar, uint8_t>)
+                    {
+                        stream << matrix.row(row).template cast<uint16_t>();
+                    }
+                    else
+                    {
+                        stream << matrix.row(row);
+                    }
 
                     if (row + 1 < rows)
                     {

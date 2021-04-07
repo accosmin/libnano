@@ -57,11 +57,11 @@ namespace nano
 
             if constexpr(trank == 1)
             {
-                return std::make_tuple(m_index, sample, given, m_data(sample));
+                return std::make_tuple(m_index, given, m_data(sample));
             }
             else
             {
-                return std::make_tuple(m_index, sample, given, m_data.tensor(sample));
+                return std::make_tuple(m_index, given, m_data.tensor(sample));
             }
         }
 

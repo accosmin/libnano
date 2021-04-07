@@ -43,9 +43,8 @@ UTEST_CASE(data1D)
         UTEST_CHECK_EQUAL(it.index(), 0);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), true);
         {
-            const auto [index, sample, given, value] = *it;
+            const auto [index, given, value] = *it;
             UTEST_CHECK_EQUAL(index, 0);
-            UTEST_CHECK_EQUAL(sample, 5);
             UTEST_CHECK_EQUAL(given, false);
             UTEST_CHECK_EQUAL(value, -1);
         }
@@ -55,9 +54,8 @@ UTEST_CASE(data1D)
         UTEST_CHECK_EQUAL(it.index(), 1);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), true);
         {
-            const auto [index, sample, given, value] = *it;
+            const auto [index, given, value] = *it;
             UTEST_CHECK_EQUAL(index, 1);
-            UTEST_CHECK_EQUAL(sample, 6);
             UTEST_CHECK_EQUAL(given, true);
             UTEST_CHECK_EQUAL(value, 9);
         }
@@ -67,9 +65,8 @@ UTEST_CASE(data1D)
         UTEST_CHECK_EQUAL(it.index(), 2);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), true);
         {
-            const auto [index, sample, given, value] = *it;
+            const auto [index, given, value] = *it;
             UTEST_CHECK_EQUAL(index, 2);
-            UTEST_CHECK_EQUAL(sample, 7);
             UTEST_CHECK_EQUAL(given, false);
             UTEST_CHECK_EQUAL(value, -1);
         }
@@ -79,9 +76,8 @@ UTEST_CASE(data1D)
         UTEST_CHECK_EQUAL(it.index(), 3);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), true);
         {
-            const auto [index, sample, given, value] = *it;
+            const auto [index, given, value] = *it;
             UTEST_CHECK_EQUAL(index, 3);
-            UTEST_CHECK_EQUAL(sample, 8);
             UTEST_CHECK_EQUAL(given, true);
             UTEST_CHECK_EQUAL(value, 11);
         }
@@ -91,9 +87,8 @@ UTEST_CASE(data1D)
         UTEST_CHECK_EQUAL(it.index(), 4);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), true);
         {
-            const auto [index, sample, given, value] = *it;
+            const auto [index, given, value] = *it;
             UTEST_CHECK_EQUAL(index, 4);
-            UTEST_CHECK_EQUAL(sample, 9);
             UTEST_CHECK_EQUAL(given, false);
             UTEST_CHECK_EQUAL(value, -1);
         }
@@ -103,17 +98,12 @@ UTEST_CASE(data1D)
         UTEST_CHECK_EQUAL(it.index(), 5);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), false);
     }
-    for (const auto& [samples, expected_indices, expected_samplex, expected_givens, expected_values] :
-        {
-            std::make_tuple(
-                arange(4, 16),
-                std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},
-                std::vector<int>{4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
-                std::vector<int>{1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0},
-                std::vector<int>{7, -1, 9, -1, 11, -1, 13, -1, 15, -1, 17, -1}
-            )
-        })
     {
+        const auto samples = arange(4, 16);
+        const auto expected_indices = std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+        const auto expected_givens = std::vector<int>{1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0};
+        const auto expected_values = std::vector<int>{7, -1, 9, -1, 11, -1, 13, -1, 15, -1, 17, -1};
+
         auto it = make_iterator(data, mask, samples);
         const auto it_end = make_end_iterator(data, mask, samples);
         UTEST_CHECK_EQUAL(it.size(), 12);
@@ -123,36 +113,31 @@ UTEST_CASE(data1D)
         UTEST_CHECK_EQUAL(it_end.index(), 12);
         UTEST_CHECK_EQUAL(static_cast<bool>(it_end), false);
 
-        std::vector<int> indices, samplex, givens, values;
+        std::vector<int> indices, givens, values;
         for ( ; it != it_end; ++ it)
         {
-            const auto [index, sample, given, value] = *it;
+            const auto [index, given, value] = *it;
             indices.push_back(static_cast<int>(index));
-            samplex.push_back(static_cast<int>(sample));
             givens.push_back(given);
             values.push_back(value);
         }
 
         UTEST_CHECK_EQUAL(indices, expected_indices);
-        UTEST_CHECK_EQUAL(samplex, expected_samplex);
         UTEST_CHECK_EQUAL(givens, expected_givens);
         UTEST_CHECK_EQUAL(values, expected_values);
 
         indices.clear();
-        samplex.clear();
         givens.clear();
         values.clear();
         for (auto it = make_iterator(data, mask, samples); it; ++ it)
         {
-            const auto [index, sample, given, value] = *it;
+            const auto [index, given, value] = *it;
             indices.push_back(static_cast<int>(index));
-            samplex.push_back(static_cast<int>(sample));
             givens.push_back(given);
             values.push_back(value);
         }
 
         UTEST_CHECK_EQUAL(indices, expected_indices);
-        UTEST_CHECK_EQUAL(samplex, expected_samplex);
         UTEST_CHECK_EQUAL(givens, expected_givens);
         UTEST_CHECK_EQUAL(values, expected_values);
     }
@@ -185,9 +170,8 @@ UTEST_CASE(data4D)
         UTEST_CHECK_EQUAL(it.index(), 0);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), true);
         {
-            const auto [index, sample, given, value] = *it;
+            const auto [index, given, value] = *it;
             UTEST_CHECK_EQUAL(index, 0);
-            UTEST_CHECK_EQUAL(sample, 5);
             UTEST_CHECK_EQUAL(given, false);
             UTEST_CHECK_EQUAL(value.min(), -1);
             UTEST_CHECK_EQUAL(value.max(), -1);
@@ -199,9 +183,8 @@ UTEST_CASE(data4D)
         UTEST_CHECK_EQUAL(it.index(), 1);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), true);
         {
-            const auto [index, sample, given, value] = *it;
+            const auto [index, given, value] = *it;
             UTEST_CHECK_EQUAL(index, 1);
-            UTEST_CHECK_EQUAL(sample, 6);
             UTEST_CHECK_EQUAL(given, true);
             UTEST_CHECK_EQUAL(value.min(), 9);
             UTEST_CHECK_EQUAL(value.max(), 9);
@@ -213,9 +196,8 @@ UTEST_CASE(data4D)
         UTEST_CHECK_EQUAL(it.index(), 2);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), true);
         {
-            const auto [index, sample, given, value] = *it;
+            const auto [index, given, value] = *it;
             UTEST_CHECK_EQUAL(index, 2);
-            UTEST_CHECK_EQUAL(sample, 7);
             UTEST_CHECK_EQUAL(given, false);
             UTEST_CHECK_EQUAL(value.min(), -1);
             UTEST_CHECK_EQUAL(value.max(), -1);

@@ -259,7 +259,7 @@ tensor4d_cmap_t dataset_generator_t::targets(tensor_range_t sample_range, tensor
             const auto storage = resize_and_map(buffer, samples.size(), feature.classes(), 1, 1);
             for (auto it = make_iterator(tensor, mask, samples); it; ++ it)
             {
-                if (const auto [index, sample, given, label] = *it; given)
+                if (const auto [index, given, label] = *it; given)
                 {
                     storage.array(index).setConstant(-1.0);
                     storage.array(index)(label) = +1.0;
@@ -276,7 +276,7 @@ tensor4d_cmap_t dataset_generator_t::targets(tensor_range_t sample_range, tensor
             const auto storage = resize_and_map(buffer, samples.size(), feature.classes(), 1, 1);
             for (auto it = make_iterator(tensor, mask, samples); it; ++ it)
             {
-                if (const auto [index, sample, given, hits] = *it; given)
+                if (const auto [index, given, hits] = *it; given)
                 {
                     storage.array(index) = hits.array().template cast<scalar_t>() * 2.0 - 1.0;
                 }
@@ -293,7 +293,7 @@ tensor4d_cmap_t dataset_generator_t::targets(tensor_range_t sample_range, tensor
             const auto storage = resize_and_map(buffer, samples.size(), dim1, dim2, dim3);
             for (auto it = make_iterator(tensor, mask, samples); it; ++ it)
             {
-                if (const auto [index, sample, given, values] = *it; given)
+                if (const auto [index, given, values] = *it; given)
                 {
                     storage.array(index) = values.array().template cast<scalar_t>();
                 }
@@ -395,7 +395,7 @@ targets_stats_t dataset_generator_t::targets_stats(execution, tensor_size_t) con
             sclass_stats_t stats{feature.classes()};
             for (auto it = make_iterator(tensor, mask, m_samples); it; ++ it)
             {
-                if (const auto [index, sample, given, label] = *it; given)
+                if (const auto [index, given, label] = *it; given)
                 {
                     stats += label;
                 }
@@ -407,7 +407,7 @@ targets_stats_t dataset_generator_t::targets_stats(execution, tensor_size_t) con
             sclass_stats_t stats{feature.classes()};
             for (auto it = make_iterator(tensor, mask, m_samples); it; ++ it)
             {
-                if (const auto [index, sample, given, hits] = *it; given)
+                if (const auto [index, given, hits] = *it; given)
                 {
                     stats += hits;
                 }
@@ -419,7 +419,7 @@ targets_stats_t dataset_generator_t::targets_stats(execution, tensor_size_t) con
             scalar_stats_t stats{nano::size(feature.dims())};
             for (auto it = make_iterator(tensor, mask, m_samples); it; ++ it)
             {
-                if (const auto [index, sample, given, values] = *it; given)
+                if (const auto [index, given, values] = *it; given)
                 {
                     stats += values.array().template cast<scalar_t>();
                 }
@@ -458,7 +458,7 @@ tensor1d_t dataset_generator_t::sample_weights(const targets_stats_t& targets_st
 
             for (auto it = make_iterator(tensor, mask, m_samples); it; ++ it)
             {
-                if (const auto [index, sample, given, label] = *it; given)
+                if (const auto [index, given, label] = *it; given)
                 {
                     weights(index) = class_weights(label);
                 }

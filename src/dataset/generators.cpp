@@ -76,7 +76,7 @@ void identity_generator_t::select(tensor_size_t feature, tensor_range_t sample_r
             {
                 for (auto it = make_iterator(data, mask, samples(feature, sample_range)); it; ++ it)
                 {
-                    if (const auto [index, sample, given, label] = *it; given)
+                    if (const auto [index, given, label] = *it; given)
                     {
                         storage(index) = static_cast<int32_t>(label);
                     }
@@ -108,7 +108,7 @@ void identity_generator_t::select(tensor_size_t feature, tensor_range_t sample_r
             {
                 for (auto it = make_iterator(data, mask, samples(feature, sample_range)); it; ++ it)
                 {
-                    if (const auto [index, sample, given, hits] = *it; given)
+                    if (const auto [index, given, hits] = *it; given)
                     {
                         storage.vector(index) = hits.array().template cast<int8_t>();
                     }
@@ -144,7 +144,7 @@ void identity_generator_t::select(tensor_size_t feature, tensor_range_t sample_r
             {
                 for (auto it = make_iterator(data, mask, samples(feature, sample_range)); it; ++ it)
                 {
-                    if (const auto [index, sample, given, values] = *it; given)
+                    if (const auto [index, given, values] = *it; given)
                     {
                         storage(index) = static_cast<scalar_t>(values(0));
                     }
@@ -180,7 +180,7 @@ void identity_generator_t::select(tensor_size_t feature, tensor_range_t sample_r
             {
                 for (auto it = make_iterator(data, mask, samples(feature, sample_range)); it; ++ it)
                 {
-                    if (const auto [index, sample, given, values] = *it; given)
+                    if (const auto [index, given, values] = *it; given)
                     {
                         storage.array(index) = values.array().template cast<scalar_t>();
                     }
@@ -209,7 +209,7 @@ void identity_generator_t::flatten(tensor_range_t sample_range, tensor2d_map_t s
                 column_size = feature.classes();
                 for (auto it = make_iterator(data, mask, samples(f, sample_range)); it; ++ it)
                 {
-                    if (const auto [index, sample, given, label] = *it; given)
+                    if (const auto [index, given, label] = *it; given)
                     {
                         auto segment = storage.array(index).segment(column_offset, column_size);
                         if (should_drop(f))
@@ -234,7 +234,7 @@ void identity_generator_t::flatten(tensor_range_t sample_range, tensor2d_map_t s
                 column_size = feature.classes();
                 for (auto it = make_iterator(data, mask, samples(f, sample_range)); it; ++ it)
                 {
-                    if (const auto [index, sample, given, hits] = *it; given)
+                    if (const auto [index, given, hits] = *it; given)
                     {
                         auto segment = storage.array(index).segment(column_offset, column_size);
                         if (should_drop(f))
@@ -258,7 +258,7 @@ void identity_generator_t::flatten(tensor_range_t sample_range, tensor2d_map_t s
                 column_size = size(feature.dims());
                 for (auto it = make_iterator(data, mask, samples(f, sample_range)); it; ++ it)
                 {
-                    if (const auto [index, sample, given, values] = *it; given)
+                    if (const auto [index, given, values] = *it; given)
                     {
                         auto segment = storage.array(index).segment(column_offset, column_size);
                         if (should_drop(f))

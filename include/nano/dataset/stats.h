@@ -27,7 +27,7 @@ namespace nano
             feature_sclass_stats_t stats{feature.classes()};
             for ( ; iterator; ++ iterator)
             {
-                if (const auto [index, sample, given, label] = *iterator; given)
+                if (const auto [index, given, label] = *iterator; given)
                 {
                     stats.m_class_counts(static_cast<tensor_size_t>(label)) ++;
                 }
@@ -60,7 +60,7 @@ namespace nano
             feature_mclass_stats_t stats{feature.classes()};
             for ( ; iterator; ++ iterator)
             {
-                if (const auto [index, sample, given, values] = *iterator; given)
+                if (const auto [index, given, values] = *iterator; given)
                 {
                     stats.m_class_counts.array() += values.array().template cast<tensor_size_t>();
                 }
@@ -99,7 +99,7 @@ namespace nano
             feature_scalar_stats_t stats{feature.dims()};
             for ( ; iterator; ++ iterator)
             {
-                if (const auto [index, sample, given, values] = *iterator; given)
+                if (const auto [index, given, values] = *iterator; given)
                 {
                     const auto array = values.array().template cast<scalar_t>();
                     stats.m_count ++;

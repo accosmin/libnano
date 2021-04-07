@@ -40,28 +40,24 @@ void generator_t::preprocess(execution)
 {
 }
 
-sclass_cmap_t generator_t::select(tensor_size_t feature, tensor_range_t, sclass_mem_t& buffer) const
+void generator_t::select(tensor_size_t feature, tensor_range_t, sclass_map_t) const
 {
     critical0("generator_t: unhandled single-label feature <", feature, ":", this->feature(feature), ">!");
-    return buffer.tensor();
 }
 
-mclass_cmap_t generator_t::select(tensor_size_t feature, tensor_range_t, mclass_mem_t& buffer) const
+void generator_t::select(tensor_size_t feature, tensor_range_t, mclass_map_t) const
 {
     critical0("generator_t: unhandled multi-label feature <", feature, ":", this->feature(feature), ">!");
-    return buffer.tensor();
 }
 
-scalar_cmap_t generator_t::select(tensor_size_t feature, tensor_range_t, scalar_mem_t& buffer) const
+void generator_t::select(tensor_size_t feature, tensor_range_t, scalar_map_t) const
 {
     critical0("generator_t: unhandled scalar feature <", feature, ":", this->feature(feature), ">!");
-    return buffer.tensor();
 }
 
-struct_cmap_t generator_t::select(tensor_size_t feature, tensor_range_t, struct_mem_t& buffer) const
+void generator_t::select(tensor_size_t feature, tensor_range_t, struct_map_t) const
 {
     critical0("generator_t: unhandled structured feature <", feature, ":", this->feature(feature), ">!");
-    return buffer.tensor();
 }
 
 dataset_generator_t::dataset_generator_t(const memory_dataset_t& dataset, indices_t samples) :
@@ -80,7 +76,7 @@ void dataset_generator_t::update()
     }
 
     m_column_mapping.resize(columns, 2);
-    m_feature_mapping.resize(features, 2);
+    m_feature_mapping.resize(features, 5);
 
     tensor_size_t offset_features = 0, offset_columns = 0, index = 0;
     for (const auto& generator : m_generators)
@@ -97,6 +93,24 @@ void dataset_generator_t::update()
         {
             m_feature_mapping(offset_features + feature, 0) = index;
             m_feature_mapping(offset_features + feature, 1) = feature;
+
+            tensor_size_t dim1 = 1, dim2 = 1, dim3 = 1;
+            switch (const auto feature_ = generator->feature(feature); feature_.type())
+            {
+            case feature_type::sclass:
+                break;
+            case feature_type::mclass:
+                dim1 = feature_.classes();
+                break;
+            default:
+                dim1 = feature_.dims()[0];
+                dim2 = feature_.dims()[1];
+                dim3 = feature_.dims()[2];
+                break;
+            }
+            m_feature_mapping(offset_features + feature, 2) = dim1;
+            m_feature_mapping(offset_features + feature, 3) = dim2;
+            m_feature_mapping(offset_features + feature, 4) = dim3;
         }
 
         ++ index;
@@ -149,28 +163,36 @@ sclass_cmap_t dataset_generator_t::select(tensor_size_t feature, tensor_range_t 
 {
     assert(sample_range.begin() >= 0 && sample_range.end() <= m_samples.size());
 
-    return byfeature(feature)->select(m_feature_mapping(feature, 1), sample_range, buffer);
+    auto storage = resize_and_map(buffer, sample_range.size());
+    byfeature(feature)->select(m_feature_mapping(feature, 1), sample_range, storage);
+    return storage;
 }
 
 mclass_cmap_t dataset_generator_t::select(tensor_size_t feature, tensor_range_t sample_range, mclass_mem_t& buffer) const
 {
     assert(sample_range.begin() >= 0 && sample_range.end() <= m_samples.size());
 
-    return byfeature(feature)->select(m_feature_mapping(feature, 1), sample_range, buffer);
+    auto storage = resize_and_map(buffer, sample_range.size(), m_feature_mapping(feature, 2));
+    byfeature(feature)->select(m_feature_mapping(feature, 1), sample_range, storage);
+    return storage;
 }
 
 scalar_cmap_t dataset_generator_t::select(tensor_size_t feature, tensor_range_t sample_range, scalar_mem_t& buffer) const
 {
     assert(sample_range.begin() >= 0 && sample_range.end() <= m_samples.size());
 
-    return byfeature(feature)->select(m_feature_mapping(feature, 1), sample_range, buffer);
+    auto storage = resize_and_map(buffer, sample_range.size());
+    byfeature(feature)->select(m_feature_mapping(feature, 1), sample_range, storage);
+    return storage;
 }
 
 struct_cmap_t dataset_generator_t::select(tensor_size_t feature, tensor_range_t sample_range, struct_mem_t& buffer) const
 {
     assert(sample_range.begin() >= 0 && sample_range.end() <= m_samples.size());
 
-    return byfeature(feature)->select(m_feature_mapping(feature, 1), sample_range, buffer);
+    auto storage = resize_and_map(buffer, sample_range.size(), m_feature_mapping(feature, 2), m_feature_mapping(feature, 3), m_feature_mapping(feature, 4));
+    byfeature(feature)->select(m_feature_mapping(feature, 1), sample_range, storage);
+    return storage;
 }
 
 tensor2d_cmap_t dataset_generator_t::flatten(tensor_range_t sample_range, tensor2d_t& buffer) const

@@ -2,16 +2,6 @@
 
 using namespace nano;
 
-template <typename tscalar, size_t trank, typename... tindices>
-static auto resize_and_map(tensor_mem_t<tscalar, trank>& buffer, tindices... dims)
-{
-    if (buffer.size() < ::nano::size(make_dims(dims...)))
-    {
-        buffer.resize(dims...);
-    }
-    return map_tensor(buffer.data(), dims...);
-}
-
 identity_generator_t::identity_generator_t(const memory_dataset_t& dataset, const indices_t& samples) :
     generator_t(dataset, samples)
 {
@@ -72,20 +62,19 @@ tensor_size_t identity_generator_t::column2feature(tensor_size_t column) const
     return m_column_mapping(column, 0);
 }
 
-sclass_cmap_t identity_generator_t::select(tensor_size_t f, tensor_range_t sample_range, sclass_mem_t& buffer) const
+void identity_generator_t::select(tensor_size_t feature, tensor_range_t sample_range, sclass_map_t storage) const
 {
-    return dataset().visit_inputs(m_feature_mapping(f, 0), [&] (const auto&, const auto& data, const auto& mask)
+    return dataset().visit_inputs(m_feature_mapping(feature, 0), [&] (const auto&, const auto& data, const auto& mask)
     {
         if constexpr (data.rank() == 1)
         {
-            auto storage = resize_and_map(buffer, sample_range.size());
-            if (should_drop(f))
+            if (should_drop(feature))
             {
                 storage.constant(-1);
             }
             else
             {
-                for (auto it = make_iterator(data, mask, samples(f, sample_range)); it; ++ it)
+                for (auto it = make_iterator(data, mask, samples(feature, sample_range)); it; ++ it)
                 {
                     if (const auto [index, sample, given, label] = *it; given)
                     {
@@ -97,29 +86,27 @@ sclass_cmap_t identity_generator_t::select(tensor_size_t f, tensor_range_t sampl
                     }
                 }
             }
-            return sclass_cmap_t{storage};
         }
         else
         {
-            return generator_t::select(f, sample_range, buffer);
+            generator_t::select(feature, sample_range, storage);
         }
     });
 }
 
-mclass_cmap_t identity_generator_t::select(tensor_size_t f, tensor_range_t sample_range, mclass_mem_t& buffer) const
+void identity_generator_t::select(tensor_size_t feature, tensor_range_t sample_range, mclass_map_t storage) const
 {
-    return dataset().visit_inputs(m_feature_mapping(f, 0), [&] (const auto& feature, const auto& data, const auto& mask)
+    return dataset().visit_inputs(m_feature_mapping(feature, 0), [&] (const auto&, const auto& data, const auto& mask)
     {
         if constexpr (data.rank() == 2)
         {
-            auto storage = resize_and_map(buffer, sample_range.size(), feature.classes());
-            if (should_drop(f))
+            if (should_drop(feature))
             {
                 storage.constant(-1);
             }
             else
             {
-                for (auto it = make_iterator(data, mask, samples(f, sample_range)); it; ++ it)
+                for (auto it = make_iterator(data, mask, samples(feature, sample_range)); it; ++ it)
                 {
                     if (const auto [index, sample, given, hits] = *it; given)
                     {
@@ -131,34 +118,31 @@ mclass_cmap_t identity_generator_t::select(tensor_size_t f, tensor_range_t sampl
                     }
                 }
             }
-            return mclass_cmap_t{storage};
         }
         else
         {
-            return generator_t::select(f, sample_range, buffer);
+            generator_t::select(feature, sample_range, storage);
         }
     });
 }
 
-scalar_cmap_t identity_generator_t::select(tensor_size_t f, tensor_range_t sample_range, scalar_mem_t& buffer) const
+void identity_generator_t::select(tensor_size_t feature, tensor_range_t sample_range, scalar_map_t storage) const
 {
-    return dataset().visit_inputs(m_feature_mapping(f, 0), [&] (const auto& feature, const auto& data, const auto& mask)
+    return dataset().visit_inputs(m_feature_mapping(feature, 0), [&] (const auto& feature_, const auto& data, const auto& mask)
     {
         if constexpr (data.rank() == 4)
         {
-            if (size(feature.dims()) > 1)
+            if (size(feature_.dims()) > 1)
             {
-                return generator_t::select(f, sample_range, buffer);
+                generator_t::select(feature, sample_range, storage);
             }
-
-            auto storage = resize_and_map(buffer, sample_range.size());
-            if (should_drop(f))
+            else if (should_drop(feature))
             {
                 storage.constant(std::numeric_limits<scalar_t>::quiet_NaN());
             }
             else
             {
-                for (auto it = make_iterator(data, mask, samples(f, sample_range)); it; ++ it)
+                for (auto it = make_iterator(data, mask, samples(feature, sample_range)); it; ++ it)
                 {
                     if (const auto [index, sample, given, values] = *it; given)
                     {
@@ -170,35 +154,31 @@ scalar_cmap_t identity_generator_t::select(tensor_size_t f, tensor_range_t sampl
                     }
                 }
             }
-            return scalar_cmap_t{storage};
         }
         else
         {
-            return generator_t::select(f, sample_range, buffer);
+            generator_t::select(feature, sample_range, storage);
         }
     });
 }
 
-struct_cmap_t identity_generator_t::select(tensor_size_t f, tensor_range_t sample_range, struct_mem_t& buffer) const
+void identity_generator_t::select(tensor_size_t feature, tensor_range_t sample_range, struct_map_t storage) const
 {
-    return dataset().visit_inputs(m_feature_mapping(f, 0), [&] (const auto& feature, const auto& data, const auto& mask)
+    return dataset().visit_inputs(m_feature_mapping(feature, 0), [&] (const auto& feature_, const auto& data, const auto& mask)
     {
         if constexpr (data.rank() == 4)
         {
-            if (size(feature.dims()) <= 1)
+            if (size(feature_.dims()) <= 1)
             {
-                return generator_t::select(f, sample_range, buffer);
+                generator_t::select(feature, sample_range, storage);
             }
-
-            const auto [dim1, dim2, dim3] = feature.dims();
-            auto storage = resize_and_map(buffer, sample_range.size(), dim1, dim2, dim3);
-            if (should_drop(f))
+            else if (should_drop(feature))
             {
                 storage.constant(std::numeric_limits<scalar_t>::quiet_NaN());
             }
             else
             {
-                for (auto it = make_iterator(data, mask, samples(f, sample_range)); it; ++ it)
+                for (auto it = make_iterator(data, mask, samples(feature, sample_range)); it; ++ it)
                 {
                     if (const auto [index, sample, given, values] = *it; given)
                     {
@@ -210,11 +190,10 @@ struct_cmap_t identity_generator_t::select(tensor_size_t f, tensor_range_t sampl
                     }
                 }
             }
-            return struct_cmap_t{storage};
         }
         else
         {
-            return generator_t::select(f, sample_range, buffer);
+            generator_t::select(feature, sample_range, storage);
         }
     });
 }

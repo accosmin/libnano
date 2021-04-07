@@ -24,10 +24,10 @@ namespace nano
         tensor_size_t column2feature(tensor_size_t column) const override;
         void flatten(tensor_range_t, tensor2d_map_t, tensor_size_t) const override;
 
-        sclass_cmap_t select(tensor_size_t, tensor_range_t, sclass_mem_t&) const override;
-        mclass_cmap_t select(tensor_size_t, tensor_range_t, mclass_mem_t&) const override;
-        scalar_cmap_t select(tensor_size_t, tensor_range_t, scalar_mem_t&) const override;
-        struct_cmap_t select(tensor_size_t, tensor_range_t, struct_mem_t&) const override;
+        void select(tensor_size_t, tensor_range_t, sclass_map_t) const override;
+        void select(tensor_size_t, tensor_range_t, mclass_map_t) const override;
+        void select(tensor_size_t, tensor_range_t, scalar_map_t) const override;
+        void select(tensor_size_t, tensor_range_t, struct_map_t) const override;
 
         void undrop() override;
         void unshuffle() override;

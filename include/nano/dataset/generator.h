@@ -13,18 +13,22 @@ namespace nano
 
     // single-label categorical feature values: (sample index) = label/class index
     using sclass_mem_t = tensor_mem_t<int32_t, 1>;
+    using sclass_map_t = tensor_map_t<int32_t, 1>;
     using sclass_cmap_t = tensor_cmap_t<int32_t, 1>;
 
     // multi-label categorical feature values: (sample index, label/class index) = 0 or 1
     using mclass_mem_t = tensor_mem_t<int8_t, 2>;
+    using mclass_map_t = tensor_map_t<int8_t, 2>;
     using mclass_cmap_t = tensor_cmap_t<int8_t, 2>;
 
     // scalar continuous feature values: (sample index) = scalar feature value
     using scalar_mem_t = tensor_mem_t<scalar_t, 1>;
+    using scalar_map_t = tensor_map_t<scalar_t, 1>;
     using scalar_cmap_t = tensor_cmap_t<scalar_t, 1>;
 
     // structured continuous feature values: (sample index, dim1, dim2, dim3)
     using struct_mem_t = tensor_mem_t<scalar_t, 4>;
+    using struct_map_t = tensor_map_t<scalar_t, 4>;
     using struct_cmap_t = tensor_cmap_t<scalar_t, 4>;
 
     ///
@@ -93,10 +97,10 @@ namespace nano
         ///     useful for training and evaluating ML models that perform feature selection
         ///     (e.g. gradient boosting).
         ///
-        virtual sclass_cmap_t select(tensor_size_t feature, tensor_range_t sample_range, sclass_mem_t&) const;
-        virtual mclass_cmap_t select(tensor_size_t feature, tensor_range_t sample_range, mclass_mem_t&) const;
-        virtual scalar_cmap_t select(tensor_size_t feature, tensor_range_t sample_range, scalar_mem_t&) const;
-        virtual struct_cmap_t select(tensor_size_t feature, tensor_range_t sample_range, struct_mem_t&) const;
+        virtual void select(tensor_size_t feature, tensor_range_t sample_range, sclass_map_t) const;
+        virtual void select(tensor_size_t feature, tensor_range_t sample_range, mclass_map_t) const;
+        virtual void select(tensor_size_t feature, tensor_range_t sample_range, scalar_map_t) const;
+        virtual void select(tensor_size_t feature, tensor_range_t sample_range, struct_map_t) const;
 
         ///
         /// \brief computes the values of all features for the given samples,

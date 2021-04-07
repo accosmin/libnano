@@ -103,27 +103,18 @@ UTEST_CASE(data1D)
         UTEST_CHECK_EQUAL(it.index(), 5);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), false);
     }
-    for (const auto& [samples, shuffled, expected_indices, expected_samplex, expected_givens, expected_values] :
+    for (const auto& [samples, expected_indices, expected_samplex, expected_givens, expected_values] :
         {
             std::make_tuple(
                 arange(4, 16),
-                indices_t{},
                 std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},
                 std::vector<int>{4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
                 std::vector<int>{1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0},
                 std::vector<int>{7, -1, 9, -1, 11, -1, 13, -1, 15, -1, 17, -1}
-            ),
-            std::make_tuple(
-                arange(4, 16),
-                make_tensor<tensor_size_t>(make_dims(16), 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0),
-                std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},
-                std::vector<int>{11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0},
-                std::vector<int>{0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1},
-                std::vector<int>{-1, 13, -1, 11, -1, 9, -1, 7, -1, 5, -1, 3}
             )
         })
     {
-        auto it = make_iterator(data, mask, samples, shuffled);
+        auto it = make_iterator(data, mask, samples);
         const auto it_end = make_end_iterator(data, mask, samples);
         UTEST_CHECK_EQUAL(it.size(), 12);
         UTEST_CHECK_EQUAL(it.index(), 0);
@@ -151,7 +142,7 @@ UTEST_CASE(data1D)
         samplex.clear();
         givens.clear();
         values.clear();
-        for (auto it = make_iterator(data, mask, samples, shuffled); it; ++ it)
+        for (auto it = make_iterator(data, mask, samples); it; ++ it)
         {
             const auto [index, sample, given, value] = *it;
             indices.push_back(static_cast<int>(index));

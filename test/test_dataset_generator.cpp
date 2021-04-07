@@ -102,71 +102,101 @@ static auto make_dataset(tensor_size_t samples, size_t target)
     return dataset;
 }
 
-static void check_sclass(const dataset_generator_t& generator, tensor_size_t feature, indices_cmap_t samples, const sclass_mem_t& expected)
+static auto make_sample_ranges(const dataset_generator_t& generator)
 {
-    sclass_mem_t sclass_buffer;
-    mclass_mem_t mclass_buffer;
-    scalar_mem_t scalar_buffer;
-    struct_mem_t struct_buffer;
+    const auto samples = generator.samples().size();
 
-    UTEST_CHECK_NOTHROW(generator.select(feature, samples, sclass_buffer));
-    UTEST_CHECK_THROW(generator.select(feature, samples, mclass_buffer), std::runtime_error);
-    UTEST_CHECK_THROW(generator.select(feature, samples, scalar_buffer), std::runtime_error);
-    UTEST_CHECK_THROW(generator.select(feature, samples, struct_buffer), std::runtime_error);
-    UTEST_CHECK_TENSOR_EQUAL(sclass_buffer, expected);
+    return std::vector<tensor_range_t>
+    {
+        make_range(0, samples),
+        make_range(0, samples / 2),
+        make_range(samples / 2, samples)
+    };
 }
 
-static void check_mclass(const dataset_generator_t& generator, tensor_size_t feature, indices_cmap_t samples, const mclass_mem_t& expected)
+static void check_sclass(const dataset_generator_t& generator, tensor_size_t feature, const sclass_mem_t& expected)
 {
     sclass_mem_t sclass_buffer;
     mclass_mem_t mclass_buffer;
     scalar_mem_t scalar_buffer;
     struct_mem_t struct_buffer;
 
-    UTEST_CHECK_THROW(generator.select(feature, samples, sclass_buffer), std::runtime_error);
-    UTEST_CHECK_NOTHROW(generator.select(feature, samples, mclass_buffer));
-    UTEST_CHECK_THROW(generator.select(feature, samples, scalar_buffer), std::runtime_error);
-    UTEST_CHECK_THROW(generator.select(feature, samples, struct_buffer), std::runtime_error);
-    UTEST_CHECK_TENSOR_EQUAL(mclass_buffer, expected);
+    for (const auto sample_range : make_sample_ranges(generator))
+    {
+        sclass_cmap_t sclass_data;
+        UTEST_CHECK_NOTHROW(sclass_data = generator.select(feature, sample_range, sclass_buffer));
+        UTEST_CHECK_THROW(generator.select(feature, sample_range, mclass_buffer), std::runtime_error);
+        UTEST_CHECK_THROW(generator.select(feature, sample_range, scalar_buffer), std::runtime_error);
+        UTEST_CHECK_THROW(generator.select(feature, sample_range, struct_buffer), std::runtime_error);
+        UTEST_CHECK_TENSOR_EQUAL(sclass_data, expected.slice(sample_range));
+    }
 }
 
-static void check_scalar(const dataset_generator_t& generator, tensor_size_t feature, indices_cmap_t samples, const scalar_mem_t& expected)
+static void check_mclass(const dataset_generator_t& generator, tensor_size_t feature, const mclass_mem_t& expected)
 {
     sclass_mem_t sclass_buffer;
     mclass_mem_t mclass_buffer;
     scalar_mem_t scalar_buffer;
     struct_mem_t struct_buffer;
 
-    UTEST_CHECK_THROW(generator.select(feature, samples, sclass_buffer), std::runtime_error);
-    UTEST_CHECK_THROW(generator.select(feature, samples, mclass_buffer), std::runtime_error);
-    UTEST_CHECK_NOTHROW(generator.select(feature, samples, scalar_buffer));
-    UTEST_CHECK_THROW(generator.select(feature, samples, struct_buffer), std::runtime_error);
-    UTEST_CHECK_TENSOR_CLOSE(scalar_buffer, expected, 1e-12);
+    for (const auto sample_range : make_sample_ranges(generator))
+    {
+        mclass_cmap_t mclass_data;
+        UTEST_CHECK_THROW(generator.select(feature, sample_range, sclass_buffer), std::runtime_error);
+        UTEST_CHECK_NOTHROW(mclass_data = generator.select(feature, sample_range, mclass_buffer));
+        UTEST_CHECK_THROW(generator.select(feature, sample_range, scalar_buffer), std::runtime_error);
+        UTEST_CHECK_THROW(generator.select(feature, sample_range, struct_buffer), std::runtime_error);
+        UTEST_CHECK_TENSOR_EQUAL(mclass_data, expected.slice(sample_range));
+    }
 }
 
-static void check_struct(const dataset_generator_t& generator, tensor_size_t feature, indices_cmap_t samples, const struct_mem_t& expected)
+static void check_scalar(const dataset_generator_t& generator, tensor_size_t feature, const scalar_mem_t& expected)
 {
     sclass_mem_t sclass_buffer;
     mclass_mem_t mclass_buffer;
     scalar_mem_t scalar_buffer;
     struct_mem_t struct_buffer;
 
-    UTEST_CHECK_THROW(generator.select(feature, samples, sclass_buffer), std::runtime_error);
-    UTEST_CHECK_THROW(generator.select(feature, samples, mclass_buffer), std::runtime_error);
-    UTEST_CHECK_THROW(generator.select(feature, samples, scalar_buffer), std::runtime_error);
-    UTEST_CHECK_NOTHROW(generator.select(feature, samples, struct_buffer));
-    UTEST_CHECK_TENSOR_CLOSE(struct_buffer, expected, 1e-12);
+    for (const auto sample_range : make_sample_ranges(generator))
+    {
+        scalar_cmap_t scalar_data;
+        UTEST_CHECK_THROW(generator.select(feature, sample_range, sclass_buffer), std::runtime_error);
+        UTEST_CHECK_THROW(generator.select(feature, sample_range, mclass_buffer), std::runtime_error);
+        UTEST_CHECK_NOTHROW(scalar_data = generator.select(feature, sample_range, scalar_buffer));
+        UTEST_CHECK_THROW(generator.select(feature, sample_range, struct_buffer), std::runtime_error);
+        UTEST_CHECK_TENSOR_CLOSE(scalar_data, expected.slice(sample_range), 1e-12);
+    }
+}
+
+static void check_struct(const dataset_generator_t& generator, tensor_size_t feature, const struct_mem_t& expected)
+{
+    sclass_mem_t sclass_buffer;
+    mclass_mem_t mclass_buffer;
+    scalar_mem_t scalar_buffer;
+    struct_mem_t struct_buffer;
+
+    for (const auto sample_range : make_sample_ranges(generator))
+    {
+        struct_cmap_t struct_data;
+        UTEST_CHECK_THROW(generator.select(feature, sample_range, sclass_buffer), std::runtime_error);
+        UTEST_CHECK_THROW(generator.select(feature, sample_range, mclass_buffer), std::runtime_error);
+        UTEST_CHECK_THROW(generator.select(feature, sample_range, scalar_buffer), std::runtime_error);
+        UTEST_CHECK_NOTHROW(struct_data = generator.select(feature, sample_range, struct_buffer));
+        UTEST_CHECK_TENSOR_CLOSE(struct_data, expected.slice(sample_range), 1e-12);
+    }
 }
 
 static void check_flatten(const dataset_generator_t& generator, const tensor2d_t& expected_flatten, scalar_t eps = 1e-12)
 {
-    const auto alrange = make_range(0, expected_flatten.size<0>());
-
     tensor2d_t flatten_buffer;
     tensor2d_cmap_t flatten_cmap;
-    UTEST_CHECK_EQUAL(generator.columns(), expected_flatten.size<1>());
-    UTEST_CHECK_NOTHROW(flatten_cmap = generator.flatten(alrange, flatten_buffer));
-    UTEST_CHECK_TENSOR_CLOSE(flatten_cmap, expected_flatten, eps);
+
+    for (const auto sample_range : make_sample_ranges(generator))
+    {
+        UTEST_CHECK_EQUAL(generator.columns(), expected_flatten.size<1>());
+        UTEST_CHECK_NOTHROW(flatten_cmap = generator.flatten(sample_range, flatten_buffer));
+        UTEST_CHECK_TENSOR_CLOSE(flatten_cmap, expected_flatten.slice(sample_range), eps);
+    }
 }
 
 static void check_select_stats(const dataset_generator_t& generator,
@@ -286,18 +316,18 @@ UTEST_CASE(unsupervised)
     UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"f32"}.scalar(feature_type::float32, make_dims(1, 1, 1)));
     UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"u8_struct"}.scalar(feature_type::uint8, make_dims(2, 1, 2)));
 
-    check_mclass(generator, 0, samples, dataset.expected_select0());
-    check_sclass(generator, 1, samples, dataset.expected_select1());
-    check_scalar(generator, 2, samples, dataset.expected_select2());
-    check_struct(generator, 3, samples, dataset.expected_select3());
+    check_mclass(generator, 0, dataset.expected_select0());
+    check_sclass(generator, 1, dataset.expected_select1());
+    check_scalar(generator, 2, dataset.expected_select2());
+    check_struct(generator, 3, dataset.expected_select3());
     check_select_stats(generator, make_indices(1), make_indices(0), make_indices(2), make_indices(3));
 
     /*generator.drop(0);
-    check_mclass(generator, 0, samples, dataset.expected_select0());
+    check_mclass(generator, 0, dataset.expected_select0());
     generator.undrop();
 
     generator.shuffle(0);
-    check_mclass(generator, 0, samples, dataset.expected_select0());
+    check_mclass(generator, 0, dataset.expected_select0());
     generator.unshuffle();*/
 
     check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 10),
@@ -350,9 +380,9 @@ UTEST_CASE(sclassification)
     UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"f32"}.scalar(feature_type::float32, make_dims(1, 1, 1)));
     UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"u8_struct"}.scalar(feature_type::uint8, make_dims(2, 1, 2)));
 
-    check_mclass(generator, 0, samples, dataset.expected_select0());
-    check_scalar(generator, 1, samples, dataset.expected_select2());
-    check_struct(generator, 2, samples, dataset.expected_select3());
+    check_mclass(generator, 0, dataset.expected_select0());
+    check_scalar(generator, 1, dataset.expected_select2());
+    check_struct(generator, 2, dataset.expected_select3());
     check_select_stats(generator, indices_t{}, make_indices(0), make_indices(1), make_indices(2));
 
     check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 8),
@@ -397,9 +427,9 @@ UTEST_CASE(mclassification)
     UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"f32"}.scalar(feature_type::float32, make_dims(1, 1, 1)));
     UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"u8_struct"}.scalar(feature_type::uint8, make_dims(2, 1, 2)));
 
-    check_sclass(generator, 0, samples, dataset.expected_select1());
-    check_scalar(generator, 1, samples, dataset.expected_select2());
-    check_struct(generator, 2, samples, dataset.expected_select3());
+    check_sclass(generator, 0, dataset.expected_select1());
+    check_scalar(generator, 1, dataset.expected_select2());
+    check_struct(generator, 2, dataset.expected_select3());
     check_select_stats(generator, make_indices(0), indices_t{}, make_indices(1), make_indices(2));
 
     check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 7),
@@ -445,9 +475,9 @@ UTEST_CASE(regression)
     UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"sclass2"}.sclass(strings_t{"s0", "s1"}));
     UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"u8_struct"}.scalar(feature_type::uint8, make_dims(2, 1, 2)));
 
-    check_mclass(generator, 0, samples, dataset.expected_select0());
-    check_sclass(generator, 1, samples, dataset.expected_select1());
-    check_struct(generator, 2, samples, dataset.expected_select3());
+    check_mclass(generator, 0, dataset.expected_select0());
+    check_sclass(generator, 1, dataset.expected_select1());
+    check_struct(generator, 2, dataset.expected_select3());
     check_select_stats(generator, make_indices(1), make_indices(0), indices_t{}, make_indices(2));
 
     check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 9),
@@ -493,9 +523,9 @@ UTEST_CASE(mvregression)
     UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"sclass2"}.sclass(strings_t{"s0", "s1"}));
     UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"f32"}.scalar(feature_type::float32, make_dims(1, 1, 1)));
 
-    check_mclass(generator, 0, samples, dataset.expected_select0());
-    check_sclass(generator, 1, samples, dataset.expected_select1());
-    check_scalar(generator, 2, samples, dataset.expected_select2());
+    check_mclass(generator, 0, dataset.expected_select0());
+    check_sclass(generator, 1, dataset.expected_select1());
+    check_scalar(generator, 2, dataset.expected_select2());
     check_select_stats(generator, make_indices(1), make_indices(0), make_indices(2), indices_t{});
 
     check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 6),

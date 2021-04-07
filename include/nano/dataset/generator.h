@@ -54,7 +54,7 @@ namespace nano
         ///
         /// \brief constructor.
         ///
-        generator_t(const memory_dataset_t& dataset);
+        generator_t(const memory_dataset_t& dataset, const indices_t& samples);
 
         ///
         /// \brief default destructor.
@@ -64,7 +64,7 @@ namespace nano
         ///
         /// \brief prepare the given samples to generate features fast when needed.
         ///
-        virtual void preprocess(execution, indices_cmap_t samples);
+        virtual void preprocess(execution);
 
         ///
         /// \brief returns the total number of generated features.
@@ -93,10 +93,10 @@ namespace nano
         ///     useful for training and evaluating ML models that perform feature selection
         ///     (e.g. gradient boosting).
         ///
-        virtual sclass_cmap_t select(tensor_size_t feature, indices_cmap_t samples, sclass_mem_t&) const;
-        virtual mclass_cmap_t select(tensor_size_t feature, indices_cmap_t samples, mclass_mem_t&) const;
-        virtual scalar_cmap_t select(tensor_size_t feature, indices_cmap_t samples, scalar_mem_t&) const;
-        virtual struct_cmap_t select(tensor_size_t feature, indices_cmap_t samples, struct_mem_t&) const;
+        virtual sclass_cmap_t select(tensor_size_t feature, tensor_range_t sample_range, sclass_mem_t&) const;
+        virtual mclass_cmap_t select(tensor_size_t feature, tensor_range_t sample_range, mclass_mem_t&) const;
+        virtual scalar_cmap_t select(tensor_size_t feature, tensor_range_t sample_range, scalar_mem_t&) const;
+        virtual struct_cmap_t select(tensor_size_t feature, tensor_range_t sample_range, struct_mem_t&) const;
 
         ///
         /// \brief computes the values of all features for the given samples,
@@ -104,7 +104,7 @@ namespace nano
         ///     (e.g. linear models, MLPs).
         ///
         virtual tensor_size_t columns() const = 0;
-        virtual void flatten(indices_cmap_t samples, tensor2d_map_t, tensor_size_t column_offset) const = 0;
+        virtual void flatten(tensor_range_t sample_range, tensor2d_map_t, tensor_size_t column_offset) const = 0;
 
         ///
         /// \brief map the given column to its feature index.
@@ -115,11 +115,13 @@ namespace nano
         /// \brief access functions
         ///
         const auto& dataset() const { return m_dataset; }
+        const auto& samples() const { return m_samples; }
 
     private:
 
         // attributes
         const memory_dataset_t& m_dataset;  ///<
+        const indices_t&        m_samples;  ///<
     };
 
     struct select_stats_t
@@ -231,8 +233,8 @@ namespace nano
         {
             static_assert(std::is_base_of_v<generator_t, tgenerator>);
 
-            auto generator = std::make_unique<tgenerator>(m_dataset, args...);
-            generator->preprocess(ex, m_samples);
+            auto generator = std::make_unique<tgenerator>(m_dataset, m_samples, args...);
+            generator->preprocess(ex);
             m_generators.push_back(std::move(generator));
             update();
             return *this;
@@ -242,10 +244,14 @@ namespace nano
         feature_t feature(tensor_size_t feature) const;
 
         select_stats_t select_stats(execution) const;
-        sclass_cmap_t select(tensor_size_t feature, indices_cmap_t samples, sclass_mem_t&) const;
-        mclass_cmap_t select(tensor_size_t feature, indices_cmap_t samples, mclass_mem_t&) const;
-        scalar_cmap_t select(tensor_size_t feature, indices_cmap_t samples, scalar_mem_t&) const;
-        struct_cmap_t select(tensor_size_t feature, indices_cmap_t samples, struct_mem_t&) const;
+        sclass_cmap_t select(tensor_size_t feature, sclass_mem_t&) const;
+        mclass_cmap_t select(tensor_size_t feature, mclass_mem_t&) const;
+        scalar_cmap_t select(tensor_size_t feature, scalar_mem_t&) const;
+        struct_cmap_t select(tensor_size_t feature, struct_mem_t&) const;
+        sclass_cmap_t select(tensor_size_t feature, tensor_range_t sample_range, sclass_mem_t&) const;
+        mclass_cmap_t select(tensor_size_t feature, tensor_range_t sample_range, mclass_mem_t&) const;
+        scalar_cmap_t select(tensor_size_t feature, tensor_range_t sample_range, scalar_mem_t&) const;
+        struct_cmap_t select(tensor_size_t feature, tensor_range_t sample_range, struct_mem_t&) const;
 
         tensor_size_t columns() const;
         tensor_size_t column2feature(tensor_size_t column) const;

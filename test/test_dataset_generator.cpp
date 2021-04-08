@@ -114,50 +114,55 @@ static auto make_sample_ranges(const dataset_generator_t& generator)
     };
 }
 
+template <typename texpected>
+static void check_select0(const dataset_generator_t& generator,
+    tensor_size_t feature, tensor_range_t sample_range, const texpected& expected)
+{
+    texpected buffer;
+    decltype(generator.select(feature, sample_range, buffer)) storage;
+
+    UTEST_CHECK_NOTHROW(storage = generator.select(feature, sample_range, buffer));
+    UTEST_CHECK_TENSOR_CLOSE(storage, expected.slice(sample_range), 1e-12);
+
+    const auto shuffle = generator.shuffle(feature);
+    const auto samples = arange(0, generator.samples().size());
+    UTEST_REQUIRE_EQUAL(shuffle.size(), samples.size());
+    UTEST_CHECK(std::is_permutation(shuffle.begin(), shuffle.end(), samples.begin()));
+    UTEST_CHECK_NOT_EQUAL(shuffle, samples);
+
+    UTEST_CHECK_NOTHROW(storage = generator.select(feature, sample_range, buffer));
+    UTEST_CHECK_TENSOR_CLOSE(storage, expected.indexed(shuffle.slice(sample_range)), 1e-12);
+
+    generator.unshuffle();
+}
+
 static void check_select(const dataset_generator_t& generator, tensor_size_t feature, const sclass_mem_t& expected)
 {
-    sclass_mem_t sclass_buffer;
     mclass_mem_t mclass_buffer;
     scalar_mem_t scalar_buffer;
     struct_mem_t struct_buffer;
 
     for (const auto sample_range : make_sample_ranges(generator))
     {
-        sclass_cmap_t sclass_data;
-        UTEST_CHECK_NOTHROW(sclass_data = generator.select(feature, sample_range, sclass_buffer));
         UTEST_CHECK_THROW(generator.select(feature, sample_range, mclass_buffer), std::runtime_error);
         UTEST_CHECK_THROW(generator.select(feature, sample_range, scalar_buffer), std::runtime_error);
         UTEST_CHECK_THROW(generator.select(feature, sample_range, struct_buffer), std::runtime_error);
-        UTEST_CHECK_TENSOR_EQUAL(sclass_data, expected.slice(sample_range));
-
-        const auto shuffle = generator.shuffle(feature);
-        const auto samples = arange(0, generator.samples().size());
-        UTEST_REQUIRE_EQUAL(shuffle.size(), samples.size());
-        UTEST_CHECK(std::is_permutation(shuffle.begin(), shuffle.end(), samples.begin()));
-        UTEST_CHECK_NOT_EQUAL(shuffle, samples);
-
-        UTEST_CHECK_NOTHROW(sclass_data = generator.select(feature, sample_range, sclass_buffer));
-        UTEST_CHECK_TENSOR_EQUAL(sclass_data, expected.indexed(shuffle.slice(sample_range)));
-
-        generator.unshuffle();
+        check_select0(generator, feature, sample_range, expected);
     }
 }
 
 static void check_select(const dataset_generator_t& generator, tensor_size_t feature, const mclass_mem_t& expected)
 {
     sclass_mem_t sclass_buffer;
-    mclass_mem_t mclass_buffer;
     scalar_mem_t scalar_buffer;
     struct_mem_t struct_buffer;
 
     for (const auto sample_range : make_sample_ranges(generator))
     {
-        mclass_cmap_t mclass_data;
         UTEST_CHECK_THROW(generator.select(feature, sample_range, sclass_buffer), std::runtime_error);
-        UTEST_CHECK_NOTHROW(mclass_data = generator.select(feature, sample_range, mclass_buffer));
         UTEST_CHECK_THROW(generator.select(feature, sample_range, scalar_buffer), std::runtime_error);
         UTEST_CHECK_THROW(generator.select(feature, sample_range, struct_buffer), std::runtime_error);
-        UTEST_CHECK_TENSOR_EQUAL(mclass_data, expected.slice(sample_range));
+        check_select0(generator, feature, sample_range, expected);
     }
 }
 
@@ -165,17 +170,14 @@ static void check_select(const dataset_generator_t& generator, tensor_size_t fea
 {
     sclass_mem_t sclass_buffer;
     mclass_mem_t mclass_buffer;
-    scalar_mem_t scalar_buffer;
     struct_mem_t struct_buffer;
 
     for (const auto sample_range : make_sample_ranges(generator))
     {
-        scalar_cmap_t scalar_data;
         UTEST_CHECK_THROW(generator.select(feature, sample_range, sclass_buffer), std::runtime_error);
         UTEST_CHECK_THROW(generator.select(feature, sample_range, mclass_buffer), std::runtime_error);
-        UTEST_CHECK_NOTHROW(scalar_data = generator.select(feature, sample_range, scalar_buffer));
         UTEST_CHECK_THROW(generator.select(feature, sample_range, struct_buffer), std::runtime_error);
-        UTEST_CHECK_TENSOR_CLOSE(scalar_data, expected.slice(sample_range), 1e-12);
+        check_select0(generator, feature, sample_range, expected);
     }
 }
 
@@ -184,16 +186,13 @@ static void check_select(const dataset_generator_t& generator, tensor_size_t fea
     sclass_mem_t sclass_buffer;
     mclass_mem_t mclass_buffer;
     scalar_mem_t scalar_buffer;
-    struct_mem_t struct_buffer;
 
     for (const auto sample_range : make_sample_ranges(generator))
     {
-        struct_cmap_t struct_data;
         UTEST_CHECK_THROW(generator.select(feature, sample_range, sclass_buffer), std::runtime_error);
         UTEST_CHECK_THROW(generator.select(feature, sample_range, mclass_buffer), std::runtime_error);
         UTEST_CHECK_THROW(generator.select(feature, sample_range, scalar_buffer), std::runtime_error);
-        UTEST_CHECK_NOTHROW(struct_data = generator.select(feature, sample_range, struct_buffer));
-        UTEST_CHECK_TENSOR_CLOSE(struct_data, expected.slice(sample_range), 1e-12);
+        check_select0(generator, feature, sample_range, expected);
     }
 }
 

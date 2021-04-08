@@ -114,11 +114,11 @@ static auto make_sample_ranges(const dataset_generator_t& generator)
     };
 }
 
-template <typename texpected>
+template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
 static void check_select0(const dataset_generator_t& generator,
-    tensor_size_t feature, tensor_range_t sample_range, const texpected& expected)
+    tensor_size_t feature, tensor_range_t sample_range, const tensor_t<tstorage, tscalar, trank>& expected)
 {
-    texpected buffer;
+    tensor_t<tstorage, tscalar, trank> buffer;
     decltype(generator.select(feature, sample_range, buffer)) storage;
 
     UTEST_CHECK_NOTHROW(storage = generator.select(feature, sample_range, buffer));
@@ -129,11 +129,27 @@ static void check_select0(const dataset_generator_t& generator,
     UTEST_REQUIRE_EQUAL(shuffle.size(), samples.size());
     UTEST_CHECK(std::is_permutation(shuffle.begin(), shuffle.end(), samples.begin()));
     UTEST_CHECK_NOT_EQUAL(shuffle, samples);
-
     UTEST_CHECK_NOTHROW(storage = generator.select(feature, sample_range, buffer));
     UTEST_CHECK_TENSOR_CLOSE(storage, expected.indexed(shuffle.slice(sample_range)), 1e-12);
 
     generator.unshuffle();
+    UTEST_CHECK_NOTHROW(storage = generator.select(feature, sample_range, buffer));
+    UTEST_CHECK_TENSOR_CLOSE(storage, expected.slice(sample_range), 1e-12);
+
+    generator.drop(feature);
+    tensor_t<tstorage, tscalar, trank> expected_dropped = expected.slice(sample_range);
+    UTEST_CHECK_NOTHROW(storage = generator.select(feature, sample_range, buffer));
+    switch (generator.feature(feature).type())
+    {
+    case feature_type::sclass:  expected_dropped.constant(-1); break;
+    case feature_type::mclass:  expected_dropped.constant(-1); break;
+    default:                    expected_dropped.constant(static_cast<tscalar>(NaN)); break;
+    }
+    UTEST_CHECK_TENSOR_CLOSE(storage, expected_dropped, 1e-12);
+
+    generator.undrop();
+    UTEST_CHECK_NOTHROW(storage = generator.select(feature, sample_range, buffer));
+    UTEST_CHECK_TENSOR_CLOSE(storage, expected.slice(sample_range), 1e-12);
 }
 
 static void check_select(const dataset_generator_t& generator, tensor_size_t feature, const sclass_mem_t& expected)
@@ -330,7 +346,6 @@ static auto make_indices(tindices... indices)
     return make_tensor<tensor_size_t>(make_dims(static_cast<tensor_size_t>(sizeof...(indices))), indices...);
 }
 
-// TODO: check that the flatten & the feature iterators work as expected
 // TODO: check that feature scaling scaling works
 // TODO: check that feature extraction works (e.g sign(x), sign(x)*log(1+x^2), polynomial expansion)
 
@@ -368,6 +383,49 @@ UTEST_CASE(unsupervised)
         +0, +0, +0, -1, +1, 8, 9, 8, 8, 8,
         +1, -1, -1, +1, -1, 9, 0, 0, 0, 0),
         make_indices(0, 0, 0, 1, 1,  2, 3, 3, 3, 3));
+
+    generator.drop(0);
+    check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 10),
+        +0, +0, +0, +1, -1, 0, 1, 0, 0, 0,
+        +0, +0, +0, -1, +1, 1, 0, 0, 0, 0,
+        +0, +0, +0, -1, +1, 2, 3, 2, 2, 2,
+        +0, +0, +0, +1, -1, 3, 0, 0, 0, 0,
+        +0, +0, +0, -1, +1, 4, 5, 4, 4, 4,
+        +0, +0, +0, -1, +1, 5, 0, 0, 0, 0,
+        +0, +0, +0, +1, -1, 6, 7, 6, 6, 6,
+        +0, +0, +0, -1, +1, 7, 0, 0, 0, 0,
+        +0, +0, +0, -1, +1, 8, 9, 8, 8, 8,
+        +0, +0, +0, +1, -1, 9, 0, 0, 0, 0),
+        make_indices(0, 0, 0, 1, 1,  2, 3, 3, 3, 3));
+
+    generator.drop(2);
+    check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 10),
+        +0, +0, +0, +1, -1, 0, 1, 0, 0, 0,
+        +0, +0, +0, -1, +1, 0, 0, 0, 0, 0,
+        +0, +0, +0, -1, +1, 0, 3, 2, 2, 2,
+        +0, +0, +0, +1, -1, 0, 0, 0, 0, 0,
+        +0, +0, +0, -1, +1, 0, 5, 4, 4, 4,
+        +0, +0, +0, -1, +1, 0, 0, 0, 0, 0,
+        +0, +0, +0, +1, -1, 0, 7, 6, 6, 6,
+        +0, +0, +0, -1, +1, 0, 0, 0, 0, 0,
+        +0, +0, +0, -1, +1, 0, 9, 8, 8, 8,
+        +0, +0, +0, +1, -1, 0, 0, 0, 0, 0),
+        make_indices(0, 0, 0, 1, 1,  2, 3, 3, 3, 3));
+
+    generator.undrop();
+    check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 10),
+        -1, +1, +1, +1, -1, 0, 1, 0, 0, 0,
+        +0, +0, +0, -1, +1, 1, 0, 0, 0, 0,
+        +0, +0, +0, -1, +1, 2, 3, 2, 2, 2,
+        +1, -1, -1, +1, -1, 3, 0, 0, 0, 0,
+        +0, +0, +0, -1, +1, 4, 5, 4, 4, 4,
+        +0, +0, +0, -1, +1, 5, 0, 0, 0, 0,
+        -1, +1, +1, +1, -1, 6, 7, 6, 6, 6,
+        +0, +0, +0, -1, +1, 7, 0, 0, 0, 0,
+        +0, +0, +0, -1, +1, 8, 9, 8, 8, 8,
+        +1, -1, -1, +1, -1, 9, 0, 0, 0, 0),
+        make_indices(0, 0, 0, 1, 1,  2, 3, 3, 3, 3));
+
     check_flatten_stats(
         generator, 10,
         make_tensor<scalar_t>(make_dims(10), -1, -1, -1, -1, -1, 0, 0, 0, 0, 0),
@@ -424,6 +482,7 @@ UTEST_CASE(sclassification)
         +0, +0, +0, 8, 9, 8, 8, 8,
         +1, -1, -1, 9, 0, 0, 0, 0),
         make_indices(0, 0, 0, 1, 2, 2, 2, 2));
+
     check_flatten_stats(generator, 10,
         make_tensor<scalar_t>(make_dims(8), -1, -1, -1, 0, 0, 0, 0, 0),
         make_tensor<scalar_t>(make_dims(8), +1, +1, +1, 9, 9, 8, 8, 8),
@@ -472,6 +531,7 @@ UTEST_CASE(mclassification)
         -1, +1, 8, 9, 8, 8, 8,
         +1, -1, 9, 0, 0, 0, 0),
         make_indices(0, 0, 1, 2, 2, 2, 2));
+
     check_flatten_stats(generator, 10,
         make_tensor<scalar_t>(make_dims(7), -1, -1, 0, 0, 0, 0, 0),
         make_tensor<scalar_t>(make_dims(7), +1, +1, 9, 9, 8, 8, 8),
@@ -521,6 +581,7 @@ UTEST_CASE(regression)
         +0, +0, +0, -1, +1, 9, 8, 8, 8,
         +1, -1, -1, +1, -1, 0, 0, 0, 0),
         make_indices(0, 0, 0, 1, 1, 2, 2, 2, 2));
+
     check_flatten_stats(generator, 10,
         make_tensor<scalar_t>(make_dims(9), -1, -1, -1, -1, -1, 0, 0, 0, 0),
         make_tensor<scalar_t>(make_dims(9), +1, +1, +1, +1, +1, 9, 8, 8, 8),
@@ -570,6 +631,7 @@ UTEST_CASE(mvregression)
         +0, +0, +0, -1, +1, 8,
         +1, -1, -1, +1, -1, 9),
         make_indices(0, 0, 0, 1, 1, 2));
+
     check_flatten_stats(generator, 10,
         make_tensor<scalar_t>(make_dims(6), -1, -1, -1, -1, -1, 0),
         make_tensor<scalar_t>(make_dims(6), +1, +1, +1, +1, +1, 9),
@@ -579,11 +641,11 @@ UTEST_CASE(mvregression)
 
     check_targets(generator, feature_t{"u8_struct"}.scalar(feature_type::uint8, make_dims(2, 1, 2)), make_dims(2, 1, 2),
         make_tensor<scalar_t>(make_dims(10, 2, 1, 2),
-            1, 0, 0, 0, NAN, NAN, NAN, NAN,
-            3, 2, 2, 2, NAN, NAN, NAN, NAN,
-            5, 4, 4, 4, NAN, NAN, NAN, NAN,
-            7, 6, 6, 6, NAN, NAN, NAN, NAN,
-            9, 8, 8, 8, NAN, NAN, NAN, NAN));
+            1, 0, 0, 0, NaN, NaN, NaN, NaN,
+            3, 2, 2, 2, NaN, NaN, NaN, NaN,
+            5, 4, 4, 4, NaN, NaN, NaN, NaN,
+            7, 6, 6, 6, NaN, NaN, NaN, NaN,
+            9, 8, 8, 8, NaN, NaN, NaN, NaN));
     check_targets_stats(generator, 5,
         make_tensor<scalar_t>(make_dims(4), 1, 0, 0, 0),
         make_tensor<scalar_t>(make_dims(4), 9, 8, 8, 8),

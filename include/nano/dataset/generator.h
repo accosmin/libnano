@@ -83,14 +83,14 @@ namespace nano
         ///
         /// \brief toggle dropping of features, useful for feature importance analysis.
         ///
-        virtual void undrop() = 0;
-        virtual void drop(tensor_size_t feature) = 0;
+        void undrop();
+        void drop(tensor_size_t feature);
 
         ///
         /// \brief toggle sample permutation of features, useful for feature importance analysis.
         ///
-        virtual void unshuffle() = 0;
-        virtual indices_t shuffle(tensor_size_t feature) = 0;
+        void unshuffle();
+        indices_t shuffle(tensor_size_t feature);
 
         ///
         /// \brief computes the values of the given feature and samples,
@@ -107,13 +107,7 @@ namespace nano
         ///     useful for training and evaluating ML model that map densely continuous inputs to targets
         ///     (e.g. linear models, MLPs).
         ///
-        virtual tensor_size_t columns() const = 0;
         virtual void flatten(tensor_range_t sample_range, tensor2d_map_t, tensor_size_t column_offset) const = 0;
-
-        ///
-        /// \brief map the given column to its feature index.
-        ///
-        virtual tensor_size_t column2feature(tensor_size_t column) const = 0;
 
         ///
         /// \brief access functions
@@ -121,11 +115,33 @@ namespace nano
         const auto& dataset() const { return m_dataset; }
         const auto& samples() const { return m_samples; }
 
+    protected:
+
+        void allocate(tensor_size_t features);
+
+        auto should_drop(tensor_size_t feature) const { return m_feature_infos(feature) == 1; }
+        auto should_shuffle(tensor_size_t feature) const { return m_feature_infos(feature) == 2; }
+
+        auto samples(tensor_size_t feature, tensor_range_t sample_range) const
+        {
+            const auto& all_samples = should_shuffle(feature) ? m_shuffle_indices.find(feature)->second : samples();
+            return all_samples.slice(sample_range);
+        }
+
     private:
 
+        // per-feature information:
+        //  - flags: 0 - default, 1 - to drop, 2 - to shuffle
+        using feature_infos_t = tensor_mem_t<tensor_size_t, 1>;
+
+        // fixed sample indices for the features to shuffle
+        using shuffle_indices_t = std::unordered_map<tensor_size_t, indices_t>;
+
         // attributes
-        const memory_dataset_t& m_dataset;  ///<
-        const indices_t&        m_samples;  ///<
+        const memory_dataset_t& m_dataset;      ///<
+        const indices_t&    m_samples;          ///<
+        feature_infos_t     m_feature_infos;    ///<
+        shuffle_indices_t   m_shuffle_indices;  ///<
     };
 
     struct select_stats_t
@@ -297,6 +313,7 @@ namespace nano
 
         using column_mapping_t = tensor_mem_t<tensor_size_t, 2>;
         using feature_mapping_t = tensor_mem_t<tensor_size_t, 2>;
+        using generator_mapping_t = tensor_mem_t<tensor_size_t, 2>;
 
         // attributes
         const memory_dataset_t& m_dataset;          ///<
@@ -304,5 +321,6 @@ namespace nano
         rgenerators_t           m_generators;       ///<
         column_mapping_t        m_column_mapping;   ///<
         feature_mapping_t       m_feature_mapping;  ///<
+        generator_mapping_t     m_generator_mapping;///<
     };
 }

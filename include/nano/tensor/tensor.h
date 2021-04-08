@@ -367,8 +367,8 @@ namespace nano
         /// \brief copy some of (sub-)tensors using the given indices.
         /// NB: the indices are relative to the first dimension.
         ///
-        template <typename tindices, typename tscalar_return>
-        void indexed(const tindices& indices, tensor_mem_t<tscalar_return, trank>& subtensor) const
+        template <typename tscalar_return = tscalar>
+        void indexed(indices_cmap_t indices, tensor_mem_t<tscalar_return, trank>& subtensor) const
         {
             assert(indices.min() >= 0 && indices.max() < this->template size<0>());
 
@@ -396,8 +396,8 @@ namespace nano
         /// \brief returns a copy of some (sub-)tensors using the given indices.
         /// NB: the indices are relative to the first dimension.
         ///
-        template <typename tscalar_return, typename tindices>
-        auto indexed(const tindices& indices) const
+        template <typename tscalar_return = tscalar>
+        auto indexed(indices_cmap_t indices) const
         {
             auto subtensor = tensor_mem_t<tscalar_return, trank>{};
             indexed(indices, subtensor);
@@ -678,6 +678,23 @@ namespace nano
     {
         return  lhs.dims() == rhs.dims() &&
                 lhs.vector() == rhs.vector();
+    }
+
+    ///
+    /// \brief compare two tensors element-wise.
+    ///
+    template
+    <
+        template <typename, size_t> class tstorage1,
+        template <typename, size_t> class tstorage2,
+        typename tscalar, size_t trank
+    >
+    bool operator!=(
+        const tensor_t<tstorage1, tscalar, trank>& lhs,
+        const tensor_t<tstorage2, tscalar, trank>& rhs)
+    {
+        return  lhs.dims() != rhs.dims() ||
+                lhs.vector() != rhs.vector();
     }
 
     ///

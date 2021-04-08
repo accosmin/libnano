@@ -60,6 +60,37 @@ void generator_t::select(tensor_size_t feature, tensor_range_t, struct_map_t) co
     critical0("generator_t: unhandled structured feature <", feature, ":", this->feature(feature), ">!");
 }
 
+void generator_t::allocate(tensor_size_t features)
+{
+    m_feature_infos.resize(features);
+    m_feature_infos.zero();
+}
+
+void generator_t::undrop()
+{
+    m_feature_infos.array() = 0;
+}
+
+void generator_t::unshuffle()
+{
+    m_feature_infos.array() = 0;
+}
+
+void generator_t::drop(tensor_size_t feature)
+{
+    m_feature_infos(feature) = 1;
+}
+
+indices_t generator_t::shuffle(tensor_size_t feature)
+{
+    m_feature_infos(feature) = 2;
+
+    indices_t indices = samples();
+    std::shuffle(indices.begin(), indices.end(), make_rng());
+    m_shuffle_indices[feature] = indices;
+    return indices;
+}
+
 dataset_generator_t::dataset_generator_t(const memory_dataset_t& dataset, indices_t samples) :
     m_dataset(dataset),
     m_samples(std::move(samples))
@@ -68,54 +99,65 @@ dataset_generator_t::dataset_generator_t(const memory_dataset_t& dataset, indice
 
 void dataset_generator_t::update()
 {
-    tensor_size_t columns = 0, features = 0;
+    tensor_size_t columns = 0, features = 0, generators = 0;
     for (const auto& generator : m_generators)
     {
-        columns += generator->columns();
-        features += generator->features();
+        for (tensor_size_t ifeature = 0; ifeature < generator->features(); ++ ifeature, ++ features)
+        {
+            switch (const auto feature = generator->feature(ifeature); feature.type())
+            {
+            case feature_type::sclass:  columns += feature.classes(); break;
+            case feature_type::mclass:  columns += feature.classes(); break;
+            default:                    columns += size(feature.dims()); break;
+            }
+        }
+        ++ generators;
     }
 
-    m_column_mapping.resize(columns, 2);
+    m_column_mapping.resize(columns, 3);
     m_feature_mapping.resize(features, 5);
+    m_generator_mapping.resize(generators, 1);
 
     tensor_size_t offset_features = 0, offset_columns = 0, index = 0;
     for (const auto& generator : m_generators)
     {
-        const auto columns = generator->columns();
-        for (tensor_size_t column = 0; column < columns; ++ column)
-        {
-            m_column_mapping(offset_columns + column, 0) = index;
-            m_column_mapping(offset_columns + column, 1) = column;
-        }
+        const auto old_offset_columns = offset_columns;
 
-        const auto features = generator->features();
-        for (tensor_size_t feature = 0; feature < features; ++ feature)
+        for (tensor_size_t ifeature = 0; ifeature < generator->features(); ++ ifeature, ++ offset_features)
         {
-            m_feature_mapping(offset_features + feature, 0) = index;
-            m_feature_mapping(offset_features + feature, 1) = feature;
+            m_feature_mapping(offset_features, 0) = index;
+            m_feature_mapping(offset_features, 1) = ifeature;
 
-            tensor_size_t dim1 = 1, dim2 = 1, dim3 = 1;
-            switch (const auto feature_ = generator->feature(feature); feature_.type())
+            tensor_size_t dim1 = 1, dim2 = 1, dim3 = 1, columns = 0;
+            switch (const auto feature = generator->feature(ifeature); feature.type())
             {
             case feature_type::sclass:
+                columns = feature.classes();
                 break;
             case feature_type::mclass:
-                dim1 = feature_.classes();
+                dim1 = feature.classes();
+                columns = feature.classes();
                 break;
             default:
-                dim1 = feature_.dims()[0];
-                dim2 = feature_.dims()[1];
-                dim3 = feature_.dims()[2];
+                dim1 = feature.dims()[0];
+                dim2 = feature.dims()[1];
+                dim3 = feature.dims()[2];
+                columns = size(feature.dims());
                 break;
             }
-            m_feature_mapping(offset_features + feature, 2) = dim1;
-            m_feature_mapping(offset_features + feature, 3) = dim2;
-            m_feature_mapping(offset_features + feature, 4) = dim3;
+            m_feature_mapping(offset_features, 2) = dim1;
+            m_feature_mapping(offset_features, 3) = dim2;
+            m_feature_mapping(offset_features, 4) = dim3;
+
+            for (tensor_size_t icolumn = 0; icolumn < columns; ++ icolumn, ++ offset_columns)
+            {
+                m_column_mapping(offset_columns, 0) = index;
+                m_column_mapping(offset_columns, 1) = icolumn;
+                m_column_mapping(offset_columns, 2) = offset_features;
+            }
         }
 
-        ++ index;
-        offset_columns += columns;
-        offset_features += features;
+        m_generator_mapping(index ++, 0) = offset_columns - old_offset_columns;
     }
 }
 
@@ -136,7 +178,7 @@ tensor_size_t dataset_generator_t::columns() const
 
 tensor_size_t dataset_generator_t::column2feature(tensor_size_t column) const
 {
-    return bycolumn(column)->column2feature(m_column_mapping(column, 1));
+    return m_column_mapping(column, 2);
 }
 
 sclass_cmap_t dataset_generator_t::select(tensor_size_t feature, sclass_mem_t& buffer) const
@@ -199,11 +241,11 @@ tensor2d_cmap_t dataset_generator_t::flatten(tensor_range_t sample_range, tensor
 {
     const auto storage = resize_and_map(buffer, sample_range.size(), columns());
 
-    tensor_size_t offset = 0;
+    tensor_size_t offset = 0, index = 0;
     for (const auto& generator : m_generators)
     {
         generator->flatten(sample_range, storage, offset);
-        offset += generator->columns();
+        offset += m_generator_mapping(index ++, 0);
     }
     return storage;
 }

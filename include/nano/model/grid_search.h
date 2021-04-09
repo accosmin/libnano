@@ -63,7 +63,7 @@ namespace nano
         template
         <
             typename tmodel,
-            typename = typename std::enable_if<std::is_base_of_v<model_t, tmodel>>::type
+            std::enable_if_t<std::is_base_of_v<model_t, tmodel>, bool> = true
         >
         grid_search_model_t(const tmodel& model, const param_grid_t& grid) :
             grid_search_model_t(factory_traits_t<tmodel>::id(), model.clone(), grid)

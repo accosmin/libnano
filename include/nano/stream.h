@@ -13,30 +13,34 @@ namespace nano
     template
     <
         typename tscalar,
-        typename = typename std::enable_if<std::is_pod_v<tscalar>>::type
+        std::enable_if_t<std::is_pod_v<tscalar>, bool> = true
     >
     // NOLINTNEXTLINE(readability-avoid-const-params-in-decls)
     std::ostream& write(std::ostream& stream, const tscalar scalar)
     {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        return stream.write(reinterpret_cast<const char*>(&scalar), sizeof(tscalar));
+        return stream.write(
+            reinterpret_cast<const char*>(&scalar),
+            static_cast<std::streamsize>(sizeof(tscalar)));
     }
 
     template
     <
         typename tscalar, typename tcount,
-        typename = typename std::enable_if<std::is_pod_v<tscalar>>::type
+        std::enable_if_t<std::is_pod_v<tscalar>, bool> = true
     >
     std::ostream& write(std::ostream& stream, const tscalar* data, const tcount count)
     {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        return stream.write(reinterpret_cast<const char*>(data), sizeof(tscalar) * count);
+        return stream.write(
+            reinterpret_cast<const char*>(data),
+            static_cast<std::streamsize>(sizeof(tscalar)) * static_cast<std::streamsize>(count));
     }
 
     template
     <
         typename twscalar, typename tscalar, typename tcount,
-        typename = typename std::enable_if<std::is_pod_v<tscalar>>::type
+        std::enable_if_t<std::is_pod_v<tscalar>, bool> = true
     >
     std::ostream& write_cast(std::ostream& stream, const tscalar* data, const tcount count)
     {
@@ -74,29 +78,33 @@ namespace nano
     template
     <
         typename tscalar,
-        typename = typename std::enable_if<std::is_pod_v<tscalar>>::type
+        std::enable_if_t<std::is_pod_v<tscalar>, bool> = true
     >
     std::istream& read(std::istream& stream, tscalar& scalar)
     {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        return stream.read(reinterpret_cast<char*>(&scalar), sizeof(tscalar));
+        return stream.read(
+            reinterpret_cast<char*>(&scalar),
+            static_cast<std::streamsize>(sizeof(tscalar)));
     }
 
     template
     <
         typename tscalar, typename tcount,
-        typename = typename std::enable_if<std::is_pod_v<tscalar>>::type
+        std::enable_if_t<std::is_pod_v<tscalar>, bool> = true
     >
     std::istream& read(std::istream& stream, tscalar* data, const tcount count)
     {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        return stream.read(reinterpret_cast<char*>(data), sizeof(tscalar) * count);
+        return stream.read(
+            reinterpret_cast<char*>(data),
+            static_cast<std::streamsize>(sizeof(tscalar)) * static_cast<std::streamsize>(count));
     }
 
     template
     <
         typename trscalar, typename tscalar,
-        typename = typename std::enable_if<std::is_pod_v<tscalar>>::type
+        std::enable_if_t<std::is_pod_v<tscalar>, bool> = true
     >
     std::istream& read_cast(std::istream& stream, tscalar& scalar)
     {
@@ -109,7 +117,7 @@ namespace nano
     template
     <
         typename trscalar, typename tscalar, typename tcount,
-        typename = typename std::enable_if<std::is_pod_v<tscalar>>::type
+        std::enable_if_t<std::is_pod_v<tscalar>, bool> = true
     >
     std::istream& read_cast(std::istream& stream, tscalar* data, const tcount count)
     {
@@ -227,7 +235,7 @@ namespace nano
     <
         typename tobject,
         typename trobject = std::unique_ptr<tobject>,
-        typename = typename std::enable_if<std::is_base_of_v<serializable_t, tobject>>::type
+        std::enable_if_t<std::is_base_of_v<serializable_t, tobject>, bool> = true
     >
     class NANO_PUBLIC identifiable_t
     {

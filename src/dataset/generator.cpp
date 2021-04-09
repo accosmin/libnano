@@ -461,7 +461,7 @@ targets_stats_t dataset_generator_t::targets_stats(execution, tensor_size_t) con
             scalar_stats_t stats{nano::size(feature.dims())};
             for (auto it = make_iterator(tensor, mask, m_samples); it; ++ it)
             {
-                if (const auto [index, given, values] = *it; given)
+                if ([[maybe_unused]] const auto [index, given, values] = *it; given)
                 {
                     stats += values.array().template cast<scalar_t>();
                 }

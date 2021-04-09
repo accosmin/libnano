@@ -264,7 +264,7 @@ namespace nano
             {
                 for (auto begin = tbegin, tend = std::min(tbegin + tchunk, size); begin < tend; begin += chunk)
                 {
-                    op(begin, std::min(begin + chunk, tend), tnum);
+                    op(begin, std::min(begin + chunk, tend), static_cast<size_t>(tnum));
                 }
             }));
         }
@@ -292,7 +292,7 @@ namespace nano
             {
                 for (auto begin = tbegin, tend = std::min(tbegin + tchunk, size); begin < tend; ++ begin)
                 {
-                    op(begin, tnum);
+                    op(begin, static_cast<size_t>(tnum));
                 }
             }));
         }

@@ -12,7 +12,7 @@ namespace nano
     <
         typename tscalar_,
         int trows = Eigen::Dynamic,
-        typename tscalar = typename std::remove_const<tscalar_>::type
+        typename tscalar = std::remove_const_t<tscalar_>
     >
     using tensor_vector_t = Eigen::Matrix<tscalar, trows, 1, Eigen::ColMajor>;
 
@@ -24,7 +24,7 @@ namespace nano
         int alignment = Eigen::Unaligned,
         typename tscalar_,
         typename tsize,
-        typename tscalar = typename std::remove_const<tscalar_>::type,
+        typename tscalar = std::remove_const_t<tscalar_>,
         typename tresult = Eigen::Map<tensor_vector_t<tscalar>, alignment>
     >
     tresult map_vector(tscalar_* data, tsize rows)
@@ -40,7 +40,7 @@ namespace nano
         int alignment = Eigen::Unaligned,
         typename tscalar_,
         typename tsize,
-        typename tscalar = typename std::remove_const<tscalar_>::type,
+        typename tscalar = std::remove_const_t<tscalar_>,
         typename tresult = Eigen::Map<const tensor_vector_t<tscalar>, alignment>
     >
     tresult map_vector(const tscalar_* data, tsize rows)

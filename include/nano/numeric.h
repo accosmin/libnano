@@ -11,7 +11,7 @@ namespace nano
     template
     <
         typename tscalar,
-        typename = typename std::enable_if<std::is_arithmetic_v<tscalar>>::type
+        std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true
     >
     tscalar square(tscalar value)
     {
@@ -24,7 +24,7 @@ namespace nano
     template
     <
         typename tscalar,
-        typename = typename std::enable_if<std::is_arithmetic_v<tscalar>>::type
+        std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true
     >
     tscalar cube(tscalar value)
     {
@@ -37,7 +37,7 @@ namespace nano
     template
     <
         typename tscalar,
-        typename = typename std::enable_if<std::is_arithmetic_v<tscalar>>::type
+        std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true
     >
     tscalar quartic(tscalar value)
     {
@@ -50,8 +50,8 @@ namespace nano
     template
     <
         typename tnominator, typename tdenominator,
-        typename = typename std::enable_if<std::is_integral_v<tnominator>>::type,
-        typename = typename std::enable_if<std::is_integral_v<tdenominator>>::type
+        std::enable_if_t<std::is_integral_v<tnominator>, bool> = true,
+        std::enable_if_t<std::is_integral_v<tdenominator>, bool> = true
     >
     tnominator idiv(tnominator nominator, tdenominator denominator)
     {
@@ -64,8 +64,8 @@ namespace nano
     template
     <
         typename tvalue, typename tmodulo,
-        typename = typename std::enable_if<std::is_integral_v<tvalue>>::type,
-        typename = typename std::enable_if<std::is_integral_v<tmodulo>>::type
+        std::enable_if_t<std::is_integral_v<tvalue>, bool> = true,
+        std::enable_if_t<std::is_integral_v<tmodulo>, bool> = true
     >
     tvalue iround(tvalue value, tmodulo modulo)
     {
@@ -78,7 +78,7 @@ namespace nano
     template
     <
         typename tscalar,
-        typename = typename std::enable_if<std::is_arithmetic_v<tscalar>>::type
+        std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true
     >
     bool close(tscalar x, tscalar y, tscalar epsilon)
     {
@@ -91,7 +91,7 @@ namespace nano
     template
     <
         typename tscalar,
-        typename = typename std::enable_if<std::is_floating_point_v<tscalar>>::type
+        std::enable_if_t<std::is_floating_point_v<tscalar>, bool> = true
     >
     inline auto roundpow10(tscalar v)
     {
@@ -104,7 +104,7 @@ namespace nano
     template
     <
         typename tscalar,
-        typename = typename std::enable_if<std::is_floating_point_v<tscalar>>::type
+        std::enable_if_t<std::is_floating_point_v<tscalar>, bool> = true
     >
     tscalar epsilon()
     {
@@ -114,7 +114,7 @@ namespace nano
     template
     <
         typename tscalar,
-        typename = typename std::enable_if<std::is_floating_point_v<tscalar>>::type
+        std::enable_if_t<std::is_floating_point_v<tscalar>, bool> = true
     >
     tscalar epsilon0()
     {
@@ -124,7 +124,7 @@ namespace nano
     template
     <
         typename tscalar,
-        typename = typename std::enable_if<std::is_floating_point_v<tscalar>>::type
+        std::enable_if_t<std::is_floating_point_v<tscalar>, bool> = true
     >
     tscalar epsilon1()
     {
@@ -135,7 +135,7 @@ namespace nano
     template
     <
         typename tscalar,
-        typename = typename std::enable_if<std::is_floating_point_v<tscalar>>::type
+        std::enable_if_t<std::is_floating_point_v<tscalar>, bool> = true
     >
     tscalar epsilon2()
     {
@@ -145,7 +145,7 @@ namespace nano
     template
     <
         typename tscalar,
-        typename = typename std::enable_if<std::is_floating_point_v<tscalar>>::type
+        std::enable_if_t<std::is_floating_point_v<tscalar>, bool> = true
     >
     tscalar epsilon3()
     {

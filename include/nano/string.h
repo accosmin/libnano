@@ -24,7 +24,7 @@ namespace nano
         right
     };
 
-    template <typename tenum, typename = typename std::enable_if<std::is_enum_v<tenum>>::type>
+    template <typename tenum, std::enable_if_t<std::is_enum_v<tenum>, bool> = true>
     using enum_map_t = std::vector<std::pair<tenum, const char*>>;
 
     ///
@@ -36,7 +36,7 @@ namespace nano
     ///
     /// \brief collect all the values of an enum type, optionally filtered by the given regular expression.
     ///
-    template <typename tenum, typename = typename std::enable_if<std::is_enum_v<tenum>>::type>
+    template <typename tenum, std::enable_if_t<std::is_enum_v<tenum>, bool> = true>
     auto enum_values(const std::regex& enum_regex = std::regex(".+"))
     {
         std::vector<tenum> enums;
@@ -58,7 +58,7 @@ namespace nano
         template <typename tvalue>
         void scat(std::ostringstream& stream, const tvalue& value)
         {
-            if constexpr (std::is_enum_v<typename std::remove_reference<tvalue>::type>)
+            if constexpr (std::is_enum_v<std::remove_reference_t<tvalue>>)
             {
                 for (const auto& elem : enum_string<tvalue>())
                 {
@@ -134,7 +134,7 @@ namespace nano
         {
             return str;
         }
-        else if constexpr (std::is_enum_v<typename std::remove_reference<tvalue>::type>)
+        else if constexpr (std::is_enum_v<std::remove_reference_t<tvalue>>)
         {
             const auto options = enum_string<tvalue>();
             for (const auto& option : options)

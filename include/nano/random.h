@@ -11,7 +11,7 @@ namespace nano
     template
     <
         typename tscalar,
-        typename = typename std::enable_if<std::is_arithmetic_v<typename std::remove_reference<tscalar>::type>>::type
+        std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true
     >
     using udist_t = typename std::conditional<
         std::is_integral_v<tscalar>,
@@ -33,7 +33,7 @@ namespace nano
     template
     <
         typename tscalar,
-        typename = typename std::enable_if<std::is_arithmetic_v<typename std::remove_reference<tscalar>::type>>::type
+        std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true
     >
     inline auto make_udist(const tscalar min, const tscalar max)
     {
@@ -47,7 +47,7 @@ namespace nano
     template
     <
         typename tscalar, typename trng,
-        typename = typename std::enable_if<std::is_arithmetic_v<typename std::remove_reference<tscalar>::type>>::type
+        std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true
     >
     tscalar urand(const tscalar min, const tscalar max, trng&& rng)
     {
@@ -61,7 +61,7 @@ namespace nano
     template
     <
         typename tscalar, typename titerator, typename trng,
-        typename = typename std::enable_if<std::is_arithmetic_v<typename std::remove_reference<tscalar>::type>>::type
+        std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true
     >
     void urand(const tscalar min, const tscalar max, titerator begin, const titerator end, trng&& rng)
     {
@@ -78,7 +78,7 @@ namespace nano
     template
     <
         typename tscalar, typename titerator, typename trng,
-        typename = typename std::enable_if<std::is_arithmetic_v<typename std::remove_reference<tscalar>::type>>::type
+        std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true
     >
     void add_urand(const tscalar min, const tscalar max, titerator begin, const titerator end, trng&& rng)
     {

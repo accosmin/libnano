@@ -3,7 +3,7 @@
 
 using namespace nano;
 
-template <typename tindex, typename = typename std::enable_if<std::is_integral<tindex>::value>::type>
+template <typename tindex, std::enable_if_t<std::is_integral_v<tindex>, bool> = true>
 static tensor_mem_t<tindex, 2> exhaustive(const tensor_mem_t<tindex, 1>& counts)
 {
     auto iter = combinatorial_iterator_t{counts};

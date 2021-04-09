@@ -437,7 +437,7 @@ targets_stats_t dataset_generator_t::targets_stats(execution, tensor_size_t) con
             sclass_stats_t stats{feature.classes()};
             for (auto it = make_iterator(tensor, mask, m_samples); it; ++ it)
             {
-                if (const auto [index, given, label] = *it; given)
+                if ([[maybe_unused]] const auto [index, given, label] = *it; given)
                 {
                     stats += label;
                 }
@@ -449,7 +449,7 @@ targets_stats_t dataset_generator_t::targets_stats(execution, tensor_size_t) con
             sclass_stats_t stats{feature.classes()};
             for (auto it = make_iterator(tensor, mask, m_samples); it; ++ it)
             {
-                if (const auto [index, given, hits] = *it; given)
+                if ([[maybe_unused]] const auto [index, given, hits] = *it; given)
                 {
                     stats += hits;
                 }

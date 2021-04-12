@@ -482,7 +482,7 @@ tensor1d_t dataset_generator_t::sample_weights(const targets_stats_t& targets_st
     }
 
     tensor1d_t weights(m_samples.size());
-    weights.constant(1.0);
+    weights.full(1.0);
 
     return m_dataset.visit_target([&] (const feature_t& feature, const auto& data, const auto& mask)
     {

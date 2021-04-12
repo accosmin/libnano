@@ -7,7 +7,7 @@ template <typename tvalue, size_t trank>
 static auto make_tensor(tvalue value, tensor_dims_t<trank> dims)
 {
     tensor_mem_t<tvalue, trank> values(dims);
-    values.constant(value);
+    values.full(value);
     return values;
 }
 
@@ -26,7 +26,7 @@ UTEST_CASE(scalar)
         UTEST_CHECK_EQUAL(storage.feature(), feature);
 
         tensor_mem_t<scalar_t, 4> values(cat_dims(42, dims));
-        values.constant(std::numeric_limits<scalar_t>::quiet_NaN());
+        values.full(std::numeric_limits<scalar_t>::quiet_NaN());
 
         for (tensor_size_t sample : {0, 11})
         {

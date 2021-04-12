@@ -19,7 +19,7 @@ public:
             {
                 input(f) = value(s, f);
             }
-            target(s).constant(static_cast<scalar_t>(-s));
+            target(s).full(static_cast<scalar_t>(-s));
         }
     }
 

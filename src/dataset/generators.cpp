@@ -27,7 +27,7 @@ void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_
             {
                 if (should_drop(ifeature))
                 {
-                    storage.constant(-1);
+                    storage.full(-1);
                 }
                 else
                 {
@@ -60,7 +60,7 @@ void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_
             {
                 if (should_drop(ifeature))
                 {
-                    storage.constant(-1);
+                    storage.full(-1);
                 }
                 else
                 {
@@ -97,7 +97,7 @@ void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_
                 }
                 else if (should_drop(ifeature))
                 {
-                    storage.constant(std::numeric_limits<scalar_t>::quiet_NaN());
+                    storage.full(std::numeric_limits<scalar_t>::quiet_NaN());
                 }
                 else
                 {
@@ -134,7 +134,7 @@ void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_
                 }
                 else if (should_drop(ifeature))
                 {
-                    storage.constant(std::numeric_limits<scalar_t>::quiet_NaN());
+                    storage.full(std::numeric_limits<scalar_t>::quiet_NaN());
                 }
                 else
                 {
@@ -146,7 +146,7 @@ void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_
                         }
                         else
                         {
-                            storage.tensor(index).constant(std::numeric_limits<scalar_t>::quiet_NaN());
+                            storage.tensor(index).full(std::numeric_limits<scalar_t>::quiet_NaN());
                         }
                     }
                 }

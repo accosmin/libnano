@@ -100,7 +100,7 @@ bool base_mnist_dataset_t::tread(const string_t& path, tensor_size_t offset, ten
         }
 
         auto target = this->target(offset ++);
-        target.constant(neg_target());
+        target.full(neg_target());
         target(ilabel) = pos_target();
     }
 

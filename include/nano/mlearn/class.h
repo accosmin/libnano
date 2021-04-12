@@ -52,7 +52,7 @@ namespace nano
     inline tensor3d_t class_target(const tensor_size_t n_labels, const tindices... indices)
     {
         tensor3d_t target(n_labels, 1, 1);
-        target.constant(neg_target());
+        target.full(neg_target());
         detail::class_target(target, indices...);
         return target;
     }

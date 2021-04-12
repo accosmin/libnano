@@ -18,7 +18,7 @@ public:
 
     void make_target(const tensor_size_t sample) override
     {
-        target(sample).constant(
+        target(sample).full(
             make_affine_target<tfun1>(sample, gt_feature(), 6, weight(), bias(), 0));
     }
 

@@ -17,7 +17,7 @@ public:
 
     void make_target(const tensor_size_t sample) override
     {
-        target(sample).constant(
+        target(sample).full(
             make_stump_target(sample, gt_feature(), 5, 2.5, +3.0, -2.1, 0));
     }
 

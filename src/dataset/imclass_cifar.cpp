@@ -71,7 +71,7 @@ bool cifar_dataset_t::iread(const file_t& file)
             log_error() << m_name << ": invalid label, read " << ilabel << " expected in [0, " << m_labels << ")!";
             return false;
         }
-        target.constant(neg_target());
+        target.full(neg_target());
         target(ilabel) = pos_target();
 
         if (!stream.read(reinterpret_cast<char*>(image.data()), image.size())) // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)

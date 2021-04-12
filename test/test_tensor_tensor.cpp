@@ -105,13 +105,13 @@ UTEST_CASE(tensor3d)
     UTEST_CHECK_EQUAL(tensor(0, 0, 1), -3);
     UTEST_CHECK_EQUAL(tensor(2, 2, 0), -7);
 
-    tensor.constant(42);
+    tensor.full(42);
     UTEST_CHECK_EQUAL(tensor.min(), 42);
     UTEST_CHECK_EQUAL(tensor.max(), 42);
     UTEST_CHECK_EQUAL(tensor.sum(), 42 * tensor.size());
     UTEST_CHECK_EQUAL(tensor.mean(), 42);
 
-    tensor.constant(42);
+    tensor.full(42);
     tensor.vector(3, 0).setConstant(7);
     UTEST_CHECK_EQUAL(tensor.min(), 7);
     UTEST_CHECK_EQUAL(tensor.max(), 42);
@@ -234,7 +234,7 @@ UTEST_CASE(tensor4d)
     UTEST_CHECK_EQUAL(tensor(0, 4, 0, 1), -3);
     UTEST_CHECK_EQUAL(tensor(1, 2, 2, 0), -7);
 
-    tensor.constant(42);
+    tensor.full(42);
     UTEST_CHECK_EQUAL(tensor.min(), 42);
     UTEST_CHECK_EQUAL(tensor.max(), 42);
 
@@ -338,7 +338,7 @@ UTEST_CASE(tensor3d_fill)
     UTEST_CHECK_EQUAL(tensor.min(), 0);
     UTEST_CHECK_EQUAL(tensor.max(), 0);
 
-    tensor.constant(-4);
+    tensor.full(-4);
     UTEST_CHECK_EQUAL(tensor.min(), -4);
     UTEST_CHECK_EQUAL(tensor.max(), -4);
 
@@ -396,20 +396,20 @@ UTEST_CASE(tensor4d_subtensor)
     tensor4d_t tensor;
     tensor.resize(dim1, dim2, rows, cols);
 
-    tensor.constant(42);
+    tensor.full(42);
     UTEST_CHECK_EQUAL(tensor.min(), 42);
     UTEST_CHECK_EQUAL(tensor.max(), 42);
 
-    tensor.constant(42);
-    tensor.tensor(1, 2).constant(7);
+    tensor.full(42);
+    tensor.tensor(1, 2).full(7);
     UTEST_CHECK_EQUAL(tensor.tensor(1, 2).dims(), nano::make_dims(rows, cols));
     UTEST_CHECK_EQUAL(tensor.array(1, 2).minCoeff(), 7);
     UTEST_CHECK_EQUAL(tensor.array(1, 2).maxCoeff(), 7);
     UTEST_CHECK_EQUAL(tensor.array(1, 2).sum(), 7 * rows * cols);
     UTEST_CHECK_EQUAL(tensor.vector().sum(), 42 * dim1 * dim2 * rows * cols - (42 - 7) * rows * cols);
 
-    tensor.constant(42);
-    tensor.tensor(1).constant(7);
+    tensor.full(42);
+    tensor.tensor(1).full(7);
     UTEST_CHECK_EQUAL(tensor.tensor(1).dims(), nano::make_dims(dim2, rows, cols));
     UTEST_CHECK_EQUAL(tensor.array(1).minCoeff(), 7);
     UTEST_CHECK_EQUAL(tensor.array(1).maxCoeff(), 7);

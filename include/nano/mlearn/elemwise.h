@@ -27,10 +27,10 @@ namespace nano
             m_mean(dims),
             m_stdev(dims)
         {
-            m_mean.constant(0);
-            m_stdev.constant(0);
-            m_min.constant(std::numeric_limits<scalar_t>::max());
-            m_max.constant(std::numeric_limits<scalar_t>::lowest());
+            m_mean.full(0);
+            m_stdev.full(0);
+            m_min.full(std::numeric_limits<scalar_t>::max());
+            m_max.full(std::numeric_limits<scalar_t>::lowest());
         }
 
         ///

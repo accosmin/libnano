@@ -34,7 +34,7 @@ public:
 
     void make_target(const tensor_size_t sample) override
     {
-        target(sample).constant(
+        target(sample).full(
             make_affine_target<fun1_lin_t>(sample, gt_feature1(), 6, +1.0, -0.5) +
             make_affine_target<fun1_lin_t>(sample, gt_feature2(), 7, +2.0, -1.5) +
             make_affine_target<fun1_lin_t>(sample, gt_feature3(), 8, -1.0, +2.5));
@@ -53,7 +53,7 @@ public:
 
     void make_target(const tensor_size_t sample) override
     {
-        target(sample).constant(
+        target(sample).full(
             make_affine_target<fun1_lin_t>(sample, gt_feature1(), 6, +1.0, -0.5) +
             make_stump_target(sample, gt_feature2(), 7, +3.5, +2.0, -1.5, 0) +
             make_stump_target(sample, gt_feature3(), 8, +2.5, -1.0, +2.5, 0));

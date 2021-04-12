@@ -18,7 +18,7 @@ public:
 
     void make_target(const tensor_size_t sample) override
     {
-        target(sample).constant(
+        target(sample).full(
             make_dstep_target(sample, gt_feature(), 3, 5.0, fvalue, 0));
     }
 

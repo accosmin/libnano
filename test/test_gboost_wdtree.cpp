@@ -40,7 +40,7 @@ public:
 
     void make_target(const tensor_size_t sample) override
     {
-        target(sample).constant(make_stump_target(sample, gt_feature(), 5, 1.5, -4.0, +3.7, 0));
+        target(sample).full(make_stump_target(sample, gt_feature(), 5, 1.5, -4.0, +3.7, 0));
     }
 
     indices_t features() const override
@@ -77,7 +77,7 @@ public:
 
     void make_target(const tensor_size_t sample) override
     {
-        target(sample).constant(make_table_target(sample, gt_feature(), 3, 5.0, 0));
+        target(sample).full(make_table_target(sample, gt_feature(), 3, 5.0, 0));
     }
 
     indices_t features() const override
@@ -127,15 +127,15 @@ public:
             switch (sample % 3)
             {
             case 0:
-                target(sample).constant(make_stump_target(sample, gt_feature10(), 5, 3.5, -1.2, +3.4, 0));
+                target(sample).full(make_stump_target(sample, gt_feature10(), 5, 3.5, -1.2, +3.4, 0));
                 break;
 
             case 1:
-                target(sample).constant(make_stump_target(sample, gt_feature11(), 7, 4.5, -1.3, +3.5, 2));
+                target(sample).full(make_stump_target(sample, gt_feature11(), 7, 4.5, -1.3, +3.5, 2));
                 break;
 
             default:
-                target(sample).constant(make_stump_target(sample, gt_feature12(), 11, 5.5, -1.4, +3.6, 4));
+                target(sample).full(make_stump_target(sample, gt_feature12(), 11, 5.5, -1.4, +3.6, 4));
                 break;
             }
         }
@@ -204,11 +204,11 @@ public:
                 {
                     if ((input(tf10) = static_cast<scalar_t>(sample % 9)) < 5.0)
                     {
-                        target.constant(make_table_target(sample, gt_feature20(), 3, 2.0, 0));
+                        target.full(make_table_target(sample, gt_feature20(), 3, 2.0, 0));
                     }
                     else
                     {
-                        target.constant(make_stump_target(sample, gt_feature21(), 5, 3.5, +1.9, -0.7, 3));
+                        target.full(make_stump_target(sample, gt_feature21(), 5, 3.5, +1.9, -0.7, 3));
                     }
                 }
             }
@@ -218,12 +218,12 @@ public:
                 {
                     if ((input(tf11) = static_cast<scalar_t>(sample % 11)) < 7.0)
                     {
-                        target.constant(make_table_target(sample, gt_feature22(), 3, 3.0, 5));
+                        target.full(make_table_target(sample, gt_feature22(), 3, 3.0, 5));
                         target.array() -= 20.0;
                     }
                     else
                     {
-                        target.constant(make_table_target(sample, gt_feature23(), 3, 3.0, 8));
+                        target.full(make_table_target(sample, gt_feature23(), 3, 3.0, 8));
                         target.array() -= 30.0;
                     }
                 }

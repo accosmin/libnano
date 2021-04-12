@@ -60,7 +60,7 @@ scalar_t gboost_model_t::fit(
     tensor4d_t outputs(cat_dims(samples.size(), tdims));
     tensor4d_t woutputs(cat_dims(samples.size(), tdims));
     tensor4d_t fit_vgrads(cat_dims(dataset.samples(), tdims));   // NB: gradients for ALL samples, to index with samples!
-    fit_vgrads.constant(std::numeric_limits<scalar_t>::quiet_NaN());
+    fit_vgrads.full(std::numeric_limits<scalar_t>::quiet_NaN());
 
     // estimate bias
     auto bias_function = gboost_bias_function_t{loss, dataset, samples};

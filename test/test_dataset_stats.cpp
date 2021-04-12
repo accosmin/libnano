@@ -7,7 +7,7 @@ template <typename tvalue, size_t trank>
 static auto const_tensor(tvalue value, tensor_dims_t<trank> dims)
 {
     tensor_mem_t<tvalue, trank> values(dims);
-    values.constant(value);
+    values.full(value);
     return values;
 }
 
@@ -63,21 +63,21 @@ UTEST_CASE(scalar)
         auto mask = make_mask(make_dims(samples.size()));
 
         tensor_mem_t<scalar_t, 4> values(cat_dims(samples.size(), dims));
-        values.constant(std::numeric_limits<scalar_t>::quiet_NaN());
+        values.full(std::numeric_limits<scalar_t>::quiet_NaN());
         {
             const auto min = std::numeric_limits<scalar_t>::max();
             const auto max = std::numeric_limits<scalar_t>::lowest();
             check_scalar_stats(feature, values, samples, mask, 0, min, max, 0.0, 0.0);
         }
         {
-            values.tensor(0).constant(1.0);
+            values.tensor(0).full(1.0);
             setbit(mask, 0);
             check_scalar_stats(feature, values, samples, mask, 1, 1.0, 1.0, 1.0, 0.0);
         }
         {
             for (tensor_size_t sample = 1; sample < samples.size(); sample += 3)
             {
-                values.tensor(sample).constant(static_cast<scalar_t>(sample));
+                values.tensor(sample).full(static_cast<scalar_t>(sample));
                 setbit(mask, sample);
             }
             check_scalar_stats(feature, values, samples, mask, 15, 1.0, 40.0, 19.2, 13.09961831505);

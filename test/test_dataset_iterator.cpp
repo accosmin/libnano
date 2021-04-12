@@ -19,7 +19,7 @@ UTEST_BEGIN_MODULE(test_dataset_iterator)
 UTEST_CASE(data1D)
 {
     tensor_mem_t<int, 1> data(16);
-    data.constant(-1);
+    data.full(-1);
 
     auto mask = make_mask(make_dims(16));
 
@@ -146,14 +146,14 @@ UTEST_CASE(data1D)
 UTEST_CASE(data4D)
 {
     tensor_mem_t<int, 4> data(16, 3, 2, 1);
-    data.constant(-1);
+    data.full(-1);
 
     auto mask = make_mask(make_dims(16));
 
     for (int sample = 0; sample < 16; sample += 2)
     {
         setbit(mask, sample);
-        data.tensor(sample).constant(sample + 3);
+        data.tensor(sample).full(sample + 3);
     }
 
     {

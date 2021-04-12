@@ -6,7 +6,7 @@ cluster_t::cluster_t(const tensor_size_t samples, const tensor_size_t groups) :
     m_indices(samples),
     m_groups(groups)
 {
-    m_indices.constant(-1);
+    m_indices.full(-1);
 }
 
 cluster_t::cluster_t(const tensor_size_t samples, const indices_t& indices) :

@@ -164,8 +164,8 @@ namespace nano
         {
             m_mean.zero();
             m_stdev.zero();
-            m_min.constant(std::numeric_limits<scalar_t>::max());
-            m_max.constant(std::numeric_limits<scalar_t>::lowest());
+            m_min.full(std::numeric_limits<scalar_t>::max());
+            m_max.full(std::numeric_limits<scalar_t>::lowest());
         }
 
         template <typename tarray>

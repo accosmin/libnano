@@ -92,7 +92,7 @@ UTEST_CASE(loop)
     UTEST_CHECK_EQUAL(split.samples(), 7);
 
     indices_t all_indices(7);
-    all_indices.constant(-1);
+    all_indices.full(-1);
     split.loop(0, [&] (const tensor_size_t index) { all_indices(index) = +1; });
     UTEST_CHECK_EQUAL(all_indices(0), +1);
     UTEST_CHECK_EQUAL(all_indices(1), -1);

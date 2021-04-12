@@ -198,15 +198,15 @@ namespace nano
         ///
         void zero()
         {
-            zero(array());
+            array() = tscalar(0);
         }
 
         ///
         /// \brief set all elements to the given constant value.
         ///
-        void constant(const tscalar value)
+        void full(tscalar value)
         {
-            constant(array(), value);
+            array() = value;
         }
 
         ///
@@ -557,18 +557,6 @@ namespace nano
         }
 
     private:
-
-        template <typename tarray>
-        static void zero(tarray&& array)
-        {
-            array.setZero();
-        }
-
-        template <typename tarray>
-        static void constant(tarray&& array, tscalar value)
-        {
-            array.setConstant(value);
-        }
 
         template <typename tarray>
         static void random(tarray&& array, tscalar min, tscalar max)

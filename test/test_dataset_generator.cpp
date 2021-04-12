@@ -53,7 +53,7 @@ public:
         tensor_mem_t<tensor_size_t, 3> values(2, 1, 2);
         for (tensor_size_t sample = 0; sample < m_samples; sample += 2)
         {
-            values.constant(sample);
+            values.full(sample);
             values(0) = sample + 1;
             set(sample, 3, values);
         }
@@ -141,9 +141,9 @@ static void check_select0(const dataset_generator_t& generator,
     UTEST_CHECK_NOTHROW(storage = generator.select(feature, sample_range, buffer));
     switch (generator.feature(feature).type())
     {
-    case feature_type::sclass:  expected_dropped.constant(-1); break;
-    case feature_type::mclass:  expected_dropped.constant(-1); break;
-    default:                    expected_dropped.constant(static_cast<tscalar>(NaN)); break;
+    case feature_type::sclass:  expected_dropped.full(-1); break;
+    case feature_type::mclass:  expected_dropped.full(-1); break;
+    default:                    expected_dropped.full(static_cast<tscalar>(NaN)); break;
     }
     UTEST_CHECK_TENSOR_CLOSE(storage, expected_dropped, 1e-12);
 
@@ -324,7 +324,7 @@ static void check_targets_stats(const dataset_generator_t& generator,
     const tensor1d_t& expected_mean, const tensor1d_t& expected_stdev, scalar_t eps = 1e-12)
 {
     tensor1d_t expected_sample_weights = tensor1d_t{generator.samples().size()};
-    expected_sample_weights.constant(1.0);
+    expected_sample_weights.full(1.0);
 
     for (auto ex : {execution::par, execution::seq})
     {

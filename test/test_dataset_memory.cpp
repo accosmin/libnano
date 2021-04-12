@@ -7,7 +7,7 @@ template <typename tvalue, size_t trank>
 static auto make_tensor(tvalue value, tensor_dims_t<trank> dims)
 {
     tensor_mem_t<tvalue, trank> values(dims);
-    values.constant(value);
+    values.full(value);
     return values;
 }
 

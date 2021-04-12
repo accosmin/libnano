@@ -308,7 +308,7 @@ inline auto make_invalid_samples(const dataset_t& dataset)
 inline auto make_residuals(const dataset_t& dataset, const loss_t& loss)
 {
     tensor4d_t outputs(cat_dims(dataset.samples(), dataset.tdims()));
-    outputs.constant(+0.0);
+    outputs.full(+0.0);
 
     tensor4d_t residuals;
     loss.vgrad(dataset.targets(arange(0, dataset.samples())), outputs, residuals);

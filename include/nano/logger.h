@@ -90,7 +90,7 @@ namespace nano
     /// \brief throws an exception as a critical condition is satisfied.
     ///
     template <typename... tmessage>
-    void critical0(const tmessage&... message)
+    [[noreturn]] void critical0(const tmessage&... message)
     {
         log_error() << scat(message...);
         throw std::runtime_error("critical check failed!");

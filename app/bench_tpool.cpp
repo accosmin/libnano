@@ -69,10 +69,10 @@ static scalar_t reduce_st(const matrix_t& targets, const matrix_t& outputs)
 template <typename toperator>
 static scalar_t reduce_mt(const matrix_t& targets, const matrix_t& outputs)
 {
-    vector_t values = vector_t::Zero(tpool_t::size());
-    nano::loopi(targets.rows(), [&] (const tensor_size_t i, const tensor_size_t t)
+    vector_t values = vector_t::Zero(static_cast<tensor_size_t>(tpool_t::size()));
+    nano::loopi(targets.rows(), [&] (tensor_size_t i, size_t t)
     {
-        values(t) += sti<toperator>(i, targets, outputs);
+        values(static_cast<tensor_size_t>(t)) += sti<toperator>(i, targets, outputs);
     });
 
     return values.sum() / static_cast<scalar_t>(targets.rows());

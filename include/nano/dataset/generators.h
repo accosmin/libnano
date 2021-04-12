@@ -5,6 +5,9 @@
 namespace nano
 {
     // TODO: generic single and paired generator to handle the mapping and the dropping and shuffling part
+    // TODO: feature-wise non-linear transformations of scalar features - sign(x)*log(1+x*x), x/sqrt(1+x*x)
+    // TODO: polynomial features
+    // TODO: basic image-based features: gradients, magnitude, orientation, HoG
 
     ///
     /// \brief
@@ -24,7 +27,4 @@ namespace nano
         void select(tensor_size_t, tensor_range_t, scalar_map_t) const override;
         void select(tensor_size_t, tensor_range_t, struct_map_t) const override;
     };
-
-    // TODO: feature-wise non-linear transformations of scalar features - sign(x)*log(1+x*x), x/sqrt(1+x*x)
-    // TODO: polynomial features
 }

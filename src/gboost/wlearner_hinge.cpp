@@ -44,7 +44,7 @@ namespace
             m_acc_neg.clear();
 
             m_ivalues.clear();
-            m_ivalues.reserve(values.size());
+            m_ivalues.reserve(static_cast<size_t>(values.size()));
             for (tensor_size_t i = 0; i < values.size(); ++ i)
             {
                 if (!feature_t::missing(values(i)))

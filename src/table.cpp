@@ -38,7 +38,9 @@ std::ostream& nano::operator<<(std::ostream& os, const table_t& table)
             if (span > 1)
             {
                 const auto size = cell.m_data.size() + cell.m_mark.size();
-                if (std::accumulate(colsizes.begin() + icol, colsizes.begin() + (icol + span), size_t(0)) < size)
+                if (std::accumulate(
+                    colsizes.begin() + static_cast<int>(icol),
+                    colsizes.begin() + static_cast<int>(icol + span), size_t(0)) < size)
                 {
                     for (size_t c = 0; c < span; ++ c, ++ icol)
                     {

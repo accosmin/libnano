@@ -30,7 +30,7 @@ scalar_t linear_model_t::fit(
     }
     log_info() << string_t(128, '-');
 
-    for (size_t ifeature = 0U, features = dataset.features(); ifeature < features; ++ ifeature)
+    for (tensor_size_t ifeature = 0, features = dataset.features(); ifeature < features; ++ ifeature)
     {
         const auto feature = dataset.feature(ifeature);
         critical(

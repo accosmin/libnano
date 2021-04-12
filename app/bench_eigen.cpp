@@ -47,7 +47,7 @@ namespace
             auto x = make_vector<tscalar>(dims);
             auto z = make_vector<tscalar>(dims);
 
-            store(row, 2 * dims, [&] () { std::memcpy(z.data(), x.data(), sizeof(tscalar) * dims); });
+            store(row, 2 * dims, [&] () { std::memcpy(z.data(), x.data(), sizeof(tscalar) * static_cast<size_t>(dims)); });
         }
     };
 
@@ -263,7 +263,7 @@ namespace
     {
         auto& row = table.header();
         row << " "
-            << nano::colspan(static_cast<int>(std::log2(max/min)) + 1)
+            << nano::colspan(static_cast<size_t>(std::log2(static_cast<double>(max) / static_cast<double>(min))) + 1U)
             << nano::alignment::center << section_name;
         table.delim();
     }

@@ -232,7 +232,8 @@ struct_cmap_t dataset_generator_t::select(tensor_size_t feature, tensor_range_t 
 {
     assert(sample_range.begin() >= 0 && sample_range.end() <= m_samples.size());
 
-    auto storage = resize_and_map(buffer, sample_range.size(), m_feature_mapping(feature, 2), m_feature_mapping(feature, 3), m_feature_mapping(feature, 4));
+    auto storage = resize_and_map(buffer, sample_range.size(),
+        m_feature_mapping(feature, 2), m_feature_mapping(feature, 3), m_feature_mapping(feature, 4));
     byfeature(feature)->select(m_feature_mapping(feature, 1), sample_range, storage);
     return storage;
 }
@@ -294,58 +295,59 @@ tensor4d_cmap_t dataset_generator_t::targets(tensor_range_t sample_range, tensor
 
     const auto samples = m_samples.slice(sample_range);
 
-    return m_dataset.visit_target([&] (const feature_t& feature, const auto& tensor, const auto& mask)
+    return m_dataset.visit_target([&] (const feature_t& feature, const auto& data, const auto& mask)
     {
-        if constexpr (tensor.rank() == 1)
-        {
-            const auto storage = resize_and_map(buffer, samples.size(), feature.classes(), 1, 1);
-            for (auto it = make_iterator(tensor, mask, samples); it; ++ it)
+        return loop_samples(data, mask, samples,
+            [&] (auto it)
             {
-                if (const auto [index, given, label] = *it; given)
+                const auto storage = resize_and_map(buffer, samples.size(), feature.classes(), 1, 1);
+                for (; it; ++ it)
                 {
-                    storage.array(index).setConstant(-1.0);
-                    storage.array(index)(label) = +1.0;
+                    if (const auto [index, given, label] = *it; given)
+                    {
+                        storage.array(index).setConstant(-1.0);
+                        storage.array(index)(static_cast<tensor_size_t>(label)) = +1.0;
+                    }
+                    else
+                    {
+                        storage.array(index).setConstant(std::numeric_limits<scalar_t>::quiet_NaN());
+                    }
                 }
-                else
-                {
-                    storage.array(index).setConstant(std::numeric_limits<scalar_t>::quiet_NaN());
-                }
-            }
-            return tensor4d_cmap_t{storage};
-        }
-        else if constexpr (tensor.rank() == 2)
-        {
-            const auto storage = resize_and_map(buffer, samples.size(), feature.classes(), 1, 1);
-            for (auto it = make_iterator(tensor, mask, samples); it; ++ it)
+                return tensor4d_cmap_t{storage};
+            },
+            [&] (auto it)
             {
-                if (const auto [index, given, hits] = *it; given)
+                const auto storage = resize_and_map(buffer, samples.size(), feature.classes(), 1, 1);
+                for (; it; ++ it)
                 {
-                    storage.array(index) = hits.array().template cast<scalar_t>() * 2.0 - 1.0;
+                    if (const auto [index, given, hits] = *it; given)
+                    {
+                        storage.array(index) = hits.array().template cast<scalar_t>() * 2.0 - 1.0;
+                    }
+                    else
+                    {
+                        storage.array(index).setConstant(std::numeric_limits<scalar_t>::quiet_NaN());
+                    }
                 }
-                else
-                {
-                    storage.array(index).setConstant(std::numeric_limits<scalar_t>::quiet_NaN());
-                }
-            }
-            return tensor4d_cmap_t{storage};
-        }
-        else
-        {
-            const auto [dim1, dim2, dim3] = feature.dims();
-            const auto storage = resize_and_map(buffer, samples.size(), dim1, dim2, dim3);
-            for (auto it = make_iterator(tensor, mask, samples); it; ++ it)
+                return tensor4d_cmap_t{storage};
+            },
+            [&] (auto it)
             {
-                if (const auto [index, given, values] = *it; given)
+                const auto [dim1, dim2, dim3] = feature.dims();
+                const auto storage = resize_and_map(buffer, samples.size(), dim1, dim2, dim3);
+                for (; it; ++ it)
                 {
-                    storage.array(index) = values.array().template cast<scalar_t>();
+                    if (const auto [index, given, values] = *it; given)
+                    {
+                        storage.array(index) = values.array().template cast<scalar_t>();
+                    }
+                    else
+                    {
+                        storage.array(index).setConstant(std::numeric_limits<scalar_t>::quiet_NaN());
+                    }
                 }
-                else
-                {
-                    storage.array(index).setConstant(std::numeric_limits<scalar_t>::quiet_NaN());
-                }
-            }
-            return tensor4d_cmap_t{storage};
-        }
+                return tensor4d_cmap_t{storage};
+            });
     });
 }
 
@@ -430,44 +432,45 @@ targets_stats_t dataset_generator_t::targets_stats(execution, tensor_size_t) con
         critical0("dataset_generator_t: target statistics are not available for unsupervised datasets!");
     }
 
-    return m_dataset.visit_target([&] (const feature_t& feature, const auto& tensor, const auto& mask)
+    return m_dataset.visit_target([&] (const feature_t& feature, const auto& data, const auto& mask)
     {
-        if constexpr (tensor.rank() == 1)
-        {
-            sclass_stats_t stats{feature.classes()};
-            for (auto it = make_iterator(tensor, mask, m_samples); it; ++ it)
+        return loop_samples(data, mask, m_samples,
+            [&] (auto it)
             {
-                if ([[maybe_unused]] const auto [index, given, label] = *it; given)
+                sclass_stats_t stats{feature.classes()};
+                for (; it; ++ it)
                 {
-                    stats += label;
+                    if ([[maybe_unused]] const auto [index, given, label] = *it; given)
+                    {
+                        stats += label;
+                    }
                 }
-            }
-            return targets_stats_t{stats};
-        }
-        else if constexpr (tensor.rank() == 2)
-        {
-            sclass_stats_t stats{feature.classes()};
-            for (auto it = make_iterator(tensor, mask, m_samples); it; ++ it)
+                return targets_stats_t{stats};
+            },
+            [&] (auto it)
             {
-                if ([[maybe_unused]] const auto [index, given, hits] = *it; given)
+                sclass_stats_t stats{feature.classes()};
+                for (; it; ++ it)
                 {
-                    stats += hits;
+                    if ([[maybe_unused]] const auto [index, given, hits] = *it; given)
+                    {
+                        stats += hits;
+                    }
                 }
-            }
-            return targets_stats_t{stats};
-        }
-        else
-        {
-            scalar_stats_t stats{nano::size(feature.dims())};
-            for (auto it = make_iterator(tensor, mask, m_samples); it; ++ it)
+                return targets_stats_t{stats};
+            },
+            [&] (auto it)
             {
-                if ([[maybe_unused]] const auto [index, given, values] = *it; given)
+                scalar_stats_t stats{nano::size(feature.dims())};
+                for (; it; ++ it)
                 {
-                    stats += values.array().template cast<scalar_t>();
+                    if ([[maybe_unused]] const auto [index, given, values] = *it; given)
+                    {
+                        stats += values.array().template cast<scalar_t>();
+                    }
                 }
-            }
-            return targets_stats_t{stats.done()};
-        }
+                return targets_stats_t{stats.done()};
+            });
     });
 }
 
@@ -481,49 +484,50 @@ tensor1d_t dataset_generator_t::sample_weights(const targets_stats_t& targets_st
     tensor1d_t weights(m_samples.size());
     weights.constant(1.0);
 
-    return m_dataset.visit_target([&] (const feature_t& feature, const auto& tensor, const auto& mask)
+    return m_dataset.visit_target([&] (const feature_t& feature, const auto& data, const auto& mask)
     {
-        if constexpr (tensor.rank() == 1)
-        {
-            const auto* pstats = std::get_if<sclass_stats_t>(&targets_stats);
-            critical(
-                pstats == nullptr ||
-                pstats->m_class_counts.size() != feature.classes(),
-                "dataset_generator_t: mis-matching targets class statistics, expecting ",
-                feature.classes(), " classes, got ",
-                pstats == nullptr ? tensor_size_t(0) : pstats->m_class_counts.size(), " instead!");
-
-            const vector_t class_weights =
-                static_cast<scalar_t>(m_samples.size()) /
-                static_cast<scalar_t>(feature.classes()) /
-                pstats->m_class_counts.array().cast<scalar_t>().max(1.0);
-
-            for (auto it = make_iterator(tensor, mask, m_samples); it; ++ it)
+        return loop_samples(data, mask, m_samples,
+            [&] (auto it)
             {
-                if (const auto [index, given, label] = *it; given)
-                {
-                    weights(index) = class_weights(label);
-                }
-            }
-            return weights;
-        }
-        else if constexpr (tensor.rank() == 2)
-        {
-            const auto* pstats = std::get_if<sclass_stats_t>(&targets_stats);
-            critical(
-                pstats == nullptr ||
-                pstats->m_class_counts.size() != feature.classes(),
-                "dataset_generator_t: mis-matching targets class statistics, expecting ",
-                feature.classes(), " classes, got ",
-                pstats == nullptr ? tensor_size_t(0) : pstats->m_class_counts.size(), " instead!");
+                const auto* pstats = std::get_if<sclass_stats_t>(&targets_stats);
+                critical(
+                    pstats == nullptr ||
+                    pstats->m_class_counts.size() != feature.classes(),
+                    "dataset_generator_t: mis-matching targets class statistics, expecting ",
+                    feature.classes(), " classes, got ",
+                    pstats == nullptr ? tensor_size_t(0) : pstats->m_class_counts.size(), " instead!");
 
-            // TODO: is it possible to weight samples similarly to the single-label multi-class case?!
-            return weights;
-        }
-        else
-        {
-            return weights;
-        }
+                const vector_t class_weights =
+                    static_cast<scalar_t>(m_samples.size()) /
+                    static_cast<scalar_t>(feature.classes()) /
+                    pstats->m_class_counts.array().cast<scalar_t>().max(1.0);
+
+                for (; it; ++ it)
+                {
+                    if (const auto [index, given, label] = *it; given)
+                    {
+                        weights(index) = class_weights(static_cast<tensor_size_t>(label));
+                    }
+                }
+                return weights;
+            },
+            [&] (auto)
+            {
+                const auto* pstats = std::get_if<sclass_stats_t>(&targets_stats);
+                critical(
+                    pstats == nullptr ||
+                    pstats->m_class_counts.size() != feature.classes(),
+                    "dataset_generator_t: mis-matching targets class statistics, expecting ",
+                    feature.classes(), " classes, got ",
+                    pstats == nullptr ? tensor_size_t(0) : pstats->m_class_counts.size(), " instead!");
+
+                // TODO: is it possible to weight samples similarly to the single-label multi-class case?!
+                return weights;
+            },
+            [&] (auto)
+            {
+                return weights;
+            });
     });
 }
 

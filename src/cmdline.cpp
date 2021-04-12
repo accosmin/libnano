@@ -160,7 +160,7 @@ string_t cmdline_t::get(const string_t& name_or_short_name) const
     return it->get();
 }
 
-void cmdline_t::usage(std::ostream& os, const int indent) const
+void cmdline_t::usage(std::ostream& os, size_t indent) const
 {
     os << m_title << std::endl;
 

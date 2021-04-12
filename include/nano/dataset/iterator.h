@@ -101,4 +101,57 @@ namespace nano
     {
         return feature_iterator_t<tscalar, trank>{data, mask, samples, samples.size()};
     }
+
+    ///
+    /// \brief call the appropriate operator for the given data,
+    ///     distinguishing between single-label, multi-label and scalar/structured cases.
+    ///
+    template
+    <
+        template <typename, size_t> class tstorage, typename tscalar, size_t trank,
+        typename toperator_sclass,
+        typename toperator_mclass,
+        typename toperator_scalar
+    >
+    auto loop_samples(
+        const tensor_t<tstorage, tscalar, trank>& data, const mask_cmap_t& mask, const indices_cmap_t& samples,
+        const toperator_sclass& op_sclass,
+        const toperator_mclass& op_mclass,
+        const toperator_scalar& op_scalar)
+    {
+        if constexpr (trank == 1)
+        {
+            return op_sclass(make_iterator(data, mask, samples));
+        }
+        else if constexpr (trank == 2)
+        {
+            return op_mclass(make_iterator(data, mask, samples));
+        }
+        else
+        {
+            return op_scalar(make_iterator(data, mask, samples));
+        }
+    }
+
+    template
+    <
+        size_t trank_expected,
+        template <typename, size_t> class tstorage, typename tscalar, size_t trank,
+        typename toperator_expected,
+        typename toperator_otherwise
+    >
+    auto loop_samples(
+        const tensor_t<tstorage, tscalar, trank>& data, const mask_cmap_t& mask, const indices_cmap_t& samples,
+        const toperator_expected& op_expected,
+        const toperator_otherwise& op_otherwise)
+    {
+        if constexpr (trank == trank_expected)
+        {
+            return op_expected(make_iterator(data, mask, samples));
+        }
+        else
+        {
+            return op_otherwise();
+        }
+    }
 }

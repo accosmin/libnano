@@ -112,7 +112,7 @@ namespace nano
         ///
         /// \brief print help menu
         ///
-        void usage(std::ostream& = std::cout, int indent = 2) const;
+        void usage(std::ostream& = std::cout, size_t indent = 2) const;
 
     private:
 

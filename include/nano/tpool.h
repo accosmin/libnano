@@ -245,11 +245,9 @@ namespace nano
     /// \brief split a loop computation of the given size in fixed-sized chunks using a thread pool.
     /// NB: the operator receives the range [begin, end) to process and the assigned thread index: op(begin, end, tnum)
     ///
-    template <typename tsize, typename tchunk_, typename toperator>
-    void loopr(const tsize size, const tchunk_ chunk_, const toperator& op)
+    template <typename tsize, typename toperator>
+    void loopr(tsize size, tsize chunk, const toperator& op)
     {
-        const auto chunk = static_cast<tsize>(chunk_);
-
         assert(size >= tsize(0));
         assert(chunk >= tsize(1));
 
@@ -277,7 +275,7 @@ namespace nano
     /// NB: the operator receives the index to process and the assigned thread index: op(index, tnum)
     ///
     template <typename tsize, typename toperator>
-    void loopi(const tsize size, const toperator& op)
+    void loopi(tsize size, const toperator& op)
     {
         assert(size >= tsize(0));
 

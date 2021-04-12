@@ -101,7 +101,8 @@ public:
         {
             for (tensor_size_t sample = 0; sample < m_samples; ++ sample)
             {
-                this->set(sample, feature, make_tensor(sample % feature, m_features[feature].dims()));
+                this->set(sample, feature,
+                    make_tensor(sample % feature, m_features[static_cast<size_t>(feature)].dims()));
             }
         }
 

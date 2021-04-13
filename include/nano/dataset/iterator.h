@@ -8,15 +8,15 @@ namespace nano
     /// \brief utility to iterate over the masked feature values of a given set of samples.
     ///
     template <typename tscalar, size_t trank>
-    class feature_iterator_t
+    class dataset_iterator_t
     {
     public:
 
         using data_cmap_t = tensor_cmap_t<tscalar, trank>;
 
-        feature_iterator_t() = default;
+        dataset_iterator_t() = default;
 
-        feature_iterator_t(data_cmap_t data, mask_cmap_t mask, indices_cmap_t samples, tensor_size_t index = 0) :
+        dataset_iterator_t(data_cmap_t data, mask_cmap_t mask, indices_cmap_t samples, tensor_size_t index = 0) :
             m_index(index),
             m_data(data),
             m_mask(mask),
@@ -28,7 +28,7 @@ namespace nano
         tensor_size_t index() const { return m_index; }
         tensor_size_t size() const { return m_samples.size(); }
 
-        feature_iterator_t& operator++()
+        dataset_iterator_t& operator++()
         {
             assert(m_index < m_samples.size());
 
@@ -36,7 +36,7 @@ namespace nano
             return *this;
         }
 
-        feature_iterator_t operator++(int)
+        dataset_iterator_t operator++(int)
         {
             auto tmp = *this;
             ++(*this);
@@ -78,7 +78,7 @@ namespace nano
     /// \brief return true if the two iterators are equivalent.
     ///
     template <typename tscalar, size_t trank>
-    bool operator!=(const feature_iterator_t<tscalar, trank>& lhs, const feature_iterator_t<tscalar, trank>& rhs)
+    bool operator!=(const dataset_iterator_t<tscalar, trank>& lhs, const dataset_iterator_t<tscalar, trank>& rhs)
     {
         assert(lhs.size() == rhs.size());
         return lhs.index() != rhs.index();
@@ -90,7 +90,7 @@ namespace nano
     template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
     auto make_iterator(const tensor_t<tstorage, tscalar, trank>& data, mask_cmap_t mask, indices_cmap_t samples)
     {
-        return feature_iterator_t<tscalar, trank>{data, mask, samples, 0};
+        return dataset_iterator_t<tscalar, trank>{data, mask, samples, 0};
     }
 
     ///
@@ -99,7 +99,7 @@ namespace nano
     template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
     auto make_end_iterator(const tensor_t<tstorage, tscalar, trank>& data, mask_cmap_t mask, indices_cmap_t samples)
     {
-        return feature_iterator_t<tscalar, trank>{data, mask, samples, samples.size()};
+        return dataset_iterator_t<tscalar, trank>{data, mask, samples, samples.size()};
     }
 
     ///

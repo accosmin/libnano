@@ -30,7 +30,7 @@ UTEST_CASE(data1D)
     }
 
     {
-        const auto it = feature_iterator_t<int, 1>{};
+        const auto it = dataset_iterator_t<int, 1>{};
         UTEST_CHECK_EQUAL(it.size(), 0);
         UTEST_CHECK_EQUAL(it.index(), 0);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), false);
@@ -157,7 +157,7 @@ UTEST_CASE(data4D)
     }
 
     {
-        const auto it = feature_iterator_t<int, 1>{};
+        const auto it = dataset_iterator_t<int, 1>{};
         UTEST_CHECK_EQUAL(it.size(), 0);
         UTEST_CHECK_EQUAL(it.index(), 0);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), false);

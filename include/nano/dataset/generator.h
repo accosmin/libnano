@@ -1,7 +1,7 @@
 #pragma once
 
-#include <variant>
 #include <nano/factory.h>
+#include <nano/dataset/stats.h>
 #include <nano/dataset/dataset.h>
 
 namespace nano
@@ -143,101 +143,6 @@ namespace nano
         feature_infos_t     m_feature_infos;    ///<
         shuffle_indices_t   m_shuffle_indices;  ///<
     };
-
-    struct select_stats_t
-    {
-        indices_t       m_sclass_features;  ///< indices of the single-label features
-        indices_t       m_mclass_features;  ///< indices of the multi-label features
-        indices_t       m_scalar_features;  ///< indices of the scalar features
-        indices_t       m_struct_features;  ///< indices of structured features
-    };
-
-    struct scalar_stats_t
-    {
-        scalar_stats_t() = default;
-
-        scalar_stats_t(tensor_size_t dims) :
-            m_min(dims),
-            m_max(dims),
-            m_mean(dims),
-            m_stdev(dims)
-        {
-            m_mean.zero();
-            m_stdev.zero();
-            m_min.full(std::numeric_limits<scalar_t>::max());
-            m_max.full(std::numeric_limits<scalar_t>::lowest());
-        }
-
-        template <typename tarray>
-        auto& operator+=(const tarray& array)
-        {
-            m_count ++;
-            m_mean.array() += array;
-            m_stdev.array() += array.square();
-            m_min.array() = m_min.array().min(array);
-            m_max.array() = m_max.array().max(array);
-            return *this;
-        }
-
-        auto& operator+=(const scalar_stats_t& other)
-        {
-            m_count += other.m_count;
-            m_mean.array() += other.m_mean.array();
-            m_stdev.array() += other.m_stdev.array();
-            m_min.array() = m_min.array().min(other.m_min.array());
-            m_max.array() = m_max.array().max(other.m_max.array());
-            return *this;
-        }
-
-        auto& done()
-        {
-            if (m_count > 1)
-            {
-                const auto N = m_count;
-                m_stdev.array() = ((m_stdev.array() - m_mean.array().square() / N) / (N - 1)).sqrt();
-                m_mean.array() /= static_cast<scalar_t>(N);
-            }
-            else
-            {
-                m_stdev.zero();
-            }
-            return *this;
-        }
-
-        tensor_size_t   m_count{0};         ///<
-        tensor1d_t      m_min, m_max;       ///<
-        tensor1d_t      m_mean, m_stdev;    ///<
-    };
-
-    struct sclass_stats_t
-    {
-        sclass_stats_t() = default;
-
-        sclass_stats_t(tensor_size_t classes) :
-            m_class_counts(classes)
-        {
-            m_class_counts.zero();
-        }
-
-        template <typename tscalar>
-        auto& operator+=(tscalar label)
-        {
-            m_class_counts(static_cast<tensor_size_t>(label)) ++;
-            return *this;
-        }
-
-        template <template <typename, size_t> class tstorage, typename tscalar>
-        auto& operator+=(const tensor_t<tstorage, tscalar, 1>& class_hits)
-        {
-            m_class_counts.array() += class_hits.array().template cast<tensor_size_t>();
-            return *this;
-        }
-
-        indices_t       m_class_counts;     ///<
-    };
-
-    using flatten_stats_t = scalar_stats_t;
-    using targets_stats_t = std::variant<scalar_stats_t, sclass_stats_t>;
 
     ///
     /// \brief

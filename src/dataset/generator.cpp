@@ -435,42 +435,9 @@ targets_stats_t dataset_generator_t::targets_stats(execution, tensor_size_t) con
     return m_dataset.visit_target([&] (const feature_t& feature, const auto& data, const auto& mask)
     {
         return loop_samples(data, mask, m_samples,
-            [&] (auto it)
-            {
-                sclass_stats_t stats{feature.classes()};
-                for (; it; ++ it)
-                {
-                    if ([[maybe_unused]] const auto [index, given, label] = *it; given)
-                    {
-                        stats += label;
-                    }
-                }
-                return targets_stats_t{stats};
-            },
-            [&] (auto it)
-            {
-                sclass_stats_t stats{feature.classes()};
-                for (; it; ++ it)
-                {
-                    if ([[maybe_unused]] const auto [index, given, hits] = *it; given)
-                    {
-                        stats += hits;
-                    }
-                }
-                return targets_stats_t{stats};
-            },
-            [&] (auto it)
-            {
-                scalar_stats_t stats{nano::size(feature.dims())};
-                for (; it; ++ it)
-                {
-                    if ([[maybe_unused]] const auto [index, given, values] = *it; given)
-                    {
-                        stats += values.array().template cast<scalar_t>();
-                    }
-                }
-                return targets_stats_t{stats.done()};
-            });
+            [&] (auto it) -> targets_stats_t { return sclass_stats_t::make(feature, it); },
+            [&] (auto it) -> targets_stats_t { return sclass_stats_t::make(feature, it); },
+            [&] (auto it) -> targets_stats_t { return scalar_stats_t::make(feature, it); });
     });
 }
 

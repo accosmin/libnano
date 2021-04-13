@@ -16,7 +16,7 @@ static void check_sclass_stats(
     const feature_t& feature, const tensor_t<tstorage, tscalar, 1>& data, indices_cmap_t samples, mask_cmap_t mask,
     const indices_t& gt_class_counts)
 {
-    const auto stats = feature_sclass_stats_t::make(feature, make_iterator(data, mask, samples));
+    const auto stats = sclass_stats_t::make(feature, make_iterator(data, mask, samples));
 
     UTEST_CHECK_TENSOR_EQUAL(stats.m_class_counts, gt_class_counts);
 }
@@ -26,7 +26,7 @@ static void check_mclass_stats(
     const feature_t& feature, const tensor_t<tstorage, tscalar, 2>& data, indices_cmap_t samples, mask_cmap_t mask,
     const indices_t& gt_class_counts)
 {
-    const auto stats = feature_mclass_stats_t::make(feature, make_iterator(data, mask, samples));
+    const auto stats = mclass_stats_t::make(feature, make_iterator(data, mask, samples));
 
     UTEST_CHECK_TENSOR_EQUAL(stats.m_class_counts, gt_class_counts);
 }
@@ -37,7 +37,7 @@ static void check_scalar_stats(
     tensor_size_t gt_count, scalar_t gt_min, scalar_t gt_max, scalar_t gt_mean, scalar_t gt_stdev,
     scalar_t epsilon = 1e-12)
 {
-    const auto stats = feature_scalar_stats_t::make(feature, make_iterator(data, mask, samples));
+    const auto stats = scalar_stats_t::make(feature, make_iterator(data, mask, samples));
 
     const auto expected_min = const_tensor<scalar_t>(gt_min, feature.dims());
     const auto expected_max = const_tensor<scalar_t>(gt_max, feature.dims());
@@ -45,10 +45,10 @@ static void check_scalar_stats(
     const auto expected_stdev = const_tensor<scalar_t>(gt_stdev, feature.dims());
 
     UTEST_CHECK_EQUAL(stats.m_count, gt_count);
-    UTEST_CHECK_TENSOR_CLOSE(stats.m_min, expected_min, epsilon);
-    UTEST_CHECK_TENSOR_CLOSE(stats.m_max, expected_max, epsilon);
-    UTEST_CHECK_TENSOR_CLOSE(stats.m_mean, expected_mean, epsilon);
-    UTEST_CHECK_TENSOR_CLOSE(stats.m_stdev, expected_stdev, epsilon);
+    UTEST_CHECK_TENSOR_CLOSE(stats.m_min, expected_min.reshape(-1), epsilon);
+    UTEST_CHECK_TENSOR_CLOSE(stats.m_max, expected_max.reshape(-1), epsilon);
+    UTEST_CHECK_TENSOR_CLOSE(stats.m_mean, expected_mean.reshape(-1), epsilon);
+    UTEST_CHECK_TENSOR_CLOSE(stats.m_stdev, expected_stdev.reshape(-1), epsilon);
 }
 
 UTEST_BEGIN_MODULE(test_dataset_stats)

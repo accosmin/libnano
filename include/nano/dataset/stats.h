@@ -151,30 +151,28 @@ namespace nano
     {
         mclass_stats_t() = default;
 
-        mclass_stats_t(tensor_size_t classes) :
-            m_class_counts(classes)
+        template <template <typename, size_t> class tstorage, typename tscalar>
+        static auto hash(const tensor_t<tstorage, tscalar, 1>& class_hits)
         {
-            m_class_counts.zero();
-        }
-
-        template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
-        auto& operator+=(tscalar label)
-        {
-            m_class_counts(static_cast<tensor_size_t>(label)) ++;
-            return *this;
+            string_t str(static_cast<size_t>(class_hits.size()), '0');
+            for (tensor_size_t i = 0, size = class_hits.size(); i < size; ++ i)
+            {
+                str[static_cast<size_t>(i)] = (class_hits(i) == tscalar(0)) ? '0' : '1';
+            }
+            return str;
         }
 
         template <template <typename, size_t> class tstorage, typename tscalar>
         auto& operator+=(const tensor_t<tstorage, tscalar, 1>& class_hits)
         {
-            m_class_counts.array() += class_hits.array().template cast<tensor_size_t>();
+            m_class_counts[hash(class_hits)] ++;
             return *this;
         }
 
         template <typename tscalar, size_t trank>
-        static auto make(const feature_t& feature, dataset_iterator_t<tscalar, trank> it)
+        static auto make(const feature_t&, dataset_iterator_t<tscalar, trank> it)
         {
-            mclass_stats_t stats{feature.classes()};
+            mclass_stats_t stats;
             for (; it; ++ it)
             {
                 if ([[maybe_unused]] const auto [index, given, values] = *it; given)
@@ -185,9 +183,24 @@ namespace nano
             return stats;
         }
 
-        indices_t       m_class_counts;     ///<
+        using class_counts_t = std::unordered_map<string_t, tensor_size_t>;
+
+        class_counts_t  m_class_counts;     /// (representation of class hits, count)
     };
 
+    ///
+    /// \brief per-column statistics for flatten feature values.
+    ///
     using flatten_stats_t = scalar_stats_t;
-    using targets_stats_t = std::variant<scalar_stats_t, sclass_stats_t>;
+
+    ///
+    /// \brief
+    ///
+    using targets_stats_t = std::variant
+    <
+        std::monostate,
+        scalar_stats_t,
+        sclass_stats_t,
+        mclass_stats_t
+    >;
 }

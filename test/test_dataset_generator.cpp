@@ -16,6 +16,15 @@ static auto make_features()
     };
 }
 
+std::ostream& operator<<(std::ostream& stream, const mclass_stats_t::class_counts_t& class_counts)
+{
+    for (const auto [class_hits, counts] : class_counts)
+    {
+        stream << "class_hits=" << class_hits << ", counts=" << counts << std::endl;
+    }
+    return stream;
+}
+
 class fixture_dataset_t final : public memory_dataset_t
 {
 public:
@@ -319,6 +328,26 @@ static void check_targets_stats(const dataset_generator_t& generator,
 }
 
 static void check_targets_stats(const dataset_generator_t& generator,
+    const mclass_stats_t::class_counts_t& expected_class_counts,
+    const tensor1d_t& expected_sample_weights, scalar_t eps = 1e-12)
+{
+    for (auto ex : {execution::par, execution::seq})
+    {
+        targets_stats_t stats;
+        UTEST_REQUIRE_NOTHROW(stats = generator.targets_stats(ex, 3));
+        UTEST_REQUIRE_NOTHROW(std::get<mclass_stats_t>(stats));
+        UTEST_CHECK_EQUAL(std::get<mclass_stats_t>(stats).m_class_counts, expected_class_counts);
+        UTEST_CHECK_TENSOR_CLOSE(generator.sample_weights(stats), expected_sample_weights, eps);
+
+        /*std::get<mclass_stats_t>(stats).m_class_counts.begin()->second = 0;
+        UTEST_CHECK_NOTHROW(generator.sample_weights(stats));
+
+        std::get<mclass_stats_t>(stats).m_class_counts[string_t(42U, '0')] = 0;
+        UTEST_CHECK_THROW(generator.sample_weights(stats), std::runtime_error);*/
+    }
+}
+
+static void check_targets_stats(const dataset_generator_t& generator,
     tensor_size_t expected_count,
     const tensor1d_t& expected_min, const tensor1d_t& expected_max,
     const tensor1d_t& expected_mean, const tensor1d_t& expected_stdev, scalar_t eps = 1e-12)
@@ -346,6 +375,7 @@ static auto make_indices(tindices... indices)
     return make_tensor<tensor_size_t>(make_dims(static_cast<tensor_size_t>(sizeof...(indices))), indices...);
 }
 
+// TODO: check caching
 // TODO: check that feature scaling scaling works
 // TODO: check that feature extraction works (e.g sign(x), sign(x)*log(1+x^2), polynomial expansion)
 
@@ -446,10 +476,11 @@ UTEST_CASE(unsupervised)
     for (auto ex : {execution::par, execution::seq})
     {
         targets_stats_t stats;
-        UTEST_CHECK_THROW(stats = generator.targets_stats(ex, 3), std::runtime_error);
+        UTEST_CHECK_NOTHROW(stats = generator.targets_stats(ex, 3));
+        UTEST_CHECK_EQUAL(std::holds_alternative<scalar_stats_t>(stats), false);
+        UTEST_CHECK_EQUAL(std::holds_alternative<sclass_stats_t>(stats), false);
+        UTEST_CHECK_EQUAL(std::holds_alternative<mclass_stats_t>(stats), false);
     }
-
-    // TODO: check caching
 }
 
 UTEST_CASE(sclassification)
@@ -497,8 +528,6 @@ UTEST_CASE(sclassification)
             -1, +1, +1, -1, -1, +1, -1, +1, +1, -1));
     check_targets_stats(generator, make_indices(4, 6), make_tensor<scalar_t>(make_dims(10),
         5.0 / 4.0, 5.0 / 6.0, 5.0 / 6.0, 5.0 / 4.0, 5.0 / 6.0, 5.0 / 6.0, 5.0 / 4.0, 5.0 / 6.0, 5.0 / 6.0, 5.0 / 4.0));
-
-    // TODO: check caching
 }
 
 UTEST_CASE(mclassification)
@@ -546,9 +575,10 @@ UTEST_CASE(mclassification)
             +1.0, -1.0, -1.0, NaN, NaN, NaN, NaN, NaN, NaN,
             -1.0, +1.0, +1.0, NaN, NaN, NaN, NaN, NaN, NaN,
             +1.0, -1.0, -1.0));
-    check_targets_stats(generator, make_indices(2, 2, 2), make_tensor<scalar_t>(make_dims(10), 1, 1, 1, 1, 1, 1, 1, 1, 1, 1));
-
-    // TODO: check caching
+    check_targets_stats(generator,
+        {   {"011", 2},
+            {"100", 2}},
+        make_tensor<scalar_t>(make_dims(10), 1, 1, 1, 1, 1, 1, 1, 1, 1, 1));
 }
 
 UTEST_CASE(regression)
@@ -597,8 +627,6 @@ UTEST_CASE(regression)
         make_tensor<scalar_t>(make_dims(1), 9),
         make_tensor<scalar_t>(make_dims(1), 4.5),
         make_tensor<scalar_t>(make_dims(1), 3.027650354097));
-
-    // TODO: check caching
 }
 
 UTEST_CASE(mvregression)
@@ -651,8 +679,6 @@ UTEST_CASE(mvregression)
         make_tensor<scalar_t>(make_dims(4), 9, 8, 8, 8),
         make_tensor<scalar_t>(make_dims(4), 5, 4, 4, 4),
         make_tensor<scalar_t>(make_dims(4), 3.162277660168, 3.162277660168, 3.162277660168, 3.162277660168));
-
-    // TODO: check caching
 }
 
 UTEST_END_MODULE()

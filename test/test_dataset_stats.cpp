@@ -3,6 +3,15 @@
 
 using namespace nano;
 
+std::ostream& operator<<(std::ostream& stream, const mclass_stats_t::class_counts_t& class_counts)
+{
+    for (const auto [class_hits, counts] : class_counts)
+    {
+        stream << "class_hits=" << class_hits << ", counts=" << counts << std::endl;
+    }
+    return stream;
+}
+
 template <typename tvalue, size_t trank>
 static auto const_tensor(tvalue value, tensor_dims_t<trank> dims)
 {
@@ -24,11 +33,11 @@ static void check_sclass_stats(
 template <template <typename, size_t> class tstorage, typename tscalar>
 static void check_mclass_stats(
     const feature_t& feature, const tensor_t<tstorage, tscalar, 2>& data, indices_cmap_t samples, mask_cmap_t mask,
-    const indices_t& gt_class_counts)
+    const mclass_stats_t::class_counts_t& gt_class_counts)
 {
     const auto stats = mclass_stats_t::make(feature, make_iterator(data, mask, samples));
 
-    UTEST_CHECK_TENSOR_EQUAL(stats.m_class_counts, gt_class_counts);
+    UTEST_CHECK_EQUAL(stats.m_class_counts, gt_class_counts);
 }
 
 template <template <typename, size_t> class tstorage, typename tscalar>
@@ -98,12 +107,22 @@ UTEST_CASE(sclass)
         check_sclass_stats(feature, values, samples, mask, make_tensor<tensor_size_t>(make_dims(3), 0, 0, 0));
     }
     {
-        for (tensor_size_t sample = 1; sample < samples.size(); sample += 7)
-        {
-            values(sample) = static_cast<uint8_t>(sample % 3);
-            setbit(mask, sample);
-        }
-        check_sclass_stats(feature, values, samples, mask, make_tensor<tensor_size_t>(make_dims(3), 2, 2, 2));
+        values(0) = static_cast<uint8_t>(0); setbit(mask, 0);
+        values(1) = static_cast<uint8_t>(1); setbit(mask, 1);
+        values(3) = static_cast<uint8_t>(2); setbit(mask, 3);
+        values(5) = static_cast<uint8_t>(0); setbit(mask, 5);
+        values(6) = static_cast<uint8_t>(1); setbit(mask, 6);
+        values(9) = static_cast<uint8_t>(1); setbit(mask, 9);
+        check_sclass_stats(feature, values, samples, mask, make_tensor<tensor_size_t>(make_dims(3), 2, 3, 1));
+    }
+    {
+        values(10) = static_cast<uint8_t>(2); setbit(mask, 10);
+        values(11) = static_cast<uint8_t>(2); setbit(mask, 11);
+        values(13) = static_cast<uint8_t>(2); setbit(mask, 13);
+        values(15) = static_cast<uint8_t>(0); setbit(mask, 15);
+        values(16) = static_cast<uint8_t>(1); setbit(mask, 16);
+        values(19) = static_cast<uint8_t>(1); setbit(mask, 19);
+        check_sclass_stats(feature, values, samples, mask, make_tensor<tensor_size_t>(make_dims(3), 3, 5, 4));
     }
 }
 
@@ -117,16 +136,31 @@ UTEST_CASE(mclass)
     tensor_mem_t<uint8_t, 2> values(samples.size(), feature.classes());
     values.zero();
     {
-        check_mclass_stats(feature, values, samples, mask, make_tensor<tensor_size_t>(make_dims(3), 0, 0, 0));
+        check_mclass_stats(feature, values, samples, mask, {});
     }
     {
-        values.tensor(3) = make_tensor<uint8_t>(make_dims(3), 0, 1, 1);
-        values.tensor(5) = make_tensor<uint8_t>(make_dims(3), 1, 1, 1);
-        values.tensor(8) = make_tensor<uint8_t>(make_dims(3), 0, 0, 1);
-        setbit(mask, 3);
-        setbit(mask, 5);
-        setbit(mask, 8);
-        check_mclass_stats(feature, values, samples, mask, make_tensor<tensor_size_t>(make_dims(3), 1, 2, 3));
+        values.tensor(3) = make_tensor<uint8_t>(make_dims(3), 0, 1, 1); setbit(mask, 3);
+        values.tensor(5) = make_tensor<uint8_t>(make_dims(3), 1, 1, 1); setbit(mask, 5);
+        values.tensor(8) = make_tensor<uint8_t>(make_dims(3), 0, 0, 1); setbit(mask, 8);
+        check_mclass_stats(feature, values, samples, mask,
+        {
+            {"011", 1},
+            {"111", 1},
+            {"001", 1}
+        });
+    }
+    {
+        values.tensor(11) = make_tensor<uint8_t>(make_dims(3), 0, 1, 1); setbit(mask, 11);
+        values.tensor(12) = make_tensor<uint8_t>(make_dims(3), 1, 1, 1); setbit(mask, 12);
+        values.tensor(13) = make_tensor<uint8_t>(make_dims(3), 1, 0, 1); setbit(mask, 13);
+        values.tensor(14) = make_tensor<uint8_t>(make_dims(3), 0, 1, 1); setbit(mask, 14);
+        check_mclass_stats(feature, values, samples, mask,
+        {
+            {"011", 3},
+            {"111", 2},
+            {"001", 1},
+            {"101", 1}
+        });
     }
 }
 

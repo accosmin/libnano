@@ -445,11 +445,10 @@ targets_stats_t dataset_generator_t::targets_stats(execution, tensor_size_t) con
 
 tensor1d_t dataset_generator_t::sample_weights(const targets_stats_t& targets_stats) const
 {
-    tensor1d_t weights(m_samples.size());
-    weights.full(1.0);
-
     if (m_dataset.type() == task_type::unsupervised)
     {
+        tensor1d_t weights(m_samples.size());
+        weights.full(1.0);
         return weights;
     }
     else
@@ -462,41 +461,29 @@ tensor1d_t dataset_generator_t::sample_weights(const targets_stats_t& targets_st
                     const auto* pstats = std::get_if<sclass_stats_t>(&targets_stats);
                     critical(
                         pstats == nullptr ||
-                        pstats->m_class_counts.size() != feature.classes(),
-                        "dataset_generator_t: mis-matching targets class statistics, expecting ",
+                        pstats->classes() != feature.classes(),
+                        "dataset_generator_t: mis-matching single-label targets statistics, expecting ",
                         feature.classes(), " classes, got ",
-                        pstats == nullptr ? tensor_size_t(0) : pstats->m_class_counts.size(), " instead!");
+                        pstats == nullptr ? tensor_size_t(0) : pstats->classes(), " instead!");
 
-                    const vector_t class_weights =
-                        static_cast<scalar_t>(m_samples.size()) /
-                        static_cast<scalar_t>(feature.classes()) /
-                        pstats->m_class_counts.array().cast<scalar_t>().max(1.0);
-
-                    for (; it; ++ it)
-                    {
-                        if (const auto [index, given, label] = *it; given)
-                        {
-                            weights(index) = class_weights(static_cast<tensor_size_t>(label));
-                        }
-                    }
-                    return weights;
+                    return pstats->sample_weights(feature, it);
                 },
-                [&] (auto)
+                [&] (auto it)
                 {
-                    /*
-                    const auto* pstats = std::get_if<sclass_stats_t>(&targets_stats);
+                    const auto* pstats = std::get_if<mclass_stats_t>(&targets_stats);
                     critical(
                         pstats == nullptr ||
-                        pstats->m_class_counts.size() != feature.classes(),
-                        "dataset_generator_t: mis-matching targets class statistics, expecting ",
+                        pstats->classes() != feature.classes(),
+                        "dataset_generator_t: mis-matching multi-label targets statistics, expecting ",
                         feature.classes(), " classes, got ",
-                        pstats == nullptr ? tensor_size_t(0) : pstats->m_class_counts.size(), " instead!");*/
+                        pstats == nullptr ? tensor_size_t(0) : pstats->classes(), " instead!");
 
-                    // TODO: is it possible to weight samples similarly to the single-label multi-class case?!
-                    return weights;
+                    return pstats->sample_weights(feature, it);
                 },
                 [&] (auto)
                 {
+                    tensor1d_t weights(m_samples.size());
+                    weights.full(1.0);
                     return weights;
                 });
         });

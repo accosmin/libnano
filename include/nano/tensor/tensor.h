@@ -725,6 +725,15 @@ namespace nano
     }
 
     ///
+    /// \brief create indices at compile time.
+    ///
+    template <typename... tindices>
+    auto make_indices(tindices... indices)
+    {
+        return make_tensor<tensor_size_t>(make_dims(static_cast<tensor_size_t>(sizeof...(indices))), indices...);
+    }
+
+    ///
     /// \brief returns true if the two tensors are close, ignoring not-finite values if present.
     ///
     template

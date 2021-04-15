@@ -16,15 +16,6 @@ static auto make_features()
     };
 }
 
-std::ostream& operator<<(std::ostream& stream, const mclass_stats_t::class_counts_t& class_counts)
-{
-    for (const auto [class_hits, counts] : class_counts)
-    {
-        stream << "class_hits=" << class_hits << ", counts=" << counts << std::endl;
-    }
-    return stream;
-}
-
 class fixture_dataset_t final : public memory_dataset_t
 {
 public:
@@ -259,7 +250,7 @@ static void check_select_stats(const dataset_generator_t& generator,
 }
 
 static void check_flatten_stats0(const dataset_generator_t& generator,
-    tensor_size_t expected_count,
+    tensor_size_t expected_samples,
     const tensor1d_t& expected_min, const tensor1d_t& expected_max,
     const tensor1d_t& expected_mean, const tensor1d_t& expected_stdev, scalar_t eps = 1e-12)
 {
@@ -267,29 +258,29 @@ static void check_flatten_stats0(const dataset_generator_t& generator,
     {
         flatten_stats_t stats;
         UTEST_CHECK_NOTHROW(stats = generator.flatten_stats(ex, 3));
-        UTEST_CHECK_EQUAL(stats.m_count, expected_count);
-        UTEST_CHECK_TENSOR_CLOSE(stats.m_min, expected_min, eps);
-        UTEST_CHECK_TENSOR_CLOSE(stats.m_max, expected_max, eps);
-        UTEST_CHECK_TENSOR_CLOSE(stats.m_mean, expected_mean, eps);
-        UTEST_CHECK_TENSOR_CLOSE(stats.m_stdev, expected_stdev, eps);
+        UTEST_CHECK_EQUAL(stats.samples(), expected_samples);
+        UTEST_CHECK_TENSOR_CLOSE(stats.min(), expected_min, eps);
+        UTEST_CHECK_TENSOR_CLOSE(stats.max(), expected_max, eps);
+        UTEST_CHECK_TENSOR_CLOSE(stats.mean(), expected_mean, eps);
+        UTEST_CHECK_TENSOR_CLOSE(stats.stdev(), expected_stdev, eps);
     }
 }
 
 static void check_flatten_stats(const dataset_generator_t& generator,
-    tensor_size_t expected_count,
+    tensor_size_t expected_samples,
     const tensor1d_t& expected_min, const tensor1d_t& expected_max,
     const tensor1d_t& expected_mean, const tensor1d_t& expected_stdev)
 {
-    check_flatten_stats0(generator, expected_count, expected_min, expected_max, expected_mean, expected_stdev);
+    check_flatten_stats0(generator, expected_samples, expected_min, expected_max, expected_mean, expected_stdev);
 
     generator.shuffle(1);
-    check_flatten_stats0(generator, expected_count, expected_min, expected_max, expected_mean, expected_stdev);
+    check_flatten_stats0(generator, expected_samples, expected_min, expected_max, expected_mean, expected_stdev);
 
     generator.shuffle(0);
-    check_flatten_stats0(generator, expected_count, expected_min, expected_max, expected_mean, expected_stdev);
+    check_flatten_stats0(generator, expected_samples, expected_min, expected_max, expected_mean, expected_stdev);
 
     generator.unshuffle();
-    check_flatten_stats0(generator, expected_count, expected_min, expected_max, expected_mean, expected_stdev);
+    check_flatten_stats0(generator, expected_samples, expected_min, expected_max, expected_mean, expected_stdev);
 }
 
 static void check_targets(const dataset_generator_t& generator,
@@ -306,7 +297,7 @@ static void check_targets(const dataset_generator_t& generator,
     UTEST_CHECK_TENSOR_CLOSE(targets_cmap, expected_targets, eps);
 }
 
-static void check_targets_stats(const dataset_generator_t& generator,
+static void check_targets_sclass_stats(const dataset_generator_t& generator,
     const indices_t& expected_class_counts,
     const tensor1d_t& expected_sample_weights, scalar_t eps = 1e-12)
 {
@@ -315,20 +306,19 @@ static void check_targets_stats(const dataset_generator_t& generator,
         targets_stats_t stats;
         UTEST_REQUIRE_NOTHROW(stats = generator.targets_stats(ex, 3));
         UTEST_REQUIRE_NOTHROW(std::get<sclass_stats_t>(stats));
-        UTEST_CHECK_TENSOR_EQUAL(std::get<sclass_stats_t>(stats).m_class_counts, expected_class_counts);
+        UTEST_CHECK_TENSOR_EQUAL(std::get<sclass_stats_t>(stats).class_counts(), expected_class_counts);
         UTEST_CHECK_TENSOR_CLOSE(generator.sample_weights(stats), expected_sample_weights, eps);
 
-        std::get<sclass_stats_t>(stats).m_class_counts(0) = 0;
-        UTEST_CHECK_NOTHROW(generator.sample_weights(stats));
+        stats = sclass_stats_t{42};
+        UTEST_CHECK_THROW(generator.sample_weights(stats), std::runtime_error);
 
-        std::get<sclass_stats_t>(stats).m_class_counts.resize(42);
-        std::get<sclass_stats_t>(stats).m_class_counts.zero();
+        stats = mclass_stats_t{expected_class_counts.size()};
         UTEST_CHECK_THROW(generator.sample_weights(stats), std::runtime_error);
     }
 }
 
-static void check_targets_stats(const dataset_generator_t& generator,
-    const mclass_stats_t::class_counts_t& expected_class_counts,
+static void check_targets_mclass_stats(const dataset_generator_t& generator,
+    const indices_t& expected_class_counts,
     const tensor1d_t& expected_sample_weights, scalar_t eps = 1e-12)
 {
     for (auto ex : {execution::par, execution::seq})
@@ -336,19 +326,19 @@ static void check_targets_stats(const dataset_generator_t& generator,
         targets_stats_t stats;
         UTEST_REQUIRE_NOTHROW(stats = generator.targets_stats(ex, 3));
         UTEST_REQUIRE_NOTHROW(std::get<mclass_stats_t>(stats));
-        UTEST_CHECK_EQUAL(std::get<mclass_stats_t>(stats).m_class_counts, expected_class_counts);
+        UTEST_CHECK_EQUAL(std::get<mclass_stats_t>(stats).class_counts(), expected_class_counts);
         UTEST_CHECK_TENSOR_CLOSE(generator.sample_weights(stats), expected_sample_weights, eps);
 
-        /*std::get<mclass_stats_t>(stats).m_class_counts.begin()->second = 0;
-        UTEST_CHECK_NOTHROW(generator.sample_weights(stats));
+        stats = mclass_stats_t{42};
+        UTEST_CHECK_THROW(generator.sample_weights(stats), std::runtime_error);
 
-        std::get<mclass_stats_t>(stats).m_class_counts[string_t(42U, '0')] = 0;
-        UTEST_CHECK_THROW(generator.sample_weights(stats), std::runtime_error);*/
+        stats = sclass_stats_t{expected_class_counts.size() / 2};
+        UTEST_CHECK_THROW(generator.sample_weights(stats), std::runtime_error);
     }
 }
 
-static void check_targets_stats(const dataset_generator_t& generator,
-    tensor_size_t expected_count,
+static void check_targets_scalar_stats(const dataset_generator_t& generator,
+    tensor_size_t expected_samples,
     const tensor1d_t& expected_min, const tensor1d_t& expected_max,
     const tensor1d_t& expected_mean, const tensor1d_t& expected_stdev, scalar_t eps = 1e-12)
 {
@@ -360,19 +350,13 @@ static void check_targets_stats(const dataset_generator_t& generator,
         targets_stats_t stats;
         UTEST_REQUIRE_NOTHROW(stats = generator.targets_stats(ex, 3));
         UTEST_REQUIRE_NOTHROW(std::get<scalar_stats_t>(stats));
-        UTEST_CHECK_EQUAL(std::get<scalar_stats_t>(stats).m_count, expected_count);
-        UTEST_CHECK_TENSOR_CLOSE(std::get<scalar_stats_t>(stats).m_min, expected_min, eps);
-        UTEST_CHECK_TENSOR_CLOSE(std::get<scalar_stats_t>(stats).m_max, expected_max, eps);
-        UTEST_CHECK_TENSOR_CLOSE(std::get<scalar_stats_t>(stats).m_mean, expected_mean, eps);
-        UTEST_CHECK_TENSOR_CLOSE(std::get<scalar_stats_t>(stats).m_stdev, expected_stdev, eps);
+        UTEST_CHECK_EQUAL(std::get<scalar_stats_t>(stats).samples(), expected_samples);
+        UTEST_CHECK_TENSOR_CLOSE(std::get<scalar_stats_t>(stats).min(), expected_min, eps);
+        UTEST_CHECK_TENSOR_CLOSE(std::get<scalar_stats_t>(stats).max(), expected_max, eps);
+        UTEST_CHECK_TENSOR_CLOSE(std::get<scalar_stats_t>(stats).mean(), expected_mean, eps);
+        UTEST_CHECK_TENSOR_CLOSE(std::get<scalar_stats_t>(stats).stdev(), expected_stdev, eps);
         UTEST_CHECK_TENSOR_CLOSE(generator.sample_weights(stats), expected_sample_weights, eps);
     }
-}
-
-template <typename... tindices>
-static auto make_indices(tindices... indices)
-{
-    return make_tensor<tensor_size_t>(make_dims(static_cast<tensor_size_t>(sizeof...(indices))), indices...);
 }
 
 // TODO: check caching
@@ -526,8 +510,10 @@ UTEST_CASE(sclassification)
         make_tensor<scalar_t>(make_dims(10, 2, 1, 1),
             +1, -1, -1, +1, -1, +1, +1, -1, -1, +1,
             -1, +1, +1, -1, -1, +1, -1, +1, +1, -1));
-    check_targets_stats(generator, make_indices(4, 6), make_tensor<scalar_t>(make_dims(10),
-        5.0 / 4.0, 5.0 / 6.0, 5.0 / 6.0, 5.0 / 4.0, 5.0 / 6.0, 5.0 / 6.0, 5.0 / 4.0, 5.0 / 6.0, 5.0 / 6.0, 5.0 / 4.0));
+    check_targets_sclass_stats(generator,
+        make_indices(4, 6),
+        make_tensor<scalar_t>(make_dims(10),
+            5.0 / 4.0, 5.0 / 6.0, 5.0 / 6.0, 5.0 / 4.0, 5.0 / 6.0, 5.0 / 6.0, 5.0 / 4.0, 5.0 / 6.0, 5.0 / 6.0, 5.0 / 4.0));
 }
 
 UTEST_CASE(mclassification)
@@ -575,10 +561,9 @@ UTEST_CASE(mclassification)
             +1.0, -1.0, -1.0, NaN, NaN, NaN, NaN, NaN, NaN,
             -1.0, +1.0, +1.0, NaN, NaN, NaN, NaN, NaN, NaN,
             +1.0, -1.0, -1.0));
-    check_targets_stats(generator,
-        {   {"011", 2},
-            {"100", 2}},
-        make_tensor<scalar_t>(make_dims(10), 1, 1, 1, 1, 1, 1, 1, 1, 1, 1));
+    check_targets_mclass_stats(generator,
+        make_indices(0, 2, 0, 0, 2, 0),
+        make_tensor<scalar_t>(make_dims(10), 1, 0, 0, 1, 0, 0, 1, 0, 0, 1));
 }
 
 UTEST_CASE(regression)
@@ -622,7 +607,7 @@ UTEST_CASE(regression)
 
     check_targets(generator, feature_t{"f32"}.scalar(feature_type::float32, make_dims(1, 1, 1)), make_dims(1, 1, 1),
         make_tensor<scalar_t>(make_dims(10, 1, 1, 1), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9));
-    check_targets_stats(generator, 10,
+    check_targets_scalar_stats(generator, 10,
         make_tensor<scalar_t>(make_dims(1), 0),
         make_tensor<scalar_t>(make_dims(1), 9),
         make_tensor<scalar_t>(make_dims(1), 4.5),
@@ -674,7 +659,7 @@ UTEST_CASE(mvregression)
             5, 4, 4, 4, NaN, NaN, NaN, NaN,
             7, 6, 6, 6, NaN, NaN, NaN, NaN,
             9, 8, 8, 8, NaN, NaN, NaN, NaN));
-    check_targets_stats(generator, 5,
+    check_targets_scalar_stats(generator, 5,
         make_tensor<scalar_t>(make_dims(4), 1, 0, 0, 0),
         make_tensor<scalar_t>(make_dims(4), 9, 8, 8, 8),
         make_tensor<scalar_t>(make_dims(4), 5, 4, 4, 4),

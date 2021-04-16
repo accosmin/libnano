@@ -608,4 +608,14 @@ UTEST_CASE(is_tensor)
     static_assert(!is_tensor_v<std::vector<int>>);
 }
 
+UTEST_CASE(make_indices)
+{
+    const auto indices = make_indices(10, 42, 13);
+
+    UTEST_CHECK_EQUAL(indices.size(), 3);
+    UTEST_CHECK_EQUAL(indices(0), 10);
+    UTEST_CHECK_EQUAL(indices(1), 42);
+    UTEST_CHECK_EQUAL(indices(2), 13);
+}
+
 UTEST_END_MODULE()

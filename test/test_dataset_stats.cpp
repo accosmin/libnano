@@ -3,14 +3,6 @@
 
 using namespace nano;
 
-template <typename tvalue, size_t trank>
-static auto const_tensor(tensor_dims_t<trank> dims, tvalue value)
-{
-    tensor_mem_t<tvalue, trank> data(dims);
-    data.full(value);
-    return data;
-}
-
 template <typename tscalar, size_t trank>
 static void check_sclass_stats(
     const feature_t& feature, dataset_iterator_t<tscalar, trank> it,
@@ -35,7 +27,7 @@ static void check_sclass_stats(
     {
         // sample weights for incompatible features
         const auto weights0 = stats.sample_weights(feature_t{""}.sclass(42), it);
-        const auto expected_weights0 = const_tensor<scalar_t>(make_dims(it.size()), 0.0);
+        const auto expected_weights0 = make_full_tensor<scalar_t>(make_dims(it.size()), 0.0);
         UTEST_CHECK_TENSOR_CLOSE(weights0, expected_weights0, epsilon);
     }
 }
@@ -64,7 +56,7 @@ static void check_mclass_stats(
     {
         // sample weights for incompatible features
         const auto weights0 = stats.sample_weights(feature_t{""}.sclass(42), it);
-        const auto expected_weights0 = const_tensor<scalar_t>(make_dims(it.size()), 0.0);
+        const auto expected_weights0 = make_full_tensor<scalar_t>(make_dims(it.size()), 0.0);
         UTEST_CHECK_TENSOR_CLOSE(weights0, expected_weights0, epsilon);
     }
 }
@@ -77,10 +69,10 @@ static void check_scalar_stats(
 {
     const auto stats = scalar_stats_t::make(feature, it);
 
-    const auto gt_min = const_tensor<scalar_t>(feature.dims(), expected_min);
-    const auto gt_max = const_tensor<scalar_t>(feature.dims(), expected_max);
-    const auto gt_mean = const_tensor<scalar_t>(feature.dims(), expected_mean);
-    const auto gt_stdev = const_tensor<scalar_t>(feature.dims(), expected_stdev);
+    const auto gt_min = make_full_tensor<scalar_t>(feature.dims(), expected_min);
+    const auto gt_max = make_full_tensor<scalar_t>(feature.dims(), expected_max);
+    const auto gt_mean = make_full_tensor<scalar_t>(feature.dims(), expected_mean);
+    const auto gt_stdev = make_full_tensor<scalar_t>(feature.dims(), expected_stdev);
 
     UTEST_CHECK_EQUAL(stats.samples(), expected_samples);
     UTEST_CHECK_TENSOR_CLOSE(stats.min(), gt_min.reshape(-1), epsilon);
@@ -99,7 +91,7 @@ UTEST_CASE(scalar)
         const auto feature = feature_t{"feature"}.scalar(feature_type::float32, dims);
 
         auto mask = make_mask(make_dims(samples.size()));
-        auto data = const_tensor<scalar_t>(cat_dims(samples.size(), dims), std::numeric_limits<scalar_t>::quiet_NaN());
+        auto data = make_full_tensor<scalar_t>(cat_dims(samples.size(), dims), std::numeric_limits<scalar_t>::quiet_NaN());
         const auto it = make_iterator(data, mask, samples);
         {
             const auto min = std::numeric_limits<scalar_t>::max();
@@ -128,7 +120,7 @@ UTEST_CASE(sclass)
     const auto feature = feature_t{"feature"}.sclass(3);
 
     auto mask = make_mask(make_dims(samples.size()));
-    auto data = const_tensor<uint8_t>(make_dims(samples.size()), 0x00);
+    auto data = make_full_tensor<uint8_t>(make_dims(samples.size()), 0x00);
     const auto it = make_iterator(data, mask, samples);
     {
         check_sclass_stats(feature, it, 0, make_indices(0, 0, 0),
@@ -177,7 +169,7 @@ UTEST_CASE(mclass)
     const auto feature = feature_t{"feature"}.sclass(3);
 
     auto mask = make_mask(make_dims(samples.size()));
-    auto data = const_tensor<uint8_t>(make_dims(samples.size(), feature.classes()), 0x00);
+    auto data = make_full_tensor<uint8_t>(make_dims(samples.size(), feature.classes()), 0x00);
     const auto it = make_iterator(data, mask, samples);
     {
         check_mclass_stats(feature, it, 0, make_indices(0, 0, 0, 0, 0, 0),

@@ -618,4 +618,17 @@ UTEST_CASE(make_indices)
     UTEST_CHECK_EQUAL(indices(2), 13);
 }
 
+UTEST_CASE(make_full_tensor)
+{
+    const auto tensor = make_full_tensor<int>(make_dims(2, 3), 42);
+
+    UTEST_CHECK_EQUAL(tensor.dims(), make_dims(2, 3));
+    UTEST_CHECK_EQUAL(tensor(0, 0), 42);
+    UTEST_CHECK_EQUAL(tensor(0, 1), 42);
+    UTEST_CHECK_EQUAL(tensor(0, 2), 42);
+    UTEST_CHECK_EQUAL(tensor(1, 0), 42);
+    UTEST_CHECK_EQUAL(tensor(1, 1), 42);
+    UTEST_CHECK_EQUAL(tensor(1, 2), 42);
+}
+
 UTEST_END_MODULE()

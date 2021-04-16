@@ -725,12 +725,23 @@ namespace nano
     }
 
     ///
-    /// \brief create indices at compile time.
+    /// \brief create indices from an initializer list.
     ///
     template <typename... tindices>
     auto make_indices(tindices... indices)
     {
         return make_tensor<tensor_size_t>(make_dims(static_cast<tensor_size_t>(sizeof...(indices))), indices...);
+    }
+
+    ///
+    /// \brief create a tensor and fill it with the given value.
+    ///
+    template <typename tscalar, size_t trank, typename tscalar_value>
+    auto make_full_tensor(const tensor_dims_t<trank>& dims, tscalar_value value)
+    {
+        tensor_mem_t<tscalar, trank> tensor(dims);
+        tensor.full(static_cast<tscalar>(value));
+        return tensor;
     }
 
     ///

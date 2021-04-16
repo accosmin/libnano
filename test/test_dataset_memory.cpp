@@ -3,14 +3,6 @@
 
 using namespace nano;
 
-template <typename tvalue, size_t trank>
-static auto make_tensor(tvalue value, tensor_dims_t<trank> dims)
-{
-    tensor_mem_t<tvalue, trank> values(dims);
-    values.full(value);
-    return values;
-}
-
 template <typename tscalar, size_t trank>
 static auto check_inputs(const memory_dataset_t& dataset, tensor_size_t index,
     const feature_t& gt_feature, const tensor_mem_t<tscalar, trank>& gt_data, const mask_cmap_t& gt_mask)
@@ -101,8 +93,8 @@ public:
         {
             for (tensor_size_t sample = 0; sample < m_samples; ++ sample)
             {
-                this->set(sample, feature,
-                    make_tensor(sample % feature, m_features[static_cast<size_t>(feature)].dims()));
+                this->set(sample, feature, make_full_tensor<tensor_size_t>(
+                    m_features[static_cast<size_t>(feature)].dims(), sample % feature));
             }
         }
 
@@ -119,7 +111,7 @@ public:
         // multi label
         for (tensor_size_t sample = 0, feature = 12; sample < m_samples; sample += 4)
         {
-            this->set(sample, feature, make_tensor(sample % 3, make_dims(3)));
+            this->set(sample, feature, make_full_tensor<uint8_t>(make_dims(3), sample % 3));
         }
     }
 

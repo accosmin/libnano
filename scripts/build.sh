@@ -142,10 +142,10 @@ function codecov {
 
     local output=${basedir}/coverage.info
 
-    lcov --directory . --gcov-tool ${GCOV} --capture --output-file ${output} || return 1
-    lcov --remove ${output} '/usr/*' "${HOME}"'/.cache/*' '*/test/*' '*/external/*' --output-file ${output} || return 1
-    lcov --list ${output} || return 1
-    genhtml --output lcovhtml ${output} || return 1
+    lcov --rc lcov_branch_coverage=1 --directory . --gcov-tool ${GCOV} --capture --output-file ${output} || return 1
+    lcov --rc lcov_branch_coverage=1 --remove ${output} '/usr/*' "${HOME}"'/.cache/*' '*/test/*' '*/external/*' --output-file ${output} || return 1
+    lcov --rc lcov_branch_coverage=1 --list ${output} || return 1
+    genhtml --rc genhtml_branch_coverage=1 --output lcovhtml ${output} || return 1
     if [ -n "$CODECOV_TOKEN" ]; then
         printf "Uploading code coverage report to codecov.io ...\n"
         bash <(curl -s https://codecov.io/bash) -f ${output} || return 1

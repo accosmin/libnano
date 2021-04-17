@@ -12,8 +12,6 @@ before_script:
     if [ "$TRAVIS_OS_NAME" = "linux" ]; then
        bash scripts/setup_ubuntu1804.sh --default --llvm 10
     fi
-  - bash scripts/download_datasets.sh --iris --wine --adult --abalone --forest-fires --breast-cancer --bank-marketing
-  - bash scripts/download_datasets.sh --mnist --fashion-mnist --cifar10 --cifar100
 
 # TODO: support for building on Windows
 # TODO: support for code coverage reports for branches

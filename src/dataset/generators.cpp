@@ -2,20 +2,118 @@
 
 using namespace nano;
 
-identity_generator_t::identity_generator_t(const memory_dataset_t& dataset, const indices_t& samples) :
-    generator_t(dataset, samples)
+identity_generator_t::identity_generator_t(
+    const memory_dataset_t& dataset, const indices_t& samples,
+    mclass2binary m2b, sclass2binary s2b, struct2scalar s2s) :
+    generator_t(dataset, samples),
+    m_mclass2binary(m2b),
+    m_sclass2binary(s2b),
+    m_struct2scalar(s2s)
 {
+    tensor_size_t count = 0;
+    for (tensor_size_t ifeature = 0, features = dataset.features(); ifeature < features; ++ ifeature)
+    {
+        switch (const auto& feature = dataset.feature(ifeature); feature.type())
+        {
+        case feature_type::mclass:
+            count += (m_mclass2binary == mclass2binary::on) ? (1 + feature.classes()) : tensor_size_t(1);
+            break;
+
+        case feature_type::sclass:
+            count += (m_sclass2binary == sclass2binary::on) ? (1 + feature.classes()) : tensor_size_t(1);
+            break;
+
+        default:
+            count += 1;
+            if (size(feature.dims()) > 1 && m_struct2scalar == struct2scalar::on)
+            {
+                count += size(feature.dims());
+            }
+            break;
+        }
+    }
+
+    m_feature_mapping.resize(count, 2);
+    for (tensor_size_t ifeature = 0, index = 0, features = dataset.features(); ifeature < features; ++ ifeature)
+    {
+        switch (const auto& feature = dataset.feature(ifeature); feature.type())
+        {
+        case feature_type::mclass:
+            map1(index, ifeature, -1);
+            if (m_mclass2binary == mclass2binary::on)
+            {
+                mapN(index, ifeature, feature.classes());
+            }
+            break;
+
+        case feature_type::sclass:
+            map1(index, ifeature, -1);
+            if (m_sclass2binary == sclass2binary::on)
+            {
+                mapN(index, ifeature, feature.classes());
+            }
+            break;
+
+        default:
+            map1(index, ifeature, -1);
+            if (size(feature.dims()) > 1 && m_struct2scalar == struct2scalar::on)
+            {
+                mapN(index, ifeature, size(feature.dims()));
+            }
+            break;
+        }
+    }
+
     allocate(this->features());
 }
 
 tensor_size_t identity_generator_t::features() const
 {
-    return dataset().features();
+    return m_feature_mapping.size<0>();
 }
 
-feature_t identity_generator_t::feature(tensor_size_t feature) const
+feature_t identity_generator_t::feature(tensor_size_t ifeature) const
 {
-    return dataset().feature(feature);
+    assert(ifeature >= 0 && ifeature < m_feature_mapping.size<0>());
+
+    const auto component = m_feature_mapping(ifeature, 1);
+
+    switch (const auto& feature = dataset().feature(m_feature_mapping(ifeature, 0)); feature.type())
+    {
+    case feature_type::sclass:
+        if (component < 0)
+        {
+            return feature;
+        }
+        else
+        {
+            return feature_t{
+                scat(feature.name(), "_", feature.labels()[static_cast<size_t>(component)])}
+                .sclass(strings_t{"off", "on"});
+        }
+
+    case feature_type::mclass:
+        if (component < 0)
+        {
+            return feature;
+        }
+        else
+        {
+            return feature_t{
+                scat(feature.name(), "_", feature.labels()[static_cast<size_t>(component)])}
+                .sclass(strings_t{"off", "on"});
+        }
+
+    default:
+        if (component < 0)
+        {
+            return feature;
+        }
+        else
+        {
+            return feature_t{scat(feature.name(), "_", component)}.scalar(feature.type(), make_dims(1, 1, 1));
+        }
+    }
 }
 
 void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_range, sclass_map_t storage) const

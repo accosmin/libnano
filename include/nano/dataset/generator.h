@@ -1,14 +1,13 @@
 #pragma once
 
-#include <nano/factory.h>
+#include <unordered_map>
 #include <nano/dataset/stats.h>
 #include <nano/dataset/dataset.h>
 
 namespace nano
 {
     class generator_t;
-    using generator_factory_t = factory_t<generator_t>;
-    using rgenerator_t = generator_factory_t::trobject;
+    using rgenerator_t = std::unique_ptr<generator_t>;
     using rgenerators_t = std::vector<rgenerator_t>;
 
     // single-label categorical feature values: (sample index) = label/class index
@@ -32,6 +31,34 @@ namespace nano
     using struct_cmap_t = tensor_cmap_t<scalar_t, 4>;
 
     ///
+    /// \brief toggle the generation of binary classification features
+    ///     from single-label and multi-label multi-class features.
+    ///
+    /// NB: one binary classification feature is generated for each class.
+    ///
+    enum class sclass2binary : int32_t
+    {
+        off = 0, on
+    };
+
+    enum class mclass2binary : int32_t
+    {
+        off = 0, on
+    };
+
+    ///
+    /// \brief toggle the generation of scalar (univariate) continuous features
+    ///     from structured (multivariate) continuous features.
+    ///
+    /// NB: one scalar feature is generated for each component of the structured feature.
+    ///
+    enum class struct2scalar : int32_t
+    {
+        off = 0,
+        on
+    };
+
+    ///
     /// \brief generate features from a given collection of samples of a dataset (e.g. the training samples).
     ///
     /// NB: optional inputs are supported.
@@ -49,11 +76,6 @@ namespace nano
     class NANO_PUBLIC generator_t
     {
     public:
-
-        ///
-        /// \brief returns the available implementations.
-        ///
-        static generator_factory_t& all();
 
         ///
         /// \brief constructor.

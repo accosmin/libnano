@@ -1,4 +1,3 @@
-#include <mutex>
 #include <nano/tpool.h>
 #include <nano/dataset/iterator.h>
 #include <nano/dataset/generators.h>
@@ -13,21 +12,6 @@ static auto resize_and_map(tensor_mem_t<tscalar, trank>& buffer, tindices... dim
         buffer.resize(dims...);
     }
     return map_tensor(buffer.data(), dims...);
-}
-
-generator_factory_t& generator_t::all()
-{
-    static generator_factory_t manager;
-
-    static std::once_flag flag;
-    std::call_once(flag, [] ()
-    {
-        //manager.add<identity_generator_t>(
-        //    "identity",
-        //    "original input features");
-    });
-
-    return manager;
 }
 
 generator_t::generator_t(const memory_dataset_t& dataset, const indices_t& samples) :

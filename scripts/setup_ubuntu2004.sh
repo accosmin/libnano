@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
 function setup {
-    sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    #sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
     sudo apt update -qq
     sudo apt install -y git vim cmake lcov cppcheck valgrind
-    sudo apt install -y libomp-dev libeigen3-dev qt5-default qttools5-dev-tools
+    sudo apt install -y libomp-dev libeigen3-dev
     sudo apt install -y gcc g++ clang clang-tidy clang-tools python-yaml libc++-dev libc++abi-dev
 }
 
 function setup_gcc {
     local gcc=$1
 
-    sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    #sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
     sudo apt update -qq
     sudo apt install -y gcc-${gcc} g++-${gcc}
 }

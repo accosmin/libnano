@@ -1,5 +1,5 @@
 sudo: required
-dist: bionic
+dist: focal
 language: cpp
 
 before_script:
@@ -10,7 +10,7 @@ before_script:
     fi
   - |
     if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-       bash scripts/setup_ubuntu1804.sh --default --llvm 10
+       bash scripts/setup_ubuntu2004.sh --default
     fi
 
 # TODO: support for building on Windows
@@ -59,61 +59,61 @@ matrix:
       compiler: clang
       env: TEST="clang-tidy-cert (clang)"
       script:
-        - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-cert
+        - CXX=clang++ bash scripts/build.sh --libcpp --config --build --clang-tidy-cert
 
     - os: linux
       compiler: clang
       env: TEST="clang-tidy-hicpp (clang)"
       script:
-        - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-hicpp
+        - CXX=clang++ bash scripts/build.sh --libcpp --config --build --clang-tidy-hicpp
 
     - os: linux
       compiler: clang
       env: TEST="clang-tidy-misc (clang)"
       script:
-        - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-misc
+        - CXX=clang++ bash scripts/build.sh --libcpp --config --build --clang-tidy-misc
 
     - os: linux
       compiler: clang
       env: TEST="clang-tidy-bugprone (clang)"
       script:
-        - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-bugprone
+        - CXX=clang++ bash scripts/build.sh --libcpp --config --build --clang-tidy-bugprone
 
     - os: linux
       compiler: clang
       env: TEST="clang-tidy-modernize (clang)"
       script:
-        - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-modernize
+        - CXX=clang++ bash scripts/build.sh --libcpp --config --build --clang-tidy-modernize
 
     - os: linux
       compiler: clang
       env: TEST="clang-tidy-performance (clang)"
       script:
-        - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-performance
+        - CXX=clang++ bash scripts/build.sh --libcpp --config --build --clang-tidy-performance
 
     - os: linux
       compiler: clang
-      env: TEST="clang-tidy-portability (clang-10)"
+      env: TEST="clang-tidy-portability (clang)"
       script:
-        - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-portability
+        - CXX=clang++ bash scripts/build.sh --libcpp --config --build --clang-tidy-portability
 
     - os: linux
       compiler: clang
       env: TEST="clang-tidy-readability (clang)"
       script:
-        - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-readability
+        - CXX=clang++ bash scripts/build.sh --libcpp --config --build --clang-tidy-readability
 
     - os: linux
       compiler: clang
       env: TEST="clang-tidy-clang-analyzer (clang)"
       script:
-        - CXX=clang++-10 travis_wait 30 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-clang-analyzer
+        - CXX=clang++ travis_wait 30 bash scripts/build.sh --libcpp --config --build --clang-tidy-clang-analyzer
 
     - os: linux
       compiler: clang
       env: TEST="clang-tidy-cppcoreguidelines (clang)"
       script:
-        - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-cppcoreguidelines
+        - CXX=clang++ bash scripts/build.sh --libcpp --config --build --clang-tidy-cppcoreguidelines
 
     - os: linux
       compiler: gcc

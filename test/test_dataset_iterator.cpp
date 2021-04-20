@@ -105,7 +105,7 @@ UTEST_CASE(data1D)
         const auto expected_values = std::vector<int>{7, -1, 9, -1, 11, -1, 13, -1, 15, -1, 17, -1};
 
         auto it = make_iterator(data, mask, samples);
-        const auto it_end = make_end_iterator(data, mask, samples);
+        const auto it_end = make_end_iterator(samples);
         UTEST_CHECK_EQUAL(it.size(), 12);
         UTEST_CHECK_EQUAL(it.index(), 0);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), true);
@@ -209,6 +209,143 @@ UTEST_CASE(data4D)
         UTEST_CHECK_EQUAL(it.index(), 3);
         UTEST_CHECK_EQUAL(static_cast<bool>(it), false);
     }
+}
+
+UTEST_CASE(pairwise)
+{
+    const auto data1 = make_tensor<int>(make_dims(4, 2, 2, 1), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+    const auto data2 = make_tensor<int>(make_dims(4), -1, -2, -3, -4);
+
+    auto mask1 = make_mask(make_dims(4));
+    auto mask2 = make_mask(make_dims(4));
+
+    setbit(mask1, 0);
+    setbit(mask1, 1);
+    setbit(mask1, 3);
+
+    setbit(mask2, 1);
+    setbit(mask2, 2);
+    setbit(mask2, 3);
+
+    const auto samples = arange(0, 4);
+
+    {
+        const auto it = dataset_pairwise_iterator_t<int, 4, int, 1>{};
+        UTEST_CHECK_EQUAL(it.size(), 0);
+        UTEST_CHECK_EQUAL(it.index(), 0);
+        UTEST_CHECK_EQUAL(static_cast<bool>(it), false);
+    }
+    {
+        auto it = make_iterator(data1, mask1, data2, mask2, samples);
+        for (auto i = 0; i < 4; ++ i, ++ it)
+        {
+            UTEST_CHECK_EQUAL(it.size(), 4);
+            UTEST_CHECK_EQUAL(it.index(), i);
+            UTEST_CHECK_EQUAL(static_cast<bool>(it), true);
+            {
+                const auto [index, given1, value1, given2, value2] = *it;
+                UTEST_CHECK_EQUAL(index, i);
+                UTEST_CHECK_EQUAL(given1, getbit(mask1, i));
+                UTEST_CHECK_EQUAL(given2, getbit(mask2, i));
+                UTEST_CHECK_TENSOR_EQUAL(value1, data1.tensor(i));
+                UTEST_CHECK_EQUAL(value2, data2(i));
+            }
+        }
+        UTEST_CHECK_EQUAL(it.size(), 4);
+        UTEST_CHECK_EQUAL(it.index(), 4);
+        UTEST_CHECK_EQUAL(static_cast<bool>(it), false);
+    }
+    {
+        auto it = make_iterator(data1, mask1, data1, mask1, samples);
+        for (auto i = 0; i < 4; ++ i, ++ it)
+        {
+            UTEST_CHECK_EQUAL(it.size(), 4);
+            UTEST_CHECK_EQUAL(it.index(), i);
+            UTEST_CHECK_EQUAL(static_cast<bool>(it), true);
+            {
+                const auto [index, given1, value1, given2, value2] = *it;
+                UTEST_CHECK_EQUAL(index, i);
+                UTEST_CHECK_EQUAL(given1, getbit(mask1, i));
+                UTEST_CHECK_EQUAL(given2, getbit(mask1, i));
+                UTEST_CHECK_TENSOR_EQUAL(value1, data1.tensor(i));
+                UTEST_CHECK_TENSOR_EQUAL(value2, data1.tensor(i));
+            }
+        }
+        UTEST_CHECK_EQUAL(it.size(), 4);
+        UTEST_CHECK_EQUAL(it.index(), 4);
+        UTEST_CHECK_EQUAL(static_cast<bool>(it), false);
+    }
+    {
+        auto it = make_iterator(data2, mask2, data1, mask1, samples);
+        for (auto i = 0; i < 4; ++ i, ++ it)
+        {
+            UTEST_CHECK_EQUAL(it.size(), 4);
+            UTEST_CHECK_EQUAL(it.index(), i);
+            UTEST_CHECK_EQUAL(static_cast<bool>(it), true);
+            {
+                const auto [index, given1, value1, given2, value2] = *it;
+                UTEST_CHECK_EQUAL(index, i);
+                UTEST_CHECK_EQUAL(given1, getbit(mask2, i));
+                UTEST_CHECK_EQUAL(given2, getbit(mask1, i));
+                UTEST_CHECK_EQUAL(value1, data2(i));
+                UTEST_CHECK_TENSOR_EQUAL(value2, data1.tensor(i));
+            }
+        }
+        UTEST_CHECK_EQUAL(it.size(), 4);
+        UTEST_CHECK_EQUAL(it.index(), 4);
+        UTEST_CHECK_EQUAL(static_cast<bool>(it), false);
+    }
+    {
+        auto it = make_iterator(data2, mask2, data2, mask2, samples);
+        for (auto i = 0; i < 4; ++ i, ++ it)
+        {
+            UTEST_CHECK_EQUAL(it.size(), 4);
+            UTEST_CHECK_EQUAL(it.index(), i);
+            UTEST_CHECK_EQUAL(static_cast<bool>(it), true);
+            {
+                const auto [index, given1, value1, given2, value2] = *it;
+                UTEST_CHECK_EQUAL(index, i);
+                UTEST_CHECK_EQUAL(given1, getbit(mask2, i));
+                UTEST_CHECK_EQUAL(given2, getbit(mask2, i));
+                UTEST_CHECK_EQUAL(value1, data2(i));
+                UTEST_CHECK_EQUAL(value2, data2(i));
+            }
+        }
+        UTEST_CHECK_EQUAL(it.size(), 4);
+        UTEST_CHECK_EQUAL(it.index(), 4);
+        UTEST_CHECK_EQUAL(static_cast<bool>(it), false);
+    }
+}
+
+UTEST_CASE(loop_samples)
+{
+    const auto data1 = make_tensor<int>(make_dims(4, 2, 2, 1), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+    const auto data2 = make_tensor<int>(make_dims(4), -1, -2, -3, -4);
+
+    auto mask1 = make_mask(make_dims(4));
+    auto mask2 = make_mask(make_dims(4));
+
+    const auto samples = arange(0, 4);
+
+    loop_samples<1U>(data1, mask1, data2, mask2, samples,
+        [&] (auto) { UTEST_CHECK(false); },
+        [&] ()     { UTEST_CHECK(true); });
+
+    loop_samples<2U>(data1, mask1, data2, mask2, samples,
+        [&] (auto) { UTEST_CHECK(false); },
+        [&] ()     { UTEST_CHECK(true); });
+
+    loop_samples<4U>(data1, mask1, data2, mask2, samples,
+        [&] (auto) { UTEST_CHECK(false); },
+        [&] ()     { UTEST_CHECK(true); });
+
+    loop_samples<4U>(data1, mask1, data2.reshape(4, 1, 1, 1), mask2, samples,
+        [&] (auto) { UTEST_CHECK(true); },
+        [&] ()     { UTEST_CHECK(false); });
+
+    loop_samples<1U>(data1.reshape(-1), mask1, data2, mask2, samples,
+        [&] (auto) { UTEST_CHECK(true); },
+        [&] ()     { UTEST_CHECK(false); });
 }
 
 UTEST_END_MODULE()

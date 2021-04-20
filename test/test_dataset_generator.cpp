@@ -373,7 +373,7 @@ UTEST_CASE(unsupervised)
     auto generator = dataset_generator_t{dataset, samples};
     generator.add<identity_generator_t>(execution::par);
 
-    UTEST_CHECK_EQUAL(generator.features(), 4);
+    UTEST_REQUIRE_EQUAL(generator.features(), 4);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"mclass3"}.mclass(strings_t{"m0", "m1", "m2"}));
     UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"sclass2"}.sclass(strings_t{"s0", "s1"}));
     UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"f32"}.scalar(feature_type::float32, make_dims(1, 1, 1)));
@@ -475,7 +475,7 @@ UTEST_CASE(sclassification)
     auto generator = dataset_generator_t{dataset, samples};
     generator.add<identity_generator_t>(execution::par);
 
-    UTEST_CHECK_EQUAL(generator.features(), 3);
+    UTEST_REQUIRE_EQUAL(generator.features(), 3);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"mclass3"}.mclass(strings_t{"m0", "m1", "m2"}));
     UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"f32"}.scalar(feature_type::float32, make_dims(1, 1, 1)));
     UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"u8_struct"}.scalar(feature_type::uint8, make_dims(2, 1, 2)));
@@ -524,7 +524,7 @@ UTEST_CASE(mclassification)
     auto generator = dataset_generator_t{dataset, samples};
     generator.add<identity_generator_t>(execution::par);
 
-    UTEST_CHECK_EQUAL(generator.features(), 3);
+    UTEST_REQUIRE_EQUAL(generator.features(), 3);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"sclass2"}.sclass(strings_t{"s0", "s1"}));
     UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"f32"}.scalar(feature_type::float32, make_dims(1, 1, 1)));
     UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"u8_struct"}.scalar(feature_type::uint8, make_dims(2, 1, 2)));
@@ -574,7 +574,7 @@ UTEST_CASE(regression)
     auto generator = dataset_generator_t{dataset, samples};
     generator.add<identity_generator_t>(execution::par);
 
-    UTEST_CHECK_EQUAL(generator.features(), 3);
+    UTEST_REQUIRE_EQUAL(generator.features(), 3);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"mclass3"}.mclass(strings_t{"m0", "m1", "m2"}));
     UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"sclass2"}.sclass(strings_t{"s0", "s1"}));
     UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"u8_struct"}.scalar(feature_type::uint8, make_dims(2, 1, 2)));
@@ -622,7 +622,7 @@ UTEST_CASE(mvregression)
     auto generator = dataset_generator_t{dataset, samples};
     generator.add<identity_generator_t>(execution::par);
 
-    UTEST_CHECK_EQUAL(generator.features(), 3);
+    UTEST_REQUIRE_EQUAL(generator.features(), 3);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"mclass3"}.mclass(strings_t{"m0", "m1", "m2"}));
     UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"sclass2"}.sclass(strings_t{"s0", "s1"}));
     UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"f32"}.scalar(feature_type::float32, make_dims(1, 1, 1)));

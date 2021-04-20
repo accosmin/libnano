@@ -9,6 +9,9 @@ namespace nano
     // TODO: polynomial features
     // TODO: basic image-based features: gradients, magnitude, orientation, HoG
 
+    NANO_PUBLIC std::vector<tensor_size_t> select_scalar_components(
+        const memory_dataset_t&, struct2scalar, const indices_t& feature_indices);
+
     ///
     /// \brief
     ///
@@ -16,43 +19,361 @@ namespace nano
     {
     public:
 
-        identity_generator_t(
-            const memory_dataset_t& dataset, const indices_t& samples,
-            mclass2binary = mclass2binary::off,
-            sclass2binary = sclass2binary::off,
-            struct2scalar = struct2scalar::off);
+        identity_generator_t(const memory_dataset_t& dataset, const indices_t& samples);
 
         tensor_size_t features() const override;
         feature_t feature(tensor_size_t) const override;
-        void flatten(tensor_range_t, tensor2d_map_t, tensor_size_t) const override;
 
         void select(tensor_size_t, tensor_range_t, sclass_map_t) const override;
         void select(tensor_size_t, tensor_range_t, mclass_map_t) const override;
         void select(tensor_size_t, tensor_range_t, scalar_map_t) const override;
         void select(tensor_size_t, tensor_range_t, struct_map_t) const override;
+        void flatten(tensor_range_t, tensor2d_map_t, tensor_size_t) const override;
+    };
+
+    ///
+    /// \brief
+    ///
+    template <typename toperator>
+    class NANO_PUBLIC scalar_elemwise_generator_t : public generator_t
+    {
+    public:
+
+        scalar_elemwise_generator_t(
+            const memory_dataset_t& dataset, const indices_t& samples,
+            string_t feature_name,
+            struct2scalar s2s = struct2scalar::off,
+            indices_t feature_indices = indices_t{}) :
+            generator_t(dataset, samples),
+            m_feature_name(std::move(feature_name)),
+            m_struct2scalar(s2s)
+        {
+            make_mapping(feature_indices);
+            allocate(this->features());
+        }
+
+        tensor_size_t features() const override { return get_features(); }
+        feature_t feature(tensor_size_t ifeature) const override { return get_feature(ifeature); }
+
+        void select(tensor_size_t ifeature, tensor_range_t sample_range, scalar_map_t storage) const override
+        {
+            do_select(ifeature, sample_range, storage);
+        }
+        void flatten(tensor_range_t sample_range, tensor2d_map_t storage, tensor_size_t column_offset) const override
+        {
+            do_flatten(sample_range, storage, column_offset);
+        }
 
     private:
 
-        void map1(tensor_size_t& index, tensor_size_t ifeature, tensor_size_t icomponent)
+        void make_mapping(const indices_t& feature_indices)
         {
-            m_feature_mapping(index, 0) = ifeature;
-            m_feature_mapping(index ++, 1) = icomponent;
+            const auto mapping = select_scalar_components(dataset(), m_struct2scalar, feature_indices);
+
+            m_mapping = map_tensor(mapping.data(), static_cast<tensor_size_t>(mapping.size()) / 2, 2);
         }
 
-        void mapN(tensor_size_t& index, tensor_size_t ifeature, tensor_size_t components)
+        tensor_size_t get_features() const
         {
-            for (tensor_size_t icomponent = 0; icomponent < components; ++ icomponent)
+            return m_mapping.size<0>();
+        }
+
+        feature_t get_feature(tensor_size_t ifeature) const
+        {
+            assert(ifeature >= 0 && ifeature < m_mapping.size<0>());
+
+            const auto component = m_mapping(ifeature, 1);
+            const auto& feature = dataset().feature(m_mapping(ifeature, 0));
+
+            return  feature_t{scat(m_feature_name, "(", feature.name(), "[", component, "])")}
+                    .scalar(toperator::type(), make_dims(1, 1, 1));
+        }
+
+        void do_select(tensor_size_t ifeature, tensor_range_t sample_range, scalar_map_t storage) const
+        {
+            dataset().visit_inputs(m_mapping(ifeature, 0), [&] (const auto&, const auto& data, const auto& mask)
             {
-                map1(index, ifeature, icomponent);
+                loop_samples<4U>(data, mask, samples(ifeature, sample_range),
+                [&] (auto it)
+                {
+                    if (should_drop(ifeature))
+                    {
+                        storage.full(std::numeric_limits<scalar_t>::quiet_NaN());
+                    }
+                    else
+                    {
+                        const auto component = m_mapping(ifeature, 1);
+                        for (; it; ++ it)
+                        {
+                            if (const auto [index, given, values] = *it; given)
+                            {
+                                storage(index) = toperator::value(values(component));
+                            }
+                            else
+                            {
+                                storage(index) = std::numeric_limits<scalar_t>::quiet_NaN();
+                            }
+                        }
+                    }
+                },
+                [&] ()
+                {
+                    generator_t::select(ifeature, sample_range, storage);
+                });
+            });
+        }
+
+        void do_flatten(tensor_range_t sample_range, tensor2d_map_t storage, tensor_size_t column_offset) const
+        {
+            for (tensor_size_t ifeature = 0, column_size = 0, features = this->features();
+                 ifeature < features; ++ ifeature, column_offset += column_size)
+            {
+                dataset().visit_inputs(m_mapping(ifeature, 0), [&] (const auto& feature, const auto& data, const auto& mask)
+                {
+                    loop_samples(data, mask, samples(ifeature, sample_range),
+                    [&] (auto)
+                    {
+                    },
+                    [&] (auto)
+                    {
+                    },
+                    [&] (auto it)
+                    {
+                        column_size = size(feature.dims());
+                        for (; it; ++ it)
+                        {
+                            if (const auto [index, given, values] = *it; given)
+                            {
+                                auto segment = storage.array(index).segment(column_offset, column_size);
+                                if (should_drop(ifeature))
+                                {
+                                    segment.setConstant(+0.0);
+                                }
+                                else
+                                {
+                                    segment.array() = toperator::value(values.array());
+                                }
+                            }
+                            else
+                            {
+                                auto segment = storage.array(index).segment(column_offset, column_size);
+                                segment.setConstant(+0.0);
+                            }
+                        }
+                    });
+                });
             }
         }
 
-        using featmapping_t = tensor_mem_t<tensor_size_t, 2>;
+        using mapping_t = tensor_mem_t<tensor_size_t, 2>;
 
         // attributes
-        mclass2binary   m_mclass2binary{mclass2binary::off};    ///<
-        sclass2binary   m_sclass2binary{sclass2binary::off};    ///<
+        mapping_t       m_mapping;                              ///<
+        string_t        m_feature_name;                         ///<
         struct2scalar   m_struct2scalar{struct2scalar::off};    ///<
-        featmapping_t   m_feature_mapping;                      ///<
     };
+
+    ///
+    /// \brief
+    ///
+    template <typename toperator>
+    class NANO_PUBLIC scalar_pairwise_generator_t : public generator_t
+    {
+    public:
+
+        scalar_pairwise_generator_t(
+            const memory_dataset_t& dataset, const indices_t& samples,
+            string_t feature_name,
+            struct2scalar s2s = struct2scalar::off,
+            indices_t feature_indices = indices_t{}) :
+            generator_t(dataset, samples),
+            m_feature_name(std::move(feature_name)),
+            m_struct2scalar(s2s)
+        {
+            make_mapping(feature_indices);
+            allocate(this->features());
+        }
+
+        tensor_size_t features() const override { return get_features(); }
+        feature_t feature(tensor_size_t ifeature) const override { return get_feature(ifeature); }
+
+        void select(tensor_size_t ifeature, tensor_range_t sample_range, scalar_map_t storage) const override
+        {
+            do_select(ifeature, sample_range, storage);
+        }
+        void flatten(tensor_range_t sample_range, tensor2d_map_t storage, tensor_size_t column_offset) const override
+        {
+            do_flatten(sample_range, storage, column_offset);
+        }
+
+    private:
+
+        void make_mapping(const indices_t& feature_indices)
+        {
+            const auto mapping = select_scalar_components(dataset(), m_struct2scalar, feature_indices);
+
+            const auto size = static_cast<tensor_size_t>(mapping.size() / 2);
+
+            m_mapping.resize(size * (size + 1) / 2, 4);
+            for (tensor_size_t i = 0, k = 0; i < size; ++ i)
+            {
+                const auto feature1 = mapping[static_cast<size_t>(i) * 2 + 0];
+                const auto component1 = mapping[static_cast<size_t>(i) * 2 + 1];
+
+                for (tensor_size_t j = i; j < size; ++ j, ++ k)
+                {
+                    const auto feature2 = mapping[static_cast<size_t>(j) * 2 + 0];
+                    const auto component2 = mapping[static_cast<size_t>(j) * 2 + 1];
+
+                    m_mapping(k, 0) = feature1;
+                    m_mapping(k, 1) = component1;
+                    m_mapping(k, 2) = feature2;
+                    m_mapping(k, 3) = component2;
+                }
+            }
+        }
+
+        tensor_size_t get_features() const
+        {
+            return m_mapping.size<0>();
+        }
+
+        feature_t get_feature(tensor_size_t ifeature) const
+        {
+            assert(ifeature >= 0 && ifeature < m_mapping.size<0>());
+
+            const auto component1 = m_mapping(ifeature, 1);
+            const auto component2 = m_mapping(ifeature, 3);
+
+            const auto& feature1 = dataset().feature(m_mapping(ifeature, 0));
+            const auto& feature2 = dataset().feature(m_mapping(ifeature, 2));
+
+            return  feature_t{scat(m_feature_name,
+                    "(", feature1.name(), "[", component1, "],",
+                    "(", feature2.name(), "[", component2, "])")}
+                    .scalar(toperator::type(), make_dims(1, 1, 1));
+        }
+
+        void do_select(tensor_size_t ifeature, tensor_range_t sample_range, scalar_map_t storage) const
+        {
+            dataset().visit_inputs(m_mapping(ifeature, 0), [&] (const auto&, const auto& data1, const auto& mask1)
+            {
+                loop_samples<4U>(data1, mask1, samples(ifeature, sample_range),
+                [&] (auto it1)
+                {
+                    if (should_drop(ifeature))
+                    {
+                        storage.full(std::numeric_limits<scalar_t>::quiet_NaN());
+                    }
+                    else
+                    {
+                        const auto component1 = m_mapping(ifeature, 1);
+                        const auto component2 = m_mapping(ifeature, 3);
+                        dataset().visit_inputs(m_mapping(ifeature, 2), [&] (const auto&, const auto& data2, const auto& mask2)
+                        {
+                            loop_samples<4U>(data2, mask2, samples(ifeature, sample_range),
+                            [&] (auto it2)
+                            {
+                                for (; it1; ++ it1, ++ it2)
+                                {
+                                    const auto [index1, given1, values1] = *it1;
+                                    const auto [index2, given2, values2] = *it2;
+                                    if (given1 && given2)
+                                    {
+                                        storage(index1) = toperator::value(values1(component1), values2(component2));
+                                    }
+                                    else
+                                    {
+                                        storage(index2) = std::numeric_limits<scalar_t>::quiet_NaN();
+                                    }
+                                }
+                            },
+                            [&] ()
+                            {
+                            });
+                        });
+                    }
+                },
+                [&] ()
+                {
+                    generator_t::select(ifeature, sample_range, storage);
+                });
+            });
+        }
+
+        void do_flatten(tensor_range_t sample_range, tensor2d_map_t storage, tensor_size_t column_offset) const
+        {
+            for (tensor_size_t ifeature = 0, column_size = 0, features = this->features();
+                 ifeature < features; ++ ifeature, column_offset += column_size)
+            {
+                dataset().visit_inputs(m_mapping(ifeature, 0), [&] (const auto& feature, const auto& data, const auto& mask)
+                {
+                    loop_samples(data, mask, samples(ifeature, sample_range),
+                    [&] (auto)
+                    {
+                    },
+                    [&] (auto)
+                    {
+                    },
+                    [&] (auto it1)
+                    {
+                        column_size = size(feature.dims());
+                        for (; it1; ++ it1)
+                        {
+                            if (const auto [index, given, values] = *it1; given)
+                            {
+                                auto segment = storage.array(index).segment(column_offset, column_size);
+                                if (should_drop(ifeature))
+                                {
+                                    segment.setConstant(+0.0);
+                                }
+                                else
+                                {
+                                    segment.array() = toperator::get(values.array());
+                                }
+                            }
+                            else
+                            {
+                                auto segment = storage.array(index).segment(column_offset, column_size);
+                                segment.setConstant(+0.0);
+                            }
+                        }
+                    });
+                });
+            }
+        }
+
+        using mapping_t = tensor_mem_t<tensor_size_t, 2>;
+
+        // attributes
+        mapping_t       m_mapping;                              ///<
+        string_t        m_feature_name;                         ///<
+        struct2scalar   m_struct2scalar{struct2scalar::off};    ///<
+    };
+
+    struct sign_log_scaler_t
+    {
+    };
+
+    struct pairwise_product_t
+    {
+        static auto type()
+        {
+            return feature_type::float64;
+        }
+
+        template
+        <
+            typename tscalar1,
+            typename tscalar2,
+            std::enable_if_t<std::is_arithmetic_v<tscalar1>, bool> = true,
+            std::enable_if_t<std::is_arithmetic_v<tscalar2>, bool> = true
+        >
+        static auto value(tscalar1 val1, tscalar2 val2)
+        {
+            return static_cast<scalar_t>(val1) * static_cast<scalar_t>(val2);
+        }
+    };
+
+    using scalar_quadratic_generator_t = scalar_pairwise_generator_t<pairwise_product_t>;
 }

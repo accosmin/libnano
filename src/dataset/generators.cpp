@@ -214,79 +214,79 @@ void identity_generator_t::flatten(tensor_range_t sample_range, tensor2d_map_t s
         dataset().visit_inputs(ifeature, [&] (const auto& feature, const auto& data, const auto& mask)
         {
             loop_samples(data, mask, samples(ifeature, sample_range),
-                [&] (auto it)
+            [&] (auto it)
+            {
+                column_size = feature.classes();
+                for (; it; ++ it)
                 {
-                    column_size = feature.classes();
-                    for (; it; ++ it)
+                    if (const auto [index, given, label] = *it; given)
                     {
-                        if (const auto [index, given, label] = *it; given)
+                        auto segment = storage.array(index).segment(column_offset, column_size);
+                        if (should_drop(ifeature))
                         {
-                            auto segment = storage.array(index).segment(column_offset, column_size);
-                            if (should_drop(ifeature))
-                            {
-                                segment.setConstant(+0.0);
-                            }
-                            else
-                            {
-                                segment.setConstant(-1.0);
-                                segment(static_cast<tensor_size_t>(label)) = +1.0;
-                            }
+                            segment.setConstant(+0.0);
                         }
                         else
                         {
-                            auto segment = storage.array(index).segment(column_offset, column_size);
-                            segment.setConstant(+0.0);
+                            segment.setConstant(-1.0);
+                            segment(static_cast<tensor_size_t>(label)) = +1.0;
                         }
                     }
-                },
-                [&] (auto it)
-                {
-                    column_size = feature.classes();
-                    for (; it; ++ it)
+                    else
                     {
-                        if (const auto [index, given, hits] = *it; given)
+                        auto segment = storage.array(index).segment(column_offset, column_size);
+                        segment.setConstant(+0.0);
+                    }
+                }
+            },
+            [&] (auto it)
+            {
+                column_size = feature.classes();
+                for (; it; ++ it)
+                {
+                    if (const auto [index, given, hits] = *it; given)
+                    {
+                        auto segment = storage.array(index).segment(column_offset, column_size);
+                        if (should_drop(ifeature))
                         {
-                            auto segment = storage.array(index).segment(column_offset, column_size);
-                            if (should_drop(ifeature))
-                            {
-                                segment.setConstant(+0.0);
-                            }
-                            else
-                            {
-                                segment.array() = 2.0 * hits.array().template cast<scalar_t>() - 1.0;
-                            }
+                            segment.setConstant(+0.0);
                         }
                         else
                         {
-                            auto segment = storage.array(index).segment(column_offset, column_size);
-                            segment.setConstant(+0.0);
+                            segment.array() = 2.0 * hits.array().template cast<scalar_t>() - 1.0;
                         }
                     }
-                },
-                [&] (auto it)
-                {
-                    column_size = size(feature.dims());
-                    for (; it; ++ it)
+                    else
                     {
-                        if (const auto [index, given, values] = *it; given)
+                        auto segment = storage.array(index).segment(column_offset, column_size);
+                        segment.setConstant(+0.0);
+                    }
+                }
+            },
+            [&] (auto it)
+            {
+                column_size = size(feature.dims());
+                for (; it; ++ it)
+                {
+                    if (const auto [index, given, values] = *it; given)
+                    {
+                        auto segment = storage.array(index).segment(column_offset, column_size);
+                        if (should_drop(ifeature))
                         {
-                            auto segment = storage.array(index).segment(column_offset, column_size);
-                            if (should_drop(ifeature))
-                            {
-                                segment.setConstant(+0.0);
-                            }
-                            else
-                            {
-                                segment.array() = values.array().template cast<scalar_t>();
-                            }
+                            segment.setConstant(+0.0);
                         }
                         else
                         {
-                            auto segment = storage.array(index).segment(column_offset, column_size);
-                            segment.setConstant(+0.0);
+                            segment.array() = values.array().template cast<scalar_t>();
                         }
                     }
-                });
+                    else
+                    {
+                        auto segment = storage.array(index).segment(column_offset, column_size);
+                        segment.setConstant(+0.0);
+                    }
+                }
+            });
         });
     }
 }

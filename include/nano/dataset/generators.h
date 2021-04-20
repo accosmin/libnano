@@ -86,7 +86,7 @@ namespace nano
             const auto& feature = dataset().feature(m_mapping(ifeature, 0));
 
             return  feature_t{scat(m_feature_name, "(", feature.name(), "[", component, "])")}
-                    .scalar(toperator::type(), make_dims(1, 1, 1));
+                    .scalar(toperator::type(feature), make_dims(1, 1, 1));
         }
 
         void do_select(tensor_size_t ifeature, tensor_range_t sample_range, scalar_map_t storage) const
@@ -130,13 +130,7 @@ namespace nano
             {
                 dataset().visit_inputs(m_mapping(ifeature, 0), [&] (const auto& feature, const auto& data, const auto& mask)
                 {
-                    loop_samples(data, mask, samples(ifeature, sample_range),
-                    [&] (auto)
-                    {
-                    },
-                    [&] (auto)
-                    {
-                    },
+                    loop_samples<4U>(data, mask, samples(ifeature, sample_range),
                     [&] (auto it)
                     {
                         column_size = size(feature.dims());
@@ -151,7 +145,10 @@ namespace nano
                                 }
                                 else
                                 {
-                                    segment.array() = toperator::value(values.array());
+                                    for (tensor_size_t component = 0; component < column_size; ++ component)
+                                    {
+                                        segment(component) = toperator::value(values(component));
+                                    }
                                 }
                             }
                             else
@@ -160,6 +157,10 @@ namespace nano
                                 segment.setConstant(+0.0);
                             }
                         }
+                    },
+                    [&] ()
+                    {
+                        assert(false);
                     });
                 });
             }
@@ -251,93 +252,83 @@ namespace nano
             return  feature_t{scat(m_feature_name,
                     "(", feature1.name(), "[", component1, "],",
                     "(", feature2.name(), "[", component2, "])")}
-                    .scalar(toperator::type(), make_dims(1, 1, 1));
+                    .scalar(toperator::type(feature1, feature2), make_dims(1, 1, 1));
         }
 
         void do_select(tensor_size_t ifeature, tensor_range_t sample_range, scalar_map_t storage) const
         {
             dataset().visit_inputs(m_mapping(ifeature, 0), [&] (const auto&, const auto& data1, const auto& mask1)
             {
-                loop_samples<4U>(data1, mask1, samples(ifeature, sample_range),
-                [&] (auto it1)
+                dataset().visit_inputs(m_mapping(ifeature, 2), [&] (const auto&, const auto& data2, const auto& mask2)
                 {
-                    if (should_drop(ifeature))
+                    loop_samples<4U>(data1, mask1, data2, mask2, samples(ifeature, sample_range),
+                    [&] (auto it)
                     {
-                        storage.full(std::numeric_limits<scalar_t>::quiet_NaN());
-                    }
-                    else
-                    {
-                        const auto component1 = m_mapping(ifeature, 1);
-                        const auto component2 = m_mapping(ifeature, 3);
-                        dataset().visit_inputs(m_mapping(ifeature, 2), [&] (const auto&, const auto& data2, const auto& mask2)
+                        if (should_drop(ifeature))
                         {
-                            loop_samples<4U>(data2, mask2, samples(ifeature, sample_range),
-                            [&] (auto it2)
+                            storage.full(std::numeric_limits<scalar_t>::quiet_NaN());
+                        }
+                        else
+                        {
+                            const auto component1 = m_mapping(ifeature, 1);
+                            const auto component2 = m_mapping(ifeature, 3);
+                            for (; it; ++ it)
                             {
-                                for (; it1; ++ it1, ++ it2)
+                                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
                                 {
-                                    const auto [index1, given1, values1] = *it1;
-                                    const auto [index2, given2, values2] = *it2;
-                                    if (given1 && given2)
-                                    {
-                                        storage(index1) = toperator::value(values1(component1), values2(component2));
-                                    }
-                                    else
-                                    {
-                                        storage(index2) = std::numeric_limits<scalar_t>::quiet_NaN();
-                                    }
+                                    storage(index) = toperator::value(values1(component1), values2(component2));
                                 }
-                            },
-                            [&] ()
-                            {
-                            });
-                        });
-                    }
-                },
-                [&] ()
-                {
-                    generator_t::select(ifeature, sample_range, storage);
+                                else
+                                {
+                                    storage(index) = std::numeric_limits<scalar_t>::quiet_NaN();
+                                }
+                            }
+                        }
+                    },
+                    [&] ()
+                    {
+                        generator_t::select(ifeature, sample_range, storage);
+                    });
                 });
             });
         }
 
-        void do_flatten(tensor_range_t sample_range, tensor2d_map_t storage, tensor_size_t column_offset) const
+        void do_flatten(tensor_range_t sample_range, tensor2d_map_t storage, tensor_size_t column) const
         {
-            for (tensor_size_t ifeature = 0, column_size = 0, features = this->features();
-                 ifeature < features; ++ ifeature, column_offset += column_size)
+            for (tensor_size_t ifeature = 0, features = this->features(); ifeature < features; ++ ifeature, ++ column)
             {
-                dataset().visit_inputs(m_mapping(ifeature, 0), [&] (const auto& feature, const auto& data, const auto& mask)
+                dataset().visit_inputs(m_mapping(ifeature, 0), [&] (const auto&, const auto& data1, const auto& mask1)
                 {
-                    loop_samples(data, mask, samples(ifeature, sample_range),
-                    [&] (auto)
+                    dataset().visit_inputs(m_mapping(ifeature, 2), [&] (const auto&, const auto& data2, const auto& mask2)
                     {
-                    },
-                    [&] (auto)
-                    {
-                    },
-                    [&] (auto it1)
-                    {
-                        column_size = size(feature.dims());
-                        for (; it1; ++ it1)
+                        loop_samples<4U>(data1, mask1, data2, mask2, samples(ifeature, sample_range),
+                        [&] (auto it)
                         {
-                            if (const auto [index, given, values] = *it1; given)
+                            const auto component1 = m_mapping(ifeature, 1);
+                            const auto component2 = m_mapping(ifeature, 3);
+                            for (; it; ++ it)
                             {
-                                auto segment = storage.array(index).segment(column_offset, column_size);
-                                if (should_drop(ifeature))
+                                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
                                 {
-                                    segment.setConstant(+0.0);
+                                    if (should_drop(ifeature))
+                                    {
+                                        storage(index, column) = +0.0;
+                                    }
+                                    else
+                                    {
+                                        storage(index, column) = toperator::value(values1(component1), values2(component2));
+                                    }
                                 }
                                 else
                                 {
-                                    segment.array() = toperator::get(values.array());
+                                    storage(index, column) = +0.0;
                                 }
                             }
-                            else
-                            {
-                                auto segment = storage.array(index).segment(column_offset, column_size);
-                                segment.setConstant(+0.0);
-                            }
-                        }
+                        },
+                        [&] ()
+                        {
+                            assert(false);
+                        });
                     });
                 });
             }
@@ -353,11 +344,26 @@ namespace nano
 
     struct sign_log_scaler_t
     {
+        static auto type(const feature_t&)
+        {
+            return feature_type::float64;
+        }
+
+        template
+        <
+            typename tscalar,
+            std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true
+        >
+        static auto value(tscalar value)
+        {
+            const auto svalue = static_cast<scalar_t>(value);
+            return (value < 0.0 ? -1.0 : +1.0) * std::log1p(svalue * svalue);
+        }
     };
 
     struct pairwise_product_t
     {
-        static auto type()
+        static auto type(const feature_t&, const feature_t&)
         {
             return feature_type::float64;
         }
@@ -369,9 +375,9 @@ namespace nano
             std::enable_if_t<std::is_arithmetic_v<tscalar1>, bool> = true,
             std::enable_if_t<std::is_arithmetic_v<tscalar2>, bool> = true
         >
-        static auto value(tscalar1 val1, tscalar2 val2)
+        static auto value(tscalar1 value1, tscalar2 value2)
         {
-            return static_cast<scalar_t>(val1) * static_cast<scalar_t>(val2);
+            return static_cast<scalar_t>(value1) * static_cast<scalar_t>(value2);
         }
     };
 

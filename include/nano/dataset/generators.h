@@ -8,6 +8,10 @@ namespace nano
     // TODO: feature-wise non-linear transformations of scalar features - sign(x)*log(1+x*x), x/sqrt(1+x*x)
     // TODO: polynomial features
     // TODO: basic image-based features: gradients, magnitude, orientation, HoG
+    // TODO: histogram-based scalar features - assign scalar value into its percentile range index
+    // TODO: sign -> transform scalar value to its sign class or sign scalar value
+    // TODO: clamp_perc -> clamp scalar value outside a given percentile range
+    // TODO: clamp -> clamp scalar value to given range
 
     NANO_PUBLIC std::vector<tensor_size_t> select_scalar_components(
         const memory_dataset_t&, struct2scalar, const indices_t& feature_indices);
@@ -250,8 +254,8 @@ namespace nano
             const auto& feature2 = dataset().feature(m_mapping(ifeature, 2));
 
             return  feature_t{scat(m_feature_name,
-                    "(", feature1.name(), "[", component1, "],",
-                    "(", feature2.name(), "[", component2, "])")}
+                    "(", feature1.name(), "[", component1, "]",
+                    ",", feature2.name(), "[", component2, "])")}
                     .scalar(toperator::type(feature1, feature2), make_dims(1, 1, 1));
         }
 
@@ -380,6 +384,4 @@ namespace nano
             return static_cast<scalar_t>(value1) * static_cast<scalar_t>(value2);
         }
     };
-
-    using scalar_quadratic_generator_t = scalar_pairwise_generator_t<pairwise_product_t>;
 }

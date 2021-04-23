@@ -699,8 +699,8 @@ UTEST_CASE(unsupervised_quadratic_scalar)
     const auto dataset = make_dataset(samples.size(), string_t::npos);
 
     auto generator = dataset_generator_t{dataset, samples};
-    generator.add<scalar_pairwise_generator_t<pairwise_product_t>>(
-        execution::par, "product", struct2scalar::off);
+    generator.add<scalar2scalar_pairwise_generator_t<pairwise_product_t>>(
+        execution::par, struct2scalar::off);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 3);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"product(f32[0],f32[0])"}.scalar(feature_type::float64));
@@ -767,8 +767,8 @@ UTEST_CASE(unsupervised_quadratic_mixed)
     const auto dataset = make_dataset(samples.size(), string_t::npos);
 
     auto generator = dataset_generator_t{dataset, samples};
-    generator.add<scalar_pairwise_generator_t<pairwise_product_t>>(
-        execution::par, "product", struct2scalar::on, make_indices(0, 1, 3, 4));
+    generator.add<scalar2scalar_pairwise_generator_t<pairwise_product_t>>(
+        execution::par, struct2scalar::on, make_indices(0, 1, 3, 4));
 
     UTEST_REQUIRE_EQUAL(generator.features(), 15);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"product(u8s[0],u8s[0])"}.scalar(feature_type::float64));

@@ -13,6 +13,9 @@ namespace nano
     // TODO: clamp_perc -> clamp scalar value outside a given percentile range
     // TODO: clamp -> clamp scalar value to given range
 
+    ///
+    /// \brief
+    ///
     NANO_PUBLIC std::vector<tensor_size_t> select_scalar_components(
         const memory_dataset_t&, struct2scalar, const indices_t& feature_indices);
 

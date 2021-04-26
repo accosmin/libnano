@@ -10,10 +10,11 @@ target_sources(nano PRIVATE
     table.cpp
     logger.cpp
     stream.cpp
+    generator.cpp
+    generator/util.cpp
+    generator/identity.cpp
     dataset/dataset.cpp
     dataset/feature.cpp
-    dataset/generator.cpp
-    dataset/generators.cpp
     dataset/imclass.cpp
     dataset/imclass_mnist.cpp
     dataset/tabular.cpp

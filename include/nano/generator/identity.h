@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/dataset/generator.h>
+#include <nano/generator.h>
 
 namespace nano
 {

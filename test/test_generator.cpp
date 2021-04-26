@@ -1,19 +1,9 @@
 #include <utest/utest.h>
-#include <nano/dataset/generators.h>
+#include <nano/generator/identity.h>
 
 using namespace nano;
 
 static constexpr auto NaN = std::numeric_limits<scalar_t>::quiet_NaN();
-
-template <typename tscalar>
-std::ostream& operator<<(std::ostream& stream, const std::vector<tscalar>& values)
-{
-    for (const auto& value : values)
-    {
-        stream << value << ',';
-    }
-    return stream;
-}
 
 static auto make_features()
 {
@@ -826,46 +816,6 @@ UTEST_CASE(unsupervised_quadratic_mixed)
             27.781888584712, 24.549270186029, 24.549270186029, 24.549270186029, 21.360659581993,
             21.664102412363, 21.664102412363, 21.664102412363, 18.808981306221, 21.664102412363,
             21.664102412363, 18.808981306221, 21.664102412363, 18.808981306221, 22.535157717073));
-}
-
-UTEST_CASE(select_scalar_components)
-{
-    const auto dataset = make_dataset(10, string_t::npos);
-    {
-        const auto indices = select_scalar_components(dataset, struct2scalar::off, indices_t{});
-        const auto expected = std::vector<tensor_size_t>{2, 0, 4, 0};
-        UTEST_CHECK_EQUAL(indices, expected);
-    }
-    {
-        const auto indices = select_scalar_components(dataset, struct2scalar::off, make_indices(2));
-        const auto expected = std::vector<tensor_size_t>{2, 0};
-        UTEST_CHECK_EQUAL(indices, expected);
-    }
-    {
-        const auto indices = select_scalar_components(dataset, struct2scalar::off, make_indices(3));
-        const auto expected = std::vector<tensor_size_t>{};
-        UTEST_CHECK_EQUAL(indices, expected);
-    }
-    {
-        const auto indices = select_scalar_components(dataset, struct2scalar::off, make_indices(2, 3, 4));
-        const auto expected = std::vector<tensor_size_t>{2, 0, 4, 0};
-        UTEST_CHECK_EQUAL(indices, expected);
-    }
-    {
-        const auto indices = select_scalar_components(dataset, struct2scalar::on, indices_t{});
-        const auto expected = std::vector<tensor_size_t>{2, 0, 3, 0, 3, 1, 3, 2, 3, 3, 4, 0};
-        UTEST_CHECK_EQUAL(indices, expected);
-    }
-    {
-        const auto indices = select_scalar_components(dataset, struct2scalar::on, make_indices(1, 4));
-        const auto expected = std::vector<tensor_size_t>{4, 0};
-        UTEST_CHECK_EQUAL(indices, expected);
-    }
-    {
-        const auto indices = select_scalar_components(dataset, struct2scalar::on, make_indices(1, 3,  4));
-        const auto expected = std::vector<tensor_size_t>{3, 0, 3, 1, 3, 2, 3, 3, 4, 0};
-        UTEST_CHECK_EQUAL(indices, expected);
-    }
 }
 
 UTEST_END_MODULE()

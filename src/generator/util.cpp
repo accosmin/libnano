@@ -2,7 +2,7 @@
 
 using namespace nano;
 
-std::vector<tensor_size_t> nano::select_scalar_components(
+feature_mapping_t nano::select_scalar_components(
     const memory_dataset_t& dataset, struct2scalar s2s, const indices_t& feature_indices)
 {
     std::vector<tensor_size_t> mapping;
@@ -46,5 +46,7 @@ std::vector<tensor_size_t> nano::select_scalar_components(
         }
     }
 
-    return mapping;
+    // TODO: use a single memory allocation!
+
+    return map_tensor(mapping.data(), static_cast<tensor_size_t>(mapping.size()) / 2, 2);
 }

@@ -13,6 +13,8 @@ target_sources(nano PRIVATE
     generator.cpp
     generator/util.cpp
     generator/identity.cpp
+    generator/elemwise.cpp
+    generator/pairwise.cpp
     dataset/dataset.cpp
     dataset/feature.cpp
     dataset/imclass.cpp

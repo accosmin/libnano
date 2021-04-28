@@ -1,6 +1,8 @@
 #pragma once
 
 #include <nano/generator.h>
+#include <nano/generator/elemwise.h>
+#include <nano/generator/pairwise.h>
 
 namespace nano
 {
@@ -12,12 +14,6 @@ namespace nano
     // TODO: sign -> transform scalar value to its sign class or sign scalar value
     // TODO: clamp_perc -> clamp scalar value outside a given percentile range
     // TODO: clamp -> clamp scalar value to given range
-
-    ///
-    /// \brief
-    ///
-    NANO_PUBLIC std::vector<tensor_size_t> select_scalar_components(
-        const memory_dataset_t&, struct2scalar, const indices_t& feature_indices);
 
     ///
     /// \brief
@@ -41,7 +37,7 @@ namespace nano
     ///
     /// \brief
     ///
-    class NANO_PUBLIC scalar_elemwise_generator_t : public generator_t
+    class NANO_PUBLIC scalar_elemwise_generator_t : public elemwise_generator_t
     {
     public:
 
@@ -49,30 +45,12 @@ namespace nano
             const memory_dataset_t& dataset, const indices_t& samples,
             struct2scalar s2s = struct2scalar::off,
             const indices_t& feature_indices = indices_t{});
-
-        tensor_size_t features() const override;
-        feature_t feature(tensor_size_t) const override;
-
-    protected:
-
-        auto mapped_ifeature(tensor_size_t ifeature) const { return m_mapping(ifeature, 0); }
-        auto mapped_component(tensor_size_t ifeature) const { return m_mapping(ifeature, 1); }
-
-        virtual feature_t make_feature(
-            const feature_t&, tensor_size_t component) const = 0;
-
-    private:
-
-        using mapping_t = tensor_mem_t<tensor_size_t, 2>;
-
-        // attributes
-        mapping_t       m_mapping;                              ///<
     };
 
     ///
     /// \brief
     ///
-    class NANO_PUBLIC scalar_pairwise_generator_t : public generator_t
+    class NANO_PUBLIC scalar_pairwise_generator_t : public pairwise_generator_t
     {
     public:
 
@@ -80,27 +58,6 @@ namespace nano
             const memory_dataset_t& dataset, const indices_t& samples,
             struct2scalar s2s = struct2scalar::off,
             const indices_t& feature_indices = indices_t{});
-
-        tensor_size_t features() const override;
-        feature_t feature(tensor_size_t) const override;
-
-    protected:
-
-        auto mapped_ifeature1(tensor_size_t ifeature) const { return m_mapping(ifeature, 0); }
-        auto mapped_ifeature2(tensor_size_t ifeature) const { return m_mapping(ifeature, 2); }
-        auto mapped_component1(tensor_size_t ifeature) const { return m_mapping(ifeature, 1); }
-        auto mapped_component2(tensor_size_t ifeature) const { return m_mapping(ifeature, 3); }
-
-        virtual feature_t make_feature(
-            const feature_t&, tensor_size_t component1,
-            const feature_t&, tensor_size_t component2) const = 0;
-
-    private:
-
-        using mapping_t = tensor_mem_t<tensor_size_t, 2>;
-
-        // attributes
-        mapping_t       m_mapping;                              ///<
     };
 
     ///

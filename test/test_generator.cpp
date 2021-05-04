@@ -1,4 +1,5 @@
 #include <utest/utest.h>
+#include <nano/generator/scalar.h>
 #include <nano/generator/identity.h>
 
 using namespace nano;
@@ -714,41 +715,6 @@ UTEST_CASE(unsupervised_quadratic_scalar)
         64, -56, 49,
         81, -72, 64),
         make_indices(0, 1, 2));
-
-    generator.drop(1);
-    check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 3),
-        0, 0, 1,
-        1, 0, 0,
-        4, 0, 1,
-        9, 0, 4,
-        16, 0, 9,
-        25, 0, 16,
-        36, 0, 25,
-        49, 0, 36,
-        64, 0, 49,
-        81, 0, 64),
-        make_indices(0, 1, 2));
-
-    generator.undrop();
-    check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 3),
-        0, 0, 1,
-        1, 0, 0,
-        4, -2, 1,
-        9, -6, 4,
-        16, -12, 9,
-        25, -20, 16,
-        36, -30, 25,
-        49, -42, 36,
-        64, -56, 49,
-        81, -72, 64),
-        make_indices(0, 1, 2));
-
-    check_flatten_stats(
-        generator, 10,
-        make_tensor<scalar_t>(make_dims(3), 0, -72, 0),
-        make_tensor<scalar_t>(make_dims(3), 81, 0, 64),
-        make_tensor<scalar_t>(make_dims(3), 28.5, -24.0, 20.5),
-        make_tensor<scalar_t>(make_dims(3), 28.304887681577, 25.403411844344, 22.535157717073));
 }
 
 UTEST_CASE(unsupervised_quadratic_mixed)
@@ -806,16 +772,119 @@ UTEST_CASE(unsupervised_quadratic_mixed)
         81, 72, 72, 72, -63, 64, 64, 64, -56, 64, 64, -56, 64, -56, 49,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 64),
         arange(0, 15));
+}
 
-    check_flatten_stats(
-        generator, 10,
-        make_tensor<scalar_t>(make_dims(15), 0, 0, 0, 0, -63, 0, 0, 0, -56, 0, 0, -56, 0, -56, 0),
-        make_tensor<scalar_t>(make_dims(15), 81, 72, 72, 72, 1, 64, 64, 64, 0, 64, 64, 0, 64, 0, 64),
-        make_tensor<scalar_t>(make_dims(15), 16.5, 14.0, 14.0, 14.0, -11.5, 12.0, 12.0, 12.0, -10.0, 12.0, 12.0, -10.0, 12.0, -10.0, 20.5),
-        make_tensor<scalar_t>(make_dims(15),
-            27.781888584712, 24.549270186029, 24.549270186029, 24.549270186029, 21.360659581993,
-            21.664102412363, 21.664102412363, 21.664102412363, 18.808981306221, 21.664102412363,
-            21.664102412363, 18.808981306221, 21.664102412363, 18.808981306221, 22.535157717073));
+UTEST_CASE(unsupervised_slog1p)
+{
+    const auto samples = ::nano::arange(0, 10);
+    const auto dataset = make_dataset(samples.size(), string_t::npos);
+
+    auto generator = dataset_generator_t{dataset, samples};
+    generator.add<scalar_elemwise_generator_t<slog1p_t>>(
+        execution::par, struct2scalar::off);
+
+    UTEST_REQUIRE_EQUAL(generator.features(), 2);
+    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"slog1p(f32[0])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"slog1p(f64[0])"}.scalar(feature_type::float64));
+
+    check_select(generator, 0, make_tensor<scalar_t>(make_dims(10),
+        std::log1p(0.0), std::log1p(1.0), std::log1p(2.0), std::log1p(3.0), std::log1p(4.0),
+        std::log1p(5.0), std::log1p(6.0), std::log1p(7.0), std::log1p(8.0), std::log1p(9.0)));
+    check_select(generator, 1, make_tensor<scalar_t>(make_dims(10),
+        +std::log1p(1.0), +std::log1p(0.0), -std::log1p(1.0), -std::log1p(2.0), -std::log1p(3.0),
+        -std::log1p(4.0), -std::log1p(5.0), -std::log1p(6.0), -std::log1p(7.0), -std::log1p(8.0)));
+    check_select_stats(generator, indices_t{}, indices_t{}, make_indices(0, 1), indices_t{});
+
+    check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 2),
+        std::log1p(0.0), +std::log1p(1.0),
+        std::log1p(1.0), +std::log1p(0.0),
+        std::log1p(2.0), -std::log1p(1.0),
+        std::log1p(3.0), -std::log1p(2.0),
+        std::log1p(4.0), -std::log1p(3.0),
+        std::log1p(5.0), -std::log1p(4.0),
+        std::log1p(6.0), -std::log1p(5.0),
+        std::log1p(7.0), -std::log1p(6.0),
+        std::log1p(8.0), -std::log1p(7.0),
+        std::log1p(9.0), -std::log1p(8.0)),
+        make_indices(0, 1));
+}
+
+UTEST_CASE(unsupervised_sign)
+{
+    const auto samples = ::nano::arange(0, 10);
+    const auto dataset = make_dataset(samples.size(), string_t::npos);
+
+    auto generator = dataset_generator_t{dataset, samples};
+    generator.add<scalar_elemwise_generator_t<sign_t>>(
+        execution::par, struct2scalar::on, make_indices(0, 1, 2, 3, 4));
+
+    UTEST_REQUIRE_EQUAL(generator.features(), 6);
+    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"sign(f32[0])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"sign(u8s[0])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"sign(u8s[1])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"sign(u8s[2])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(4), feature_t{"sign(u8s[3])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(5), feature_t{"sign(f64[0])"}.scalar(feature_type::float64));
+
+    check_select(generator, 0, make_tensor<scalar_t>(make_dims(10), 1, 1, 1, 1, 1, 1, 1, 1, 1, 1));
+    check_select(generator, 1, make_tensor<scalar_t>(make_dims(10), 1, NaN, 1, NaN, 1, NaN, 1, NaN, 1, NaN));
+    check_select(generator, 2, make_tensor<scalar_t>(make_dims(10), 1, NaN, 1, NaN, 1, NaN, 1, NaN, 1, NaN));
+    check_select(generator, 3, make_tensor<scalar_t>(make_dims(10), 1, NaN, 1, NaN, 1, NaN, 1, NaN, 1, NaN));
+    check_select(generator, 4, make_tensor<scalar_t>(make_dims(10), 1, NaN, 1, NaN, 1, NaN, 1, NaN, 1, NaN));
+    check_select(generator, 5, make_tensor<scalar_t>(make_dims(10), 1, 1, -1, -1, -1, -1, -1, -1, -1, -1));
+    check_select_stats(generator, indices_t{}, indices_t{}, make_indices(0, 1, 2, 3, 4, 5), indices_t{});
+
+    check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 6),
+        1, 1, 1, 1, 1, +1,
+        1, 0, 0, 0, 0, +1,
+        1, 1, 1, 1, 1, -1,
+        1, 0, 0, 0, 0, -1,
+        1, 1, 1, 1, 1, -1,
+        1, 0, 0, 0, 0, -1,
+        1, 1, 1, 1, 1, -1,
+        1, 0, 0, 0, 0, -1,
+        1, 1, 1, 1, 1, -1,
+        1, 0, 0, 0, 0, -1),
+        make_indices(0, 1, 2, 3, 4, 5));
+}
+
+UTEST_CASE(unsupervised_sign_class)
+{
+    const auto samples = ::nano::arange(0, 10);
+    const auto dataset = make_dataset(samples.size(), string_t::npos);
+
+    auto generator = dataset_generator_t{dataset, samples};
+    generator.add<scalar_elemwise_generator_t<sign_class_t>>(
+        execution::par, struct2scalar::on, make_indices(0, 1, 2, 3, 4));
+
+    UTEST_REQUIRE_EQUAL(generator.features(), 6);
+    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"sign_class(f32[0])"}.sclass(strings_t{"negative", "positive"}));
+    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"sign_class(u8s[0])"}.sclass(strings_t{"negative", "positive"}));
+    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"sign_class(u8s[1])"}.sclass(strings_t{"negative", "positive"}));
+    UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"sign_class(u8s[2])"}.sclass(strings_t{"negative", "positive"}));
+    UTEST_CHECK_EQUAL(generator.feature(4), feature_t{"sign_class(u8s[3])"}.sclass(strings_t{"negative", "positive"}));
+    UTEST_CHECK_EQUAL(generator.feature(5), feature_t{"sign_class(f64[0])"}.sclass(strings_t{"negative", "positive"}));
+
+    check_select(generator, 0, make_tensor<int32_t>(make_dims(10), 1, 1, 1, 1, 1, 1, 1, 1, 1, 1));
+    check_select(generator, 1, make_tensor<int32_t>(make_dims(10), 1, -1, 1, -1, 1, -1, 1, -1, 1, -1));
+    check_select(generator, 2, make_tensor<int32_t>(make_dims(10), 1, -1, 1, -1, 1, -1, 1, -1, 1, -1));
+    check_select(generator, 3, make_tensor<int32_t>(make_dims(10), 1, -1, 1, -1, 1, -1, 1, -1, 1, -1));
+    check_select(generator, 4, make_tensor<int32_t>(make_dims(10), 1, -1, 1, -1, 1, -1, 1, -1, 1, -1));
+    check_select(generator, 5, make_tensor<int32_t>(make_dims(10), 1, 1, 0, 0, 0, 0, 0, 0, 0, 0));
+    check_select_stats(generator, make_indices(0, 1, 2, 3, 4, 5), indices_t{}, indices_t{}, indices_t{});
+
+    check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 12),
+        -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1,
+        -1, +1, +0, +0, +0, +0, +0, +0, +0, +0, -1, +1,
+        -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, +1, -1,
+        -1, +1, +0, +0, +0, +0, +0, +0, +0, +0, +1, -1,
+        -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, +1, -1,
+        -1, +1, +0, +0, +0, +0, +0, +0, +0, +0, +1, -1,
+        -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, +1, -1,
+        -1, +1, +0, +0, +0, +0, +0, +0, +0, +0, +1, -1,
+        -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, +1, -1,
+        -1, +1, +0, +0, +0, +0, +0, +0, +0, +0, +1, -1),
+        make_indices(0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5));
 }
 
 UTEST_END_MODULE()

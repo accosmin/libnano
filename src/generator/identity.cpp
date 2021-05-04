@@ -48,7 +48,6 @@ void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_
         [&] ()
         {
             generator_t::select(ifeature, sample_range, storage);
-            return false;
         });
     });
 }
@@ -243,16 +242,4 @@ void identity_generator_t::flatten(tensor_range_t sample_range, tensor2d_map_t s
             });
         });
     }
-}
-
-scalar_elemwise_generator_t::scalar_elemwise_generator_t(
-    const memory_dataset_t& dataset, const indices_t& samples, struct2scalar s2s, const indices_t& feature_indices) :
-    elemwise_generator_t(dataset, samples, select_scalar_components(dataset, s2s, feature_indices))
-{
-}
-
-scalar_pairwise_generator_t::scalar_pairwise_generator_t(
-    const memory_dataset_t& dataset, const indices_t& samples, struct2scalar s2s, const indices_t& feature_indices) :
-    pairwise_generator_t(dataset, samples, select_scalar_components(dataset, s2s, feature_indices))
-{
 }

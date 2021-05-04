@@ -243,11 +243,11 @@ namespace nano
         using generator_mapping_t = tensor_mem_t<tensor_size_t, 2>;
 
         // attributes
-        const memory_dataset_t& m_dataset;          ///<
-        indices_t               m_samples;          ///<
-        rgenerators_t           m_generators;       ///<
-        column_mapping_t        m_column_mapping;   ///<
-        feature_mapping_t       m_feature_mapping;  ///<
-        generator_mapping_t     m_generator_mapping;///<
+        const memory_dataset_t& m_dataset;              ///<
+        indices_t               m_samples;              ///<
+        rgenerators_t           m_generators;           ///<
+        column_mapping_t        m_column_mapping;       ///<
+        feature_mapping_t       m_feature_mapping;      ///<
+        generator_mapping_t     m_generator_mapping;    ///<
     };
 }

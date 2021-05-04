@@ -262,6 +262,22 @@ namespace nano
     template
     <
         size_t trank_expected,
+        template <typename, size_t> class tstorage, typename tscalar, size_t trank,
+        typename toperator_expected
+    >
+    void loop_samples(
+        const tensor_t<tstorage, tscalar, trank>& data, const mask_cmap_t& mask, const indices_cmap_t& samples,
+        const toperator_expected& op_expected)
+    {
+        if constexpr (trank == trank_expected)
+        {
+            op_expected(make_iterator(data, mask, samples));
+        }
+    }
+
+    template
+    <
+        size_t trank_expected,
         template <typename, size_t> class tstorage1, typename tscalar1, size_t trank1,
         template <typename, size_t> class tstorage2, typename tscalar2, size_t trank2,
         typename toperator_expected,

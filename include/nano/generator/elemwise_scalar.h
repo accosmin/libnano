@@ -63,8 +63,7 @@ namespace nano
             {
                 this->dataset().visit_inputs(this->mapped_ifeature(ifeature), [&] (const auto&, const auto& data, const auto& mask)
                 {
-                    loop_samples<4U>(data, mask, this->samples(ifeature, sample_range),
-                    [&] (auto it)
+                    loop_samples<4U>(data, mask, this->samples(ifeature, sample_range), [&] (auto it)
                     {
                         if (this->should_drop(ifeature))
                         {
@@ -85,10 +84,6 @@ namespace nano
                                 }
                             }
                         }
-                    },
-                    [&] ()
-                    {
-                        generator_t::select(ifeature, sample_range, storage);
                     });
                 });
             }
@@ -100,8 +95,7 @@ namespace nano
             {
                 this->dataset().visit_inputs(this->mapped_ifeature(ifeature), [&] (const auto&, const auto& data, const auto& mask)
                 {
-                    loop_samples<4U>(data, mask, this->samples(ifeature, sample_range),
-                    [&] (auto it)
+                    loop_samples<4U>(data, mask, this->samples(ifeature, sample_range), [&] (auto it)
                     {
                         if (this->should_drop(ifeature))
                         {
@@ -122,10 +116,6 @@ namespace nano
                                 }
                             }
                         }
-                    },
-                    [&] ()
-                    {
-                        generator_t::select(ifeature, sample_range, storage);
                     });
                 });
             }
@@ -141,8 +131,7 @@ namespace nano
             {
                 this->dataset().visit_inputs(this->mapped_ifeature(ifeature), [&] (const auto&, const auto& data, const auto& mask)
                 {
-                    loop_samples<4U>(data, mask, this->samples(ifeature, sample_range),
-                    [&] (auto it)
+                    loop_samples<4U>(data, mask, this->samples(ifeature, sample_range), [&] (auto it)
                     {
                         const auto component = this->mapped_component(ifeature);
                         if constexpr (tcomputer::generated_feature_type == feature_type::sclass)
@@ -194,10 +183,6 @@ namespace nano
                             }
                             ++ column;
                         }
-                    },
-                    [&] ()
-                    {
-                        assert(false);
                     });
                 });
             }

@@ -327,25 +327,31 @@ UTEST_CASE(loop_samples)
 
     const auto samples = arange(0, 4);
 
-    loop_samples<1U>(data1, mask1, data2, mask2, samples,
-        [&] (auto) { UTEST_CHECK(false); },
-        [&] ()     { UTEST_CHECK(true); });
-
-    loop_samples<2U>(data1, mask1, data2, mask2, samples,
-        [&] (auto) { UTEST_CHECK(false); },
-        [&] ()     { UTEST_CHECK(true); });
-
-    loop_samples<4U>(data1, mask1, data2, mask2, samples,
-        [&] (auto) { UTEST_CHECK(false); },
-        [&] ()     { UTEST_CHECK(true); });
-
-    loop_samples<4U>(data1, mask1, data2.reshape(4, 1, 1, 1), mask2, samples,
-        [&] (auto) { UTEST_CHECK(true); },
-        [&] ()     { UTEST_CHECK(false); });
-
-    loop_samples<1U>(data1.reshape(-1), mask1, data2, mask2, samples,
-        [&] (auto) { UTEST_CHECK(true); },
-        [&] ()     { UTEST_CHECK(false); });
+    {
+        bool called = false;
+        loop_samples<1U>(data1, mask1, data2, mask2, samples, [&] (auto) { called = true; });
+        UTEST_CHECK(!called);
+    }
+    {
+        bool called = false;
+        loop_samples<2U>(data1, mask1, data2, mask2, samples, [&] (auto) { called = true; });
+        UTEST_CHECK(!called);
+    }
+    {
+        bool called = false;
+        loop_samples<4U>(data1, mask1, data2, mask2, samples, [&] (auto) { called = true; });
+        UTEST_CHECK(!called);
+    }
+    {
+        bool called = false;
+        loop_samples<4U>(data1, mask1, data2.reshape(4, 1, 1, 1), mask2, samples, [&] (auto) { called = true; });
+        UTEST_CHECK(called);
+    }
+    {
+        bool called = false;
+        loop_samples<1U>(data1.reshape(-1), mask1, data2, mask2, samples, [&] (auto) { called = true; });
+        UTEST_CHECK(called);
+    }
 }
 
 UTEST_END_MODULE()

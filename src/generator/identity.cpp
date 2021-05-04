@@ -23,8 +23,7 @@ void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_
 {
     dataset().visit_inputs(ifeature, [&] (const auto&, const auto& data, const auto& mask)
     {
-        loop_samples<1U>(data, mask, samples(ifeature, sample_range),
-        [&] (auto it)
+        loop_samples<1U>(data, mask, samples(ifeature, sample_range), [&] (auto it)
         {
             if (should_drop(ifeature))
             {
@@ -44,10 +43,6 @@ void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_
                     }
                 }
             }
-        },
-        [&] ()
-        {
-            generator_t::select(ifeature, sample_range, storage);
         });
     });
 }
@@ -56,8 +51,7 @@ void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_
 {
     dataset().visit_inputs(ifeature, [&] (const auto&, const auto& data, const auto& mask)
     {
-        loop_samples<2U>(data, mask, samples(ifeature, sample_range),
-        [&] (auto it)
+        loop_samples<2U>(data, mask, samples(ifeature, sample_range), [&] (auto it)
         {
             if (should_drop(ifeature))
             {
@@ -77,10 +71,6 @@ void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_
                     }
                 }
             }
-        },
-        [&] ()
-        {
-            generator_t::select(ifeature, sample_range, storage);
         });
     });
 }
@@ -89,8 +79,7 @@ void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_
 {
     dataset().visit_inputs(ifeature, [&] (const auto& feature, const auto& data, const auto& mask)
     {
-        loop_samples<4U>(data, mask, samples(ifeature, sample_range),
-        [&] (auto it)
+        loop_samples<4U>(data, mask, samples(ifeature, sample_range), [&] (auto it)
         {
             if (size(feature.dims()) > 1)
             {
@@ -114,10 +103,6 @@ void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_
                     }
                 }
             }
-        },
-        [&] ()
-        {
-            generator_t::select(ifeature, sample_range, storage);
         });
     });
 }
@@ -126,8 +111,7 @@ void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_
 {
     dataset().visit_inputs(ifeature, [&] (const auto& feature, const auto& data, const auto& mask)
     {
-        loop_samples<4U>(data, mask, samples(ifeature, sample_range),
-        [&] (auto it)
+        loop_samples<4U>(data, mask, samples(ifeature, sample_range), [&] (auto it)
         {
             if (size(feature.dims()) <= 1)
             {
@@ -151,10 +135,6 @@ void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_
                     }
                 }
             }
-        },
-        [&]
-        {
-            generator_t::select(ifeature, sample_range, storage);
         });
     });
 }

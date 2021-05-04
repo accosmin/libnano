@@ -4,6 +4,38 @@
 
 using namespace nano;
 
+static void handle_sclass(tensor_size_t ifeature, const feature_t& feature)
+{
+    critical(
+        feature.type() != feature_type::sclass,
+        "generator_t: unhandled single-label feature <", ifeature, ":", feature, ">!");
+}
+
+static void handle_mclass(tensor_size_t ifeature, const feature_t& feature)
+{
+    critical(
+        feature.type() != feature_type::mclass,
+        "generator_t: unhandled multi-label feature <", ifeature, ":", feature, ">!");
+}
+
+static void handle_scalar(tensor_size_t ifeature, const feature_t& feature)
+{
+    critical(
+        feature.type() == feature_type::sclass ||
+        feature.type() == feature_type::mclass ||
+        size(feature.dims()) != 1,
+        "generator_t: unhandled scalar feature <", ifeature, ":", feature, ">!");
+}
+
+static void handle_struct(tensor_size_t ifeature, const feature_t& feature)
+{
+    critical(
+        feature.type() == feature_type::sclass ||
+        feature.type() == feature_type::mclass ||
+        size(feature.dims()) == 1,
+        "generator_t: unhandled structured feature <", ifeature, ":", feature, ">!");
+}
+
 template <typename tscalar, size_t trank, typename... tindices>
 static auto resize_and_map(tensor_mem_t<tscalar, trank>& buffer, tindices... dims)
 {
@@ -189,6 +221,8 @@ sclass_cmap_t dataset_generator_t::select(tensor_size_t feature, tensor_range_t 
 {
     assert(sample_range.begin() >= 0 && sample_range.end() <= m_samples.size());
 
+    handle_sclass(feature, this->feature(feature));
+
     auto storage = resize_and_map(buffer, sample_range.size());
     byfeature(feature)->select(m_feature_mapping(feature, 1), sample_range, storage);
     return storage;
@@ -197,6 +231,8 @@ sclass_cmap_t dataset_generator_t::select(tensor_size_t feature, tensor_range_t 
 mclass_cmap_t dataset_generator_t::select(tensor_size_t feature, tensor_range_t sample_range, mclass_mem_t& buffer) const
 {
     assert(sample_range.begin() >= 0 && sample_range.end() <= m_samples.size());
+
+    handle_mclass(feature, this->feature(feature));
 
     auto storage = resize_and_map(buffer, sample_range.size(), m_feature_mapping(feature, 2));
     byfeature(feature)->select(m_feature_mapping(feature, 1), sample_range, storage);
@@ -207,6 +243,8 @@ scalar_cmap_t dataset_generator_t::select(tensor_size_t feature, tensor_range_t 
 {
     assert(sample_range.begin() >= 0 && sample_range.end() <= m_samples.size());
 
+    handle_scalar(feature, this->feature(feature));
+
     auto storage = resize_and_map(buffer, sample_range.size());
     byfeature(feature)->select(m_feature_mapping(feature, 1), sample_range, storage);
     return storage;
@@ -215,6 +253,8 @@ scalar_cmap_t dataset_generator_t::select(tensor_size_t feature, tensor_range_t 
 struct_cmap_t dataset_generator_t::select(tensor_size_t feature, tensor_range_t sample_range, struct_mem_t& buffer) const
 {
     assert(sample_range.begin() >= 0 && sample_range.end() <= m_samples.size());
+
+    handle_struct(feature, this->feature(feature));
 
     auto storage = resize_and_map(buffer, sample_range.size(),
         m_feature_mapping(feature, 2), m_feature_mapping(feature, 3), m_feature_mapping(feature, 4));

@@ -47,8 +47,7 @@ namespace nano
             {
                 this->dataset().visit_inputs(this->mapped_ifeature2(ifeature), [&] (const auto&, const auto& data2, const auto& mask2)
                 {
-                    loop_samples<4U>(data1, mask1, data2, mask2, this->samples(ifeature, sample_range),
-                    [&] (auto it)
+                    loop_samples<4U>(data1, mask1, data2, mask2, this->samples(ifeature, sample_range), [&] (auto it)
                     {
                         if (this->should_drop(ifeature))
                         {
@@ -70,10 +69,6 @@ namespace nano
                                 }
                             }
                         }
-                    },
-                    [&] ()
-                    {
-                        generator_t::select(ifeature, sample_range, storage);
                     });
                 });
             });
@@ -87,8 +82,7 @@ namespace nano
                 {
                     this->dataset().visit_inputs(this->mapped_ifeature2(ifeature), [&] (const auto&, const auto& data2, const auto& mask2)
                     {
-                        loop_samples<4U>(data1, mask1, data2, mask2, this->samples(ifeature, sample_range),
-                        [&] (auto it)
+                        loop_samples<4U>(data1, mask1, data2, mask2, this->samples(ifeature, sample_range), [&] (auto it)
                         {
                             const auto component1 = this->mapped_component1(ifeature);
                             const auto component2 = this->mapped_component2(ifeature);
@@ -110,10 +104,6 @@ namespace nano
                                     storage(index, column) = +0.0;
                                 }
                             }
-                        },
-                        [&] ()
-                        {
-                            assert(false);
                         });
                     });
                 });

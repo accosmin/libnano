@@ -1,6 +1,7 @@
 #include <utest/utest.h>
-#include <nano/generator/scalar.h>
 #include <nano/generator/identity.h>
+#include <nano/generator/elemwise_scalar.h>
+#include <nano/generator/pairwise_scalar.h>
 
 using namespace nano;
 
@@ -690,7 +691,7 @@ UTEST_CASE(unsupervised_quadratic_scalar)
     const auto dataset = make_dataset(samples.size(), string_t::npos);
 
     auto generator = dataset_generator_t{dataset, samples};
-    generator.add<scalar2scalar_pairwise_generator_t<pairwise_product_t>>(
+    generator.add<scalar_pairwise_generator_t<product_t>>(
         execution::par, struct2scalar::off);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 3);
@@ -723,7 +724,7 @@ UTEST_CASE(unsupervised_quadratic_mixed)
     const auto dataset = make_dataset(samples.size(), string_t::npos);
 
     auto generator = dataset_generator_t{dataset, samples};
-    generator.add<scalar2scalar_pairwise_generator_t<pairwise_product_t>>(
+    generator.add<scalar_pairwise_generator_t<product_t>>(
         execution::par, struct2scalar::on, make_indices(0, 1, 3, 4));
 
     UTEST_REQUIRE_EQUAL(generator.features(), 15);

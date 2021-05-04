@@ -129,7 +129,7 @@ namespace nano
         ///     useful for training and evaluating ML model that map densely continuous inputs to targets
         ///     (e.g. linear models, MLPs).
         ///
-        virtual void flatten(tensor_range_t sample_range, tensor2d_map_t, tensor_size_t column_offset) const = 0;
+        virtual void flatten(tensor_range_t sample_range, tensor2d_map_t, tensor_size_t column) const = 0;
 
         ///
         /// \brief access functions

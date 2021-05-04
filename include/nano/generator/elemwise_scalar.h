@@ -2,7 +2,6 @@
 
 #include <nano/generator/util.h>
 #include <nano/generator/elemwise.h>
-#include <nano/generator/pairwise.h>
 
 namespace nano
 {
@@ -47,9 +46,9 @@ namespace nano
         {
             do_select(ifeature, sample_range, storage);
         }
-        void flatten(tensor_range_t sample_range, tensor2d_map_t storage, tensor_size_t column_offset) const override
+        void flatten(tensor_range_t sample_range, tensor2d_map_t storage, tensor_size_t column) const override
         {
-            do_flatten(sample_range, storage, column_offset);
+            do_flatten(sample_range, storage, column);
         }
 
     private:
@@ -148,12 +147,12 @@ namespace nano
                         const auto component = this->mapped_component(ifeature);
                         if constexpr (tcomputer::generated_feature_type == feature_type::sclass)
                         {
-                            const auto column_size = m_feature_classes(ifeature);
+                            const auto colsize = m_feature_classes(ifeature);
                             for (; it; ++ it)
                             {
                                 if (const auto [index, given, values] = *it; given)
                                 {
-                                    auto segment = storage.array(index).segment(column, column_size);
+                                    auto segment = storage.array(index).segment(column, colsize);
                                     if (this->should_drop(ifeature))
                                     {
                                         segment.setConstant(+0.0);
@@ -166,12 +165,12 @@ namespace nano
                                 }
                                 else
                                 {
-                                    auto segment = storage.array(index).segment(column, column_size);
+                                    auto segment = storage.array(index).segment(column, colsize);
                                     segment.setConstant(+0.0);
                                 }
                             }
 
-                            column += column_size;
+                            column += colsize;
                         }
                         else
                         {
@@ -286,167 +285,6 @@ namespace nano
         {
             const auto svalue = static_cast<scalar_t>(value);
             return (svalue < 0.0) ? 0 : 1;
-        }
-    };
-
-    ///
-
-    ///
-    /// \brief
-    ///
-    class NANO_PUBLIC scalar_pairwise_generator_t : public pairwise_generator_t
-    {
-    public:
-
-        scalar_pairwise_generator_t(
-            const memory_dataset_t& dataset, const indices_t& samples,
-            struct2scalar s2s = struct2scalar::off,
-            const indices_t& feature_indices = indices_t{});
-    };
-
-    ///
-    /// \brief
-    ///
-    template <typename toperator>
-    class NANO_PUBLIC scalar2scalar_pairwise_generator_t : public scalar_pairwise_generator_t
-    {
-    public:
-
-        scalar2scalar_pairwise_generator_t(
-            const memory_dataset_t& dataset, const indices_t& samples,
-            struct2scalar s2s = struct2scalar::off,
-            const indices_t& feature_indices = indices_t{}) :
-            scalar_pairwise_generator_t(dataset, samples, s2s, feature_indices)
-        {
-        }
-
-        void select(tensor_size_t ifeature, tensor_range_t sample_range, scalar_map_t storage) const override
-        {
-            do_select(ifeature, sample_range, storage);
-        }
-        void flatten(tensor_range_t sample_range, tensor2d_map_t storage, tensor_size_t column_offset) const override
-        {
-            do_flatten(sample_range, storage, column_offset);
-        }
-
-    private:
-
-        feature_t make_feature(
-            const feature_t& feature1, tensor_size_t component1,
-            const feature_t& feature2, tensor_size_t component2) const override
-        {
-            return  feature_t{scat(toperator::name(),
-                    "(", feature1.name(), "[", component1, "]",
-                    ",", feature2.name(), "[", component2, "])")}
-                    .scalar(toperator::type(feature1, feature2));
-        }
-
-        void do_select(tensor_size_t ifeature, tensor_range_t sample_range, scalar_map_t storage) const
-        {
-            dataset().visit_inputs(mapped_ifeature1(ifeature), [&] (const auto&, const auto& data1, const auto& mask1)
-            {
-                dataset().visit_inputs(mapped_ifeature2(ifeature), [&] (const auto&, const auto& data2, const auto& mask2)
-                {
-                    loop_samples<4U>(data1, mask1, data2, mask2, samples(ifeature, sample_range),
-                    [&] (auto it)
-                    {
-                        if (should_drop(ifeature))
-                        {
-                            storage.full(std::numeric_limits<scalar_t>::quiet_NaN());
-                        }
-                        else
-                        {
-                            const auto component1 = mapped_component1(ifeature);
-                            const auto component2 = mapped_component2(ifeature);
-                            for (; it; ++ it)
-                            {
-                                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
-                                {
-                                    storage(index) = toperator::value(values1(component1), values2(component2));
-                                }
-                                else
-                                {
-                                    storage(index) = std::numeric_limits<scalar_t>::quiet_NaN();
-                                }
-                            }
-                        }
-                    },
-                    [&] ()
-                    {
-                        generator_t::select(ifeature, sample_range, storage);
-                    });
-                });
-            });
-        }
-
-        void do_flatten(tensor_range_t sample_range, tensor2d_map_t storage, tensor_size_t column) const
-        {
-            for (tensor_size_t ifeature = 0, features = this->features(); ifeature < features; ++ ifeature, ++ column)
-            {
-                dataset().visit_inputs(mapped_ifeature1(ifeature), [&] (const auto&, const auto& data1, const auto& mask1)
-                {
-                    dataset().visit_inputs(mapped_ifeature2(ifeature), [&] (const auto&, const auto& data2, const auto& mask2)
-                    {
-                        loop_samples<4U>(data1, mask1, data2, mask2, samples(ifeature, sample_range),
-                        [&] (auto it)
-                        {
-                            const auto component1 = mapped_component1(ifeature);
-                            const auto component2 = mapped_component2(ifeature);
-                            for (; it; ++ it)
-                            {
-                                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
-                                {
-                                    if (should_drop(ifeature))
-                                    {
-                                        storage(index, column) = +0.0;
-                                    }
-                                    else
-                                    {
-                                        storage(index, column) = toperator::value(values1(component1), values2(component2));
-                                    }
-                                }
-                                else
-                                {
-                                    storage(index, column) = +0.0;
-                                }
-                            }
-                        },
-                        [&] ()
-                        {
-                            assert(false);
-                        });
-                    });
-                });
-            }
-        }
-    };
-
-    //TODO: use CRTP to easily handle all transformations, including preprocessing of samples.
-
-    /// \brief
-    ///
-    struct pairwise_product_t
-    {
-        static auto name()
-        {
-            return "product";
-        }
-
-        static auto type(const feature_t&, const feature_t&)
-        {
-            return feature_type::float64;
-        }
-
-        template
-        <
-            typename tscalar1,
-            typename tscalar2,
-            std::enable_if_t<std::is_arithmetic_v<tscalar1>, bool> = true,
-            std::enable_if_t<std::is_arithmetic_v<tscalar2>, bool> = true
-        >
-        static auto value(tscalar1 value1, tscalar2 value2)
-        {
-            return static_cast<scalar_t>(value1) * static_cast<scalar_t>(value2);
         }
     };
 }

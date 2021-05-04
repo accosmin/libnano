@@ -159,22 +159,22 @@ void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_
     });
 }
 
-void identity_generator_t::flatten(tensor_range_t sample_range, tensor2d_map_t storage, tensor_size_t column_offset) const
+void identity_generator_t::flatten(tensor_range_t sample_range, tensor2d_map_t storage, tensor_size_t column) const
 {
-    for (tensor_size_t ifeature = 0, column_size = 0, features = this->features();
-         ifeature < features; ++ ifeature, column_offset += column_size)
+    for (tensor_size_t ifeature = 0, colsize = 0, features = this->features();
+         ifeature < features; ++ ifeature, column += colsize)
     {
         dataset().visit_inputs(ifeature, [&] (const auto& feature, const auto& data, const auto& mask)
         {
             loop_samples(data, mask, samples(ifeature, sample_range),
             [&] (auto it)
             {
-                column_size = feature.classes();
+                colsize = feature.classes();
                 for (; it; ++ it)
                 {
                     if (const auto [index, given, label] = *it; given)
                     {
-                        auto segment = storage.array(index).segment(column_offset, column_size);
+                        auto segment = storage.array(index).segment(column, colsize);
                         if (should_drop(ifeature))
                         {
                             segment.setConstant(+0.0);
@@ -187,19 +187,19 @@ void identity_generator_t::flatten(tensor_range_t sample_range, tensor2d_map_t s
                     }
                     else
                     {
-                        auto segment = storage.array(index).segment(column_offset, column_size);
+                        auto segment = storage.array(index).segment(column, colsize);
                         segment.setConstant(+0.0);
                     }
                 }
             },
             [&] (auto it)
             {
-                column_size = feature.classes();
+                colsize = feature.classes();
                 for (; it; ++ it)
                 {
                     if (const auto [index, given, hits] = *it; given)
                     {
-                        auto segment = storage.array(index).segment(column_offset, column_size);
+                        auto segment = storage.array(index).segment(column, colsize);
                         if (should_drop(ifeature))
                         {
                             segment.setConstant(+0.0);
@@ -211,19 +211,19 @@ void identity_generator_t::flatten(tensor_range_t sample_range, tensor2d_map_t s
                     }
                     else
                     {
-                        auto segment = storage.array(index).segment(column_offset, column_size);
+                        auto segment = storage.array(index).segment(column, colsize);
                         segment.setConstant(+0.0);
                     }
                 }
             },
             [&] (auto it)
             {
-                column_size = size(feature.dims());
+                colsize = size(feature.dims());
                 for (; it; ++ it)
                 {
                     if (const auto [index, given, values] = *it; given)
                     {
-                        auto segment = storage.array(index).segment(column_offset, column_size);
+                        auto segment = storage.array(index).segment(column, colsize);
                         if (should_drop(ifeature))
                         {
                             segment.setConstant(+0.0);
@@ -235,7 +235,7 @@ void identity_generator_t::flatten(tensor_range_t sample_range, tensor2d_map_t s
                     }
                     else
                     {
-                        auto segment = storage.array(index).segment(column_offset, column_size);
+                        auto segment = storage.array(index).segment(column, colsize);
                         segment.setConstant(+0.0);
                     }
                 }

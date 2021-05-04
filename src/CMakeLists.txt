@@ -12,7 +12,6 @@ target_sources(nano PRIVATE
     stream.cpp
     generator.cpp
     generator/util.cpp
-    generator/scalar.cpp
     generator/identity.cpp
     generator/elemwise.cpp
     generator/pairwise.cpp

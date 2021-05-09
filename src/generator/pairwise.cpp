@@ -3,8 +3,8 @@
 using namespace nano;
 
 pairwise_generator_t::pairwise_generator_t(
-    const memory_dataset_t& dataset, const indices_t& samples, const feature_mapping_t& mapping) :
-    generator_t(dataset, samples)
+    const memory_dataset_t& dataset, const feature_mapping_t& mapping) :
+    generator_t(dataset)
 {
     const auto size = mapping.size<0>();
 

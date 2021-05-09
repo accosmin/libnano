@@ -17,7 +17,7 @@ namespace nano
     {
     public:
 
-        pairwise_generator_t(const memory_dataset_t&, const indices_t& samples, const feature_mapping_t&);
+        pairwise_generator_t(const memory_dataset_t&, const feature_mapping_t&);
 
         tensor_size_t features() const override;
         feature_t feature(tensor_size_t) const override;

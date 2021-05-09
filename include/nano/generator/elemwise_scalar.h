@@ -13,6 +13,7 @@ namespace nano
     // TODO: sign -> transform scalar value to its sign class or sign scalar value
     // TODO: clamp_perc -> clamp scalar value outside a given percentile range
     // TODO: clamp -> clamp scalar value to given range
+    // TODO: support for stateful generators (e.g. automatically find which scalar features need to scaled, percentiles)
 
     ///
     /// \brief
@@ -23,10 +24,10 @@ namespace nano
     public:
 
         scalar_elemwise_generator_t(
-            const memory_dataset_t& dataset, const indices_t& samples,
+            const memory_dataset_t& dataset,
             struct2scalar s2s = struct2scalar::off,
             const indices_t& feature_indices = indices_t{}) :
-            tcomputer(dataset, samples, select_scalar_components(dataset, s2s, feature_indices))
+            tcomputer(dataset, select_scalar_components(dataset, s2s, feature_indices))
         {
             if constexpr (tcomputer::generated_feature_type == feature_type::sclass)
             {
@@ -38,32 +39,14 @@ namespace nano
             }
         }
 
-        void select(tensor_size_t ifeature, tensor_range_t sample_range, scalar_map_t storage) const override
+        void select(indices_cmap_t samples, tensor_size_t ifeature, scalar_map_t storage) const override
         {
-            do_select(ifeature, sample_range, storage);
-        }
-        void select(tensor_size_t ifeature, tensor_range_t sample_range, sclass_map_t storage) const override
-        {
-            do_select(ifeature, sample_range, storage);
-        }
-        void flatten(tensor_range_t sample_range, tensor2d_map_t storage, tensor_size_t column) const override
-        {
-            do_flatten(sample_range, storage, column);
-        }
-
-    private:
-
-        void do_select(tensor_size_t ifeature, tensor_range_t sample_range, scalar_map_t storage) const
-        {
-            if constexpr (tcomputer::generated_feature_type == feature_type::sclass)
+            if constexpr (tcomputer::generated_feature_type != feature_type::sclass)
             {
-                generator_t::select(ifeature, sample_range, storage);
-            }
-            else
-            {
-                this->dataset().visit_inputs(this->mapped_ifeature(ifeature), [&] (const auto&, const auto& data, const auto& mask)
+                this->iterate1(samples, ifeature, this->mapped_ifeature(ifeature), [&] (
+                    const auto&, const auto& data, const auto& mask, indices_cmap_t samples)
                 {
-                    loop_samples<4U>(data, mask, this->samples(ifeature, sample_range), [&] (auto it)
+                    loop_samples<4U>(data, mask, samples, [&] (auto it)
                     {
                         if (this->should_drop(ifeature))
                         {
@@ -87,15 +70,20 @@ namespace nano
                     });
                 });
             }
+            else
+            {
+                generator_t::select(samples, ifeature, storage);
+            }
         }
 
-        void do_select(tensor_size_t ifeature, tensor_range_t sample_range, sclass_map_t storage) const
+        void select(indices_cmap_t samples, tensor_size_t ifeature, sclass_map_t storage) const override
         {
             if constexpr (tcomputer::generated_feature_type == feature_type::sclass)
             {
-                this->dataset().visit_inputs(this->mapped_ifeature(ifeature), [&] (const auto&, const auto& data, const auto& mask)
+                this->iterate1(samples, ifeature, this->mapped_ifeature(ifeature), [&] (
+                    const auto&, const auto& data, const auto& mask, indices_cmap_t samples)
                 {
-                    loop_samples<4U>(data, mask, this->samples(ifeature, sample_range), [&] (auto it)
+                    loop_samples<4U>(data, mask, samples, [&] (auto it)
                     {
                         if (this->should_drop(ifeature))
                         {
@@ -121,17 +109,18 @@ namespace nano
             }
             else
             {
-                generator_t::select(ifeature, sample_range, storage);
+                generator_t::select(samples, ifeature, storage);
             }
         }
 
-        void do_flatten(tensor_range_t sample_range, tensor2d_map_t storage, tensor_size_t column) const
+        void flatten(indices_cmap_t samples, tensor2d_map_t storage, tensor_size_t column) const override
         {
             for (tensor_size_t ifeature = 0, features = this->features(); ifeature < features; ++ ifeature)
             {
-                this->dataset().visit_inputs(this->mapped_ifeature(ifeature), [&] (const auto&, const auto& data, const auto& mask)
+                this->iterate1(samples, ifeature, this->mapped_ifeature(ifeature), [&] (
+                    const auto&, const auto& data, const auto& mask, indices_cmap_t samples)
                 {
-                    loop_samples<4U>(data, mask, this->samples(ifeature, sample_range), [&] (auto it)
+                    loop_samples<4U>(data, mask, samples, [&] (auto it)
                     {
                         const auto component = this->mapped_component(ifeature);
                         if constexpr (tcomputer::generated_feature_type == feature_type::sclass)
@@ -201,8 +190,8 @@ namespace nano
 
         static constexpr auto generated_feature_type = feature_type::float64;
 
-        slog1p_t(const memory_dataset_t& dataset, const indices_t& samples, feature_mapping_t feature_mapping) :
-            elemwise_generator_t(dataset, samples, std::move(feature_mapping))
+        slog1p_t(const memory_dataset_t& dataset, feature_mapping_t feature_mapping) :
+            elemwise_generator_t(dataset, std::move(feature_mapping))
         {
         }
 
@@ -228,8 +217,8 @@ namespace nano
 
         static constexpr auto generated_feature_type = feature_type::float64;
 
-        sign_t(const memory_dataset_t& dataset, const indices_t& samples, feature_mapping_t feature_mapping) :
-            elemwise_generator_t(dataset, samples, std::move(feature_mapping))
+        sign_t(const memory_dataset_t& dataset, feature_mapping_t feature_mapping) :
+            elemwise_generator_t(dataset, std::move(feature_mapping))
         {
         }
 
@@ -255,8 +244,8 @@ namespace nano
 
         static constexpr auto generated_feature_type = feature_type::sclass;
 
-        sign_class_t(const memory_dataset_t& dataset, const indices_t& samples, feature_mapping_t feature_mapping) :
-            elemwise_generator_t(dataset, samples, std::move(feature_mapping))
+        sign_class_t(const memory_dataset_t& dataset, feature_mapping_t feature_mapping) :
+            elemwise_generator_t(dataset, std::move(feature_mapping))
         {
         }
 

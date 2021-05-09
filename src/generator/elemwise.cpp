@@ -3,8 +3,8 @@
 using namespace nano;
 
 elemwise_generator_t::elemwise_generator_t(
-    const memory_dataset_t& dataset, const indices_t& samples, feature_mapping_t mapping) :
-    generator_t(dataset, samples),
+    const memory_dataset_t& dataset, feature_mapping_t mapping) :
+    generator_t(dataset),
     m_mapping(std::move(mapping))
 {
     allocate(this->features());

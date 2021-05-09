@@ -23,88 +23,77 @@ namespace nano
     public:
 
         scalar_pairwise_generator_t(
-            const memory_dataset_t& dataset, const indices_t& samples,
+            const memory_dataset_t& dataset,
             struct2scalar s2s = struct2scalar::off,
             const indices_t& feature_indices = indices_t{}) :
-            tcomputer(dataset, samples, select_scalar_components(dataset, s2s, feature_indices))
+            tcomputer(dataset, select_scalar_components(dataset, s2s, feature_indices))
         {
         }
 
-        void select(tensor_size_t ifeature, tensor_range_t sample_range, scalar_map_t storage) const override
+        void select(indices_cmap_t samples, tensor_size_t ifeature, scalar_map_t storage) const override
         {
-            do_select(ifeature, sample_range, storage);
-        }
-        void flatten(tensor_range_t sample_range, tensor2d_map_t storage, tensor_size_t column) const override
-        {
-            do_flatten(sample_range, storage, column);
-        }
-
-    private:
-
-        void do_select(tensor_size_t ifeature, tensor_range_t sample_range, scalar_map_t storage) const
-        {
-            this->dataset().visit_inputs(this->mapped_ifeature1(ifeature), [&] (const auto&, const auto& data1, const auto& mask1)
+            this->iterate2(samples, ifeature, this->mapped_ifeature1(ifeature), this->mapped_ifeature2(ifeature), [&] (
+                const auto&, const auto& data1, const auto& mask1,
+                const auto&, const auto& data2, const auto& mask2,
+                indices_cmap_t samples)
             {
-                this->dataset().visit_inputs(this->mapped_ifeature2(ifeature), [&] (const auto&, const auto& data2, const auto& mask2)
+                loop_samples<4U>(data1, mask1, data2, mask2, samples, [&] (auto it)
                 {
-                    loop_samples<4U>(data1, mask1, data2, mask2, this->samples(ifeature, sample_range), [&] (auto it)
+                    if (this->should_drop(ifeature))
                     {
-                        if (this->should_drop(ifeature))
+                        storage.full(std::numeric_limits<scalar_t>::quiet_NaN());
+                    }
+                    else
+                    {
+                        const auto component1 = this->mapped_component1(ifeature);
+                        const auto component2 = this->mapped_component2(ifeature);
+                        for (; it; ++ it)
                         {
-                            storage.full(std::numeric_limits<scalar_t>::quiet_NaN());
-                        }
-                        else
-                        {
-                            const auto component1 = this->mapped_component1(ifeature);
-                            const auto component2 = this->mapped_component2(ifeature);
-                            for (; it; ++ it)
+                            if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
                             {
-                                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
-                                {
-                                    storage(index) = this->make_value(values1(component1), values2(component2));
-                                }
-                                else
-                                {
-                                    storage(index) = std::numeric_limits<scalar_t>::quiet_NaN();
-                                }
+                                storage(index) = this->make_value(values1(component1), values2(component2));
+                            }
+                            else
+                            {
+                                storage(index) = std::numeric_limits<scalar_t>::quiet_NaN();
                             }
                         }
-                    });
+                    }
                 });
             });
         }
 
-        void do_flatten(tensor_range_t sample_range, tensor2d_map_t storage, tensor_size_t column) const
+        void flatten(indices_cmap_t samples, tensor2d_map_t storage, tensor_size_t column) const override
         {
             for (tensor_size_t ifeature = 0, features = this->features(); ifeature < features; ++ ifeature, ++ column)
             {
-                this->dataset().visit_inputs(this->mapped_ifeature1(ifeature), [&] (const auto&, const auto& data1, const auto& mask1)
+                this->iterate2(samples, ifeature, this->mapped_ifeature1(ifeature), this->mapped_ifeature2(ifeature), [&] (
+                    const auto&, const auto& data1, const auto& mask1,
+                    const auto&, const auto& data2, const auto& mask2,
+                    indices_cmap_t samples)
                 {
-                    this->dataset().visit_inputs(this->mapped_ifeature2(ifeature), [&] (const auto&, const auto& data2, const auto& mask2)
+                    loop_samples<4U>(data1, mask1, data2, mask2, samples, [&] (auto it)
                     {
-                        loop_samples<4U>(data1, mask1, data2, mask2, this->samples(ifeature, sample_range), [&] (auto it)
+                        const auto component1 = this->mapped_component1(ifeature);
+                        const auto component2 = this->mapped_component2(ifeature);
+                        for (; it; ++ it)
                         {
-                            const auto component1 = this->mapped_component1(ifeature);
-                            const auto component2 = this->mapped_component2(ifeature);
-                            for (; it; ++ it)
+                            if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
                             {
-                                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
-                                {
-                                    if (this->should_drop(ifeature))
-                                    {
-                                        storage(index, column) = +0.0;
-                                    }
-                                    else
-                                    {
-                                        storage(index, column) = this->make_value(values1(component1), values2(component2));
-                                    }
-                                }
-                                else
+                                if (this->should_drop(ifeature))
                                 {
                                     storage(index, column) = +0.0;
                                 }
+                                else
+                                {
+                                    storage(index, column) = this->make_value(values1(component1), values2(component2));
+                                }
                             }
-                        });
+                            else
+                            {
+                                storage(index, column) = +0.0;
+                            }
+                        }
                     });
                 });
             }
@@ -120,8 +109,8 @@ namespace nano
 
         static constexpr auto generated_feature_type = feature_type::float64;
 
-        product_t(const memory_dataset_t& dataset, const indices_t& samples, feature_mapping_t feature_mapping) :
-            pairwise_generator_t(dataset, samples, std::move(feature_mapping))
+        product_t(const memory_dataset_t& dataset, feature_mapping_t feature_mapping) :
+            pairwise_generator_t(dataset, std::move(feature_mapping))
         {
         }
 

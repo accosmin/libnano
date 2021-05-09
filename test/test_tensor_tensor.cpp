@@ -631,4 +631,36 @@ UTEST_CASE(make_full_tensor)
     UTEST_CHECK_EQUAL(tensor(1, 2), 42);
 }
 
+UTEST_CASE(mem_from_map)
+{
+    {
+        auto tensor1 = make_full_tensor<int>(make_dims(2, 1), 42);
+
+        tensor_mem_t<int, 2> tensor2 = tensor1.tensor();
+        UTEST_CHECK_EQUAL(tensor2.dims(), make_dims(2, 1));
+        UTEST_CHECK_EQUAL(tensor2(0, 0), 42);
+        UTEST_CHECK_EQUAL(tensor2(1, 0), 42);
+
+        tensor1(1, 0) = 17;
+        UTEST_CHECK_EQUAL(tensor1(0, 0), 42);
+        UTEST_CHECK_EQUAL(tensor1(1, 0), 17);
+        UTEST_CHECK_EQUAL(tensor2(0, 0), 42);
+        UTEST_CHECK_EQUAL(tensor2(1, 0), 42);
+    }
+    {
+        const auto tensor1 = make_full_tensor<int>(make_dims(2, 1), 42);
+
+        tensor_mem_t<int, 2> tensor2 = tensor1.tensor();
+        UTEST_CHECK_EQUAL(tensor2.dims(), make_dims(2, 1));
+        UTEST_CHECK_EQUAL(tensor2(0, 0), 42);
+        UTEST_CHECK_EQUAL(tensor2(1, 0), 42);
+
+        tensor2(1, 0) = 17;
+        UTEST_CHECK_EQUAL(tensor2(0, 0), 42);
+        UTEST_CHECK_EQUAL(tensor2(1, 0), 17);
+        UTEST_CHECK_EQUAL(tensor1(0, 0), 42);
+        UTEST_CHECK_EQUAL(tensor1(1, 0), 42);
+    }
+}
+
 UTEST_END_MODULE()

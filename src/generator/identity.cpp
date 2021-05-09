@@ -3,8 +3,8 @@
 
 using namespace nano;
 
-identity_generator_t::identity_generator_t(const memory_dataset_t& dataset, const indices_t& samples) :
-    generator_t(dataset, samples)
+identity_generator_t::identity_generator_t(const memory_dataset_t& dataset) :
+    generator_t(dataset)
 {
     allocate(this->features());
 }
@@ -19,11 +19,11 @@ feature_t identity_generator_t::feature(tensor_size_t ifeature) const
     return dataset().feature(ifeature);
 }
 
-void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_range, sclass_map_t storage) const
+void identity_generator_t::select(indices_cmap_t samples, tensor_size_t ifeature, sclass_map_t storage) const
 {
-    dataset().visit_inputs(ifeature, [&] (const auto&, const auto& data, const auto& mask)
+    iterate1(samples, ifeature, ifeature, [&] (const auto&, const auto& data, const auto& mask, indices_cmap_t samples)
     {
-        loop_samples<1U>(data, mask, samples(ifeature, sample_range), [&] (auto it)
+        loop_samples<1U>(data, mask, samples, [&] (auto it)
         {
             if (should_drop(ifeature))
             {
@@ -47,11 +47,11 @@ void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_
     });
 }
 
-void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_range, mclass_map_t storage) const
+void identity_generator_t::select(indices_cmap_t samples, tensor_size_t ifeature, mclass_map_t storage) const
 {
-    dataset().visit_inputs(ifeature, [&] (const auto&, const auto& data, const auto& mask)
+    iterate1(samples, ifeature, ifeature, [&] (const auto&, const auto& data, const auto& mask, indices_cmap_t samples)
     {
-        loop_samples<2U>(data, mask, samples(ifeature, sample_range), [&] (auto it)
+        loop_samples<2U>(data, mask, samples, [&] (auto it)
         {
             if (should_drop(ifeature))
             {
@@ -75,15 +75,15 @@ void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_
     });
 }
 
-void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_range, scalar_map_t storage) const
+void identity_generator_t::select(indices_cmap_t samples, tensor_size_t ifeature, scalar_map_t storage) const
 {
-    dataset().visit_inputs(ifeature, [&] (const auto& feature, const auto& data, const auto& mask)
+    iterate1(samples, ifeature, ifeature, [&] (const auto& feature, const auto& data, const auto& mask, indices_cmap_t samples)
     {
-        loop_samples<4U>(data, mask, samples(ifeature, sample_range), [&] (auto it)
+        loop_samples<4U>(data, mask, samples, [&] (auto it)
         {
             if (size(feature.dims()) > 1)
             {
-                generator_t::select(ifeature, sample_range, storage);
+                generator_t::select(samples, ifeature, storage);
             }
             else if (should_drop(ifeature))
             {
@@ -107,15 +107,15 @@ void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_
     });
 }
 
-void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_range, struct_map_t storage) const
+void identity_generator_t::select(indices_cmap_t samples, tensor_size_t ifeature, struct_map_t storage) const
 {
-    dataset().visit_inputs(ifeature, [&] (const auto& feature, const auto& data, const auto& mask)
+    iterate1(samples, ifeature, ifeature, [&] (const auto& feature, const auto& data, const auto& mask, indices_cmap_t samples)
     {
-        loop_samples<4U>(data, mask, samples(ifeature, sample_range), [&] (auto it)
+        loop_samples<4U>(data, mask, samples, [&] (auto it)
         {
             if (size(feature.dims()) <= 1)
             {
-                generator_t::select(ifeature, sample_range, storage);
+                generator_t::select(samples, ifeature, storage);
             }
             else if (should_drop(ifeature))
             {
@@ -139,14 +139,14 @@ void identity_generator_t::select(tensor_size_t ifeature, tensor_range_t sample_
     });
 }
 
-void identity_generator_t::flatten(tensor_range_t sample_range, tensor2d_map_t storage, tensor_size_t column) const
+void identity_generator_t::flatten(indices_cmap_t samples, tensor2d_map_t storage, tensor_size_t column) const
 {
     for (tensor_size_t ifeature = 0, colsize = 0, features = this->features();
          ifeature < features; ++ ifeature, column += colsize)
     {
-        dataset().visit_inputs(ifeature, [&] (const auto& feature, const auto& data, const auto& mask)
+        iterate1(samples, ifeature, ifeature, [&] (const auto& feature, const auto& data, const auto& mask, indices_cmap_t samples)
         {
-            loop_samples(data, mask, samples(ifeature, sample_range),
+            loop_samples(data, mask, samples,
             [&] (auto it)
             {
                 colsize = feature.classes();

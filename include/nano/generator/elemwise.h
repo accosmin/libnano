@@ -15,7 +15,7 @@ namespace nano
     {
     public:
 
-        elemwise_generator_t(const memory_dataset_t&, const indices_t& samples, feature_mapping_t);
+        elemwise_generator_t(const memory_dataset_t&, feature_mapping_t);
 
         tensor_size_t features() const override;
         feature_t feature(tensor_size_t) const override;

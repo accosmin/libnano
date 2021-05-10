@@ -1,7 +1,7 @@
 #include <nano/loss.h>
 #include <nano/solver.h>
 #include <utest/utest.h>
-#include <nano/numeric.h>
+#include <nano/core/numeric.h>
 
 using namespace nano;
 

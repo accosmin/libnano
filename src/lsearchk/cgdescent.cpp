@@ -1,4 +1,4 @@
-#include <nano/numeric.h>
+#include <nano/core/numeric.h>
 #include <nano/lsearchk/cgdescent.h>
 
 using namespace nano;

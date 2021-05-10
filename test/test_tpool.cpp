@@ -2,9 +2,9 @@
 #include <algorithm>
 #include <nano/arch.h>
 #include <nano/tpool.h>
-#include <nano/random.h>
 #include <utest/utest.h>
-#include <nano/numeric.h>
+#include <nano/core/random.h>
+#include <nano/core/numeric.h>
 
 using namespace nano;
 

@@ -1,5 +1,5 @@
 #include <utest/utest.h>
-#include <nano/chrono.h>
+#include <nano/core/chrono.h>
 
 UTEST_BEGIN_MODULE(test_chrono)
 

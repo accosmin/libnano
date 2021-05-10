@@ -1,8 +1,8 @@
 #include <nano/loss.h>
-#include <nano/random.h>
 #include <utest/utest.h>
-#include <nano/numeric.h>
 #include <nano/function.h>
+#include <nano/core/random.h>
+#include <nano/core/numeric.h>
 #include <nano/mlearn/class.h>
 
 using namespace nano;

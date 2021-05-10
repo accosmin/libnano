@@ -8,7 +8,7 @@
 #include <nano/arch.h>
 #include <nano/scalar.h>
 #include <nano/string.h>
-#include <nano/numeric.h>
+#include <nano/core/numeric.h>
 
 namespace nano
 {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <nano/tensor.h>
-#include <nano/numeric.h>
+#include <nano/core/numeric.h>
 #include <nano/mlearn/enums.h>
 
 namespace nano

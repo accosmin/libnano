@@ -1,13 +1,15 @@
-make_test(test_stats NANO::nano)
 make_test(test_tpool NANO::nano)
 make_test(test_table NANO::nano)
-make_test(test_chrono NANO::nano)
 make_test(test_logger NANO::nano)
 make_test(test_string NANO::nano)
 make_test(test_stream NANO::nano)
 make_test(test_factory NANO::nano)
 make_test(test_cmdline NANO::nano)
 make_test(test_parameter NANO::nano)
+
+make_test(test_core_stats NANO::nano)
+make_test(test_core_chrono NANO::nano)
+make_test(test_core_percentile NANO::nano)
 
 make_test(test_tensor_index NANO::nano)
 make_test(test_tensor_stream NANO::nano)

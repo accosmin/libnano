@@ -1,6 +1,6 @@
 #include <iomanip>
 #include <utest/utest.h>
-#include <nano/numeric.h>
+#include <nano/core/numeric.h>
 #include <nano/solver/quasi.h>
 #include <nano/function/sphere.h>
 

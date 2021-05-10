@@ -1,5 +1,5 @@
 #include <utest/utest.h>
-#include <nano/numeric.h>
+#include <nano/core/numeric.h>
 #include <nano/dataset/synth_affine.h>
 
 using namespace nano;

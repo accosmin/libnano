@@ -1,11 +1,11 @@
-#include <nano/stats.h>
-#include <nano/random.h>
 #include <utest/utest.h>
+#include <nano/core/stats.h>
+#include <nano/core/random.h>
 #include <nano/tensor/tensor.h>
 
 using namespace nano;
 
-UTEST_BEGIN_MODULE(test_stats)
+UTEST_BEGIN_MODULE(test_core_stats)
 
 UTEST_CASE(empty)
 {

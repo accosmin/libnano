@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/random.h>
+#include <nano/core/random.h>
 #include <nano/tensor.h>
 
 namespace nano

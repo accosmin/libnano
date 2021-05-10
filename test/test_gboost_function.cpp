@@ -1,5 +1,5 @@
 #include "fixture/utils.h"
-#include <nano/numeric.h>
+#include <nano/core/numeric.h>
 #include <nano/gboost/function.h>
 #include <nano/dataset/memfixed.h>
 

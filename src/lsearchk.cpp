@@ -1,5 +1,5 @@
 #include <mutex>
-#include <nano/numeric.h>
+#include <nano/core/numeric.h>
 #include <nano/lsearchk/fletcher.h>
 #include <nano/lsearchk/backtrack.h>
 #include <nano/lsearchk/cgdescent.h>

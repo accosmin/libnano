@@ -3,8 +3,8 @@
 #include <chrono>
 #include <string>
 #include <cstdio>
-#include <nano/stats.h>
-#include <nano/numeric.h>
+#include <nano/core/stats.h>
+#include <nano/core/numeric.h>
 
 namespace nano
 {

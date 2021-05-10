@@ -1,12 +1,10 @@
 #pragma once
 
-#include <nano/random.h>
-#include <nano/numeric.h>
+#include <nano/core/random.h>
+#include <nano/core/numeric.h>
 #include <nano/tensor/vector.h>
 #include <nano/tensor/matrix.h>
 #include <nano/tensor/storage.h>
-
-#include <iostream>
 
 namespace nano
 {

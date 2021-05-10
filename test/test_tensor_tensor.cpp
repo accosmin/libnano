@@ -1,6 +1,6 @@
 #include <vector>
 #include <utest/utest.h>
-#include <nano/numeric.h>
+#include <nano/core/numeric.h>
 #include <nano/tensor/tensor.h>
 
 using namespace nano;

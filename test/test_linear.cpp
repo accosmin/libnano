@@ -1,5 +1,5 @@
 #include "fixture/utils.h"
-#include <nano/numeric.h>
+#include <nano/core/numeric.h>
 #include <nano/linear/util.h>
 #include <nano/linear/model.h>
 #include <nano/linear/function.h>

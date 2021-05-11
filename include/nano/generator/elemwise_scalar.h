@@ -261,4 +261,46 @@ namespace nano
             return (svalue < 0.0) ? 0 : 1;
         }
     };
+
+    ///
+    /// \brief
+    ///
+    class percentile_class_t : public elemwise_generator_t
+    {
+    public:
+
+        static constexpr auto generated_feature_type = feature_type::sclass;
+
+        percentile_class_t(const memory_dataset_t& dataset, feature_mapping_t feature_mapping,
+            std::vector<scalar_t> percentiles = {10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0}) :
+            elemwise_generator_t(dataset, std::move(feature_mapping)),
+            m_percentiles(std::move(percentiles))
+        {
+        }
+
+        void fit(indices_cmap_t, execution) override
+        {
+            // TODO: compute the percentile thresholds for all original features
+            // TODO:
+        }
+
+        feature_t make_feature(const feature_t& feature, tensor_size_t component) const override
+        {
+            return  feature_t{scat("percentile_class(", feature.name(), "[", component, "])")}.
+                    sclass(m_percentiles.size());
+        }
+
+        template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
+        static auto make_value(tscalar value)
+        {
+            // TODO
+            const auto svalue = static_cast<scalar_t>(value);
+            return (svalue < 0.0) ? 0 : 1;
+        }
+
+    private:
+
+        // attributes
+        std::vector<scalar_t>   m_percentiles;  ///<
+    };
 }

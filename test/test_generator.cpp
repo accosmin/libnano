@@ -387,6 +387,7 @@ UTEST_CASE(unsupervised)
 
     auto generator = dataset_generator_t{dataset};
     generator.add<identity_generator_t>();
+    generator.fit(arange(0, 10), execution::par);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 5);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"mclass3"}.mclass(strings_t{"m0", "m1", "m2"}));
@@ -490,6 +491,7 @@ UTEST_CASE(sclassification)
 
     auto generator = dataset_generator_t{dataset};
     generator.add<identity_generator_t>();
+    generator.fit(arange(0, 10), execution::par);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 4);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"mclass3"}.mclass(strings_t{"m0", "m1", "m2"}));
@@ -591,6 +593,7 @@ UTEST_CASE(regression)
 
     auto generator = dataset_generator_t{dataset};
     generator.add<identity_generator_t>();
+    generator.fit(arange(0, 10), execution::par);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 4);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"mclass3"}.mclass(strings_t{"m0", "m1", "m2"}));
@@ -640,6 +643,7 @@ UTEST_CASE(mvregression)
 
     auto generator = dataset_generator_t{dataset};
     generator.add<identity_generator_t>();
+    generator.fit(arange(0, 10), execution::par);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 4);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"mclass3"}.mclass(strings_t{"m0", "m1", "m2"}));
@@ -693,6 +697,7 @@ UTEST_CASE(unsupervised_quadratic_scalar)
 
     auto generator = dataset_generator_t{dataset};
     generator.add<scalar_pairwise_generator_t<product_t>>(struct2scalar::off);
+    generator.fit(arange(0, 10), execution::par);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 3);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"product(f32[0],f32[0])"}.scalar(feature_type::float64));
@@ -724,6 +729,7 @@ UTEST_CASE(unsupervised_quadratic_mixed)
 
     auto generator = dataset_generator_t{dataset};
     generator.add<scalar_pairwise_generator_t<product_t>>(struct2scalar::on, make_indices(0, 1, 3, 4));
+    generator.fit(arange(0, 10), execution::par);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 15);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"product(u8s[0],u8s[0])"}.scalar(feature_type::float64));
@@ -778,7 +784,8 @@ UTEST_CASE(unsupervised_slog1p)
     const auto dataset = make_dataset(10, string_t::npos);
 
     auto generator = dataset_generator_t{dataset};
-    generator.add<scalar_elemwise_generator_t<slog1p_t>>(struct2scalar::off);
+    generator.add<elemwise_generator_t<slog1p_t>>(struct2scalar::off);
+    generator.fit(arange(0, 10), execution::par);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 2);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"slog1p(f32[0])"}.scalar(feature_type::float64));
@@ -811,7 +818,8 @@ UTEST_CASE(unsupervised_sign)
     const auto dataset = make_dataset(10, string_t::npos);
 
     auto generator = dataset_generator_t{dataset};
-    generator.add<scalar_elemwise_generator_t<sign_t>>(struct2scalar::on, make_indices(0, 1, 2, 3, 4));
+    generator.add<elemwise_generator_t<sign_t>>(struct2scalar::on);
+    generator.fit(arange(0, 10), execution::par);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 6);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"sign(f32[0])"}.scalar(feature_type::float64));
@@ -848,15 +856,16 @@ UTEST_CASE(unsupervised_sign_class)
     const auto dataset = make_dataset(10, string_t::npos);
 
     auto generator = dataset_generator_t{dataset};
-    generator.add<scalar_elemwise_generator_t<sign_class_t>>(struct2scalar::on, make_indices(0, 1, 2, 3, 4));
+    generator.add<elemwise_generator_t<sign_class_t>>(struct2scalar::on);
+    generator.fit(arange(0, 10), execution::par);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 6);
-    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"sign_class(f32[0])"}.sclass(strings_t{"negative", "positive"}));
-    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"sign_class(u8s[0])"}.sclass(strings_t{"negative", "positive"}));
-    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"sign_class(u8s[1])"}.sclass(strings_t{"negative", "positive"}));
-    UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"sign_class(u8s[2])"}.sclass(strings_t{"negative", "positive"}));
-    UTEST_CHECK_EQUAL(generator.feature(4), feature_t{"sign_class(u8s[3])"}.sclass(strings_t{"negative", "positive"}));
-    UTEST_CHECK_EQUAL(generator.feature(5), feature_t{"sign_class(f64[0])"}.sclass(strings_t{"negative", "positive"}));
+    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"sign_class(f32[0])"}.sclass(strings_t{"neg", "pos"}));
+    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"sign_class(u8s[0])"}.sclass(strings_t{"neg", "pos"}));
+    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"sign_class(u8s[1])"}.sclass(strings_t{"neg", "pos"}));
+    UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"sign_class(u8s[2])"}.sclass(strings_t{"neg", "pos"}));
+    UTEST_CHECK_EQUAL(generator.feature(4), feature_t{"sign_class(u8s[3])"}.sclass(strings_t{"neg", "pos"}));
+    UTEST_CHECK_EQUAL(generator.feature(5), feature_t{"sign_class(f64[0])"}.sclass(strings_t{"neg", "pos"}));
 
     check_select(generator, 0, make_tensor<int32_t>(make_dims(10), 1, 1, 1, 1, 1, 1, 1, 1, 1, 1));
     check_select(generator, 1, make_tensor<int32_t>(make_dims(10), 1, -1, 1, -1, 1, -1, 1, -1, 1, -1));

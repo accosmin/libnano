@@ -132,4 +132,132 @@ namespace nano
             call_mclass(dataset, m2b, ifeature, op);
         }
     }
+
+    ///
+    /// \brief utility to write generated single-label features.
+    ///
+    /// NB: missing or dropped feature values are written as -1.
+    ///
+    template
+    <
+        template <typename, size_t> class titerator, typename tscalar, size_t trank,
+        typename tgenerator
+    >
+    void select(titerator<tscalar, trank> it, bool should_drop, sclass_map_t storage, const tgenerator& generator)
+    {
+        if (should_drop)
+        {
+            storage.full(-1);
+        }
+        else
+        {
+            for (; it; ++ it)
+            {
+                if (const auto [index, given, values] = *it; given)
+                {
+                    storage(index) = generator(it.sample(), values);
+                }
+                else
+                {
+                    storage(index) = -1;
+                }
+            }
+        }
+    }
+
+    ///
+    /// \brief utility to write generated multi-label features.
+    ///
+    /// NB: missing or dropped feature values are written as -1.
+    ///
+    template
+    <
+        template <typename, size_t> class titerator, typename tscalar, size_t trank,
+        typename tgenerator
+    >
+    void select(titerator<tscalar, trank> it, bool should_drop, mclass_map_t storage, const tgenerator& generator)
+    {
+        if (should_drop)
+        {
+            storage.full(-1);
+        }
+        else
+        {
+            for (; it; ++ it)
+            {
+                if (const auto [index, given, values] = *it; given)
+                {
+                    generator(it.sample(), values, storage.array(index));
+                }
+                else
+                {
+                    storage.vector(index) = -1;
+                }
+            }
+        }
+    }
+
+    ///
+    /// \brief utility to write generated scalar features.
+    ///
+    /// NB: missing or dropped feature values are written as NaNs.
+    ///
+    template
+    <
+        template <typename, size_t> class titerator, typename tscalar, size_t trank,
+        typename tgenerator
+    >
+    void select(titerator<tscalar, trank> it, bool should_drop, scalar_map_t storage, const tgenerator& generator)
+    {
+        if (should_drop)
+        {
+            storage.full(std::numeric_limits<scalar_t>::quiet_NaN());
+        }
+        else
+        {
+            for (; it; ++ it)
+            {
+                if (const auto [index, given, values] = *it; given)
+                {
+                    storage(index) = generator(it.sample(), values);
+                }
+                else
+                {
+                    storage(index) = std::numeric_limits<scalar_t>::quiet_NaN();
+                }
+            }
+        }
+    }
+
+    ///
+    /// \brief utility to write generated structured features.
+    ///
+    /// NB: missing or dropped feature values are written as NaNs.
+    ///
+    template
+    <
+        template <typename, size_t> class titerator, typename tscalar, size_t trank,
+        typename tgenerator
+    >
+    void select(titerator<tscalar, trank> it, bool should_drop, struct_map_t storage, const tgenerator& generator)
+    {
+        if (should_drop)
+        {
+            storage.full(std::numeric_limits<scalar_t>::quiet_NaN());
+        }
+        else
+        {
+            for (; it; ++ it)
+            {
+                if (const auto [index, given, values] = *it; given)
+                {
+                    generator(it.sample(), values, storage.tensor(index));
+                }
+                else
+                {
+                    storage.tensor(index).full(std::numeric_limits<scalar_t>::quiet_NaN());
+                }
+            }
+        }
+    }
 }

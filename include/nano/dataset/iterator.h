@@ -20,15 +20,19 @@ namespace nano
             assert(index >= 0 && index <= m_samples.size());
         }
 
+        tensor_size_t size() const
+        {
+            return m_samples.size();
+        }
+        tensor_size_t index() const
+        {
+            return m_index;
+        }
         tensor_size_t sample() const
         {
             assert(m_index >= 0 && m_index < m_samples.size());
-
             return m_samples(m_index);
         }
-
-        tensor_size_t index() const { return m_index; }
-        tensor_size_t size() const { return m_samples.size(); }
 
         base_dataset_iterator_t& operator++()
         {

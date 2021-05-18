@@ -540,7 +540,7 @@ const rgenerator_t& dataset_generator_t::byfeature(tensor_size_t feature) const
     return m_generators[static_cast<size_t>(m_feature_mapping(feature, 0))];
 }
 
-void dataset_generator_t::fit(indices_cmap_t samples, execution ex) const
+void dataset_generator_t::fit(indices_cmap_t samples, execution ex)
 {
     check(samples);
 
@@ -548,6 +548,7 @@ void dataset_generator_t::fit(indices_cmap_t samples, execution ex) const
     {
         generator->fit(samples, ex);
     }
+    update();
 }
 
 void dataset_generator_t::check(tensor_size_t feature) const

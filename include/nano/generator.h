@@ -145,7 +145,7 @@ namespace nano
             indices_cmap_t samples, tensor_size_t ifeature, tensor_size_t ioriginal,
             const toperator& op) const
         {
-            m_dataset.visit_inputs(ioriginal, [&] (const auto& feature, const auto& data, const auto& mask)
+            dataset().visit_inputs(ioriginal, [&] (const auto& feature, const auto& data, const auto& mask)
             {
                 if (should_shuffle(ifeature))
                 {
@@ -215,7 +215,7 @@ namespace nano
             return *this;
         }
 
-        void fit(indices_cmap_t samples, execution) const;
+        void fit(indices_cmap_t samples, execution);
 
         tensor_size_t features() const;
         feature_t feature(tensor_size_t feature) const;

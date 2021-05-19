@@ -13,29 +13,149 @@ namespace nano
     ///         * original feature2,
     ///         * component index of the original feature2.
     ///
-    class NANO_PUBLIC pairwise_generator_t : public generator_t
+    template <typename tcomputer, std::enable_if_t<std::is_base_of_v<generator_t, tcomputer>, bool> = true>
+    class NANO_PUBLIC pairwise_generator_t : public tcomputer
     {
     public:
 
-        pairwise_generator_t(const memory_dataset_t&, const feature_mapping_t&);
+        template <typename... targs>
+        pairwise_generator_t(const memory_dataset_t& dataset, targs... args) :
+            tcomputer(dataset, args...)
+        {
+        }
 
-        tensor_size_t features() const override;
-        feature_t feature(tensor_size_t) const override;
+        void select(indices_cmap_t samples, tensor_size_t ifeature, scalar_map_t storage) const override
+        {
+            if constexpr (tcomputer::generated_type == generator_type::scalar)
+            {
+                this->iterate2(samples, ifeature, this->mapped_original1(ifeature), this->mapped_original2(ifeature),
+                    [&] (const auto&, const auto& data1, const auto& mask1,
+                         const auto&, const auto& data2, const auto& mask2,
+                         indices_cmap_t samples)
+                {
+                    loop_samples2<tcomputer::input_rank1, tcomputer::input_rank2>(
+                        data1, mask1, data2, mask2, samples, [&] (auto it)
+                    {
+                        if (this->should_drop(ifeature))
+                        {
+                            storage.full(std::numeric_limits<scalar_t>::quiet_NaN());
+                        }
+                        else
+                        {
+                            this->do_select(it, ifeature, storage);
+                        }
+                    });
+                });
+            }
+            else
+            {
+                generator_t::select(samples, ifeature, storage);
+            }
+        }
 
-    protected:
+        void select(indices_cmap_t samples, tensor_size_t ifeature, sclass_map_t storage) const override
+        {
+            if constexpr (tcomputer::generated_type == generator_type::sclass)
+            {
+                this->iterate2(samples, ifeature, this->mapped_original1(ifeature), this->mapped_original2(ifeature),
+                    [&] (const auto&, const auto& data1, const auto& mask1,
+                         const auto&, const auto& data2, const auto& mask2,
+                         indices_cmap_t samples)
+                {
+                    loop_samples2<tcomputer::input_rank1, tcomputer::input_rank2>(
+                        data1, mask1, data2, mask2, samples, [&] (auto it)
+                    {
+                        if (this->should_drop(ifeature))
+                        {
+                            storage.full(-1);
+                        }
+                        else
+                        {
+                            this->do_select(it, ifeature, storage);
+                        }
+                    });
+                });
+            }
+            else
+            {
+                generator_t::select(samples, ifeature, storage);
+            }
+        }
 
-        auto mapped_ifeature1(tensor_size_t ifeature) const { return m_mapping(ifeature, 0); }
-        auto mapped_ifeature2(tensor_size_t ifeature) const { return m_mapping(ifeature, 2); }
-        auto mapped_component1(tensor_size_t ifeature) const { return m_mapping(ifeature, 1); }
-        auto mapped_component2(tensor_size_t ifeature) const { return m_mapping(ifeature, 3); }
+        void select(indices_cmap_t samples, tensor_size_t ifeature, mclass_map_t storage) const override
+        {
+            if constexpr (tcomputer::generated_type == generator_type::mclass)
+            {
+                this->iterate2(samples, ifeature, this->mapped_original1(ifeature), this->mapped_original2(ifeature),
+                    [&] (const auto&, const auto& data1, const auto& mask1,
+                         const auto&, const auto& data2, const auto& mask2,
+                         indices_cmap_t samples)
+                {
+                    loop_samples2<tcomputer::input_rank1, tcomputer::input_rank2>(
+                        data1, mask1, data2, mask2, samples, [&] (auto it)
+                    {
+                        if (this->should_drop(ifeature))
+                        {
+                            storage.full(-1);
+                        }
+                        else
+                        {
+                            this->do_select(it, ifeature, storage);
+                        }
+                    });
+                });
+            }
+            else
+            {
+                generator_t::select(samples, ifeature, storage);
+            }
+        }
 
-        virtual feature_t make_feature(
-            const feature_t&, tensor_size_t component1,
-            const feature_t&, tensor_size_t component2) const = 0;
+        void select(indices_cmap_t samples, tensor_size_t ifeature, struct_map_t storage) const override
+        {
+            if constexpr (tcomputer::generated_type == generator_type::structured)
+            {
+                this->iterate2(samples, ifeature, this->mapped_original1(ifeature), this->mapped_original2(ifeature),
+                    [&] (const auto&, const auto& data1, const auto& mask1,
+                         const auto&, const auto& data2, const auto& mask2,
+                         indices_cmap_t samples)
+                {
+                    loop_samples2<tcomputer::input_rank1, tcomputer::input_rank2>(
+                        data1, mask1, data2, mask2, samples, [&] (auto it)
+                    {
+                        if (this->should_drop(ifeature))
+                        {
+                            storage.full(std::numeric_limits<scalar_t>::quiet_NaN());
+                        }
+                        else
+                        {
+                            this->do_select(it, ifeature, storage);
+                        }
+                    });
+                });
+            }
+            else
+            {
+                generator_t::select(samples, ifeature, storage);
+            }
+        }
 
-    private:
-
-        // attributes
-        feature_mapping_t   m_mapping;      ///< (feature1, component1, feature2, component2)
+        void flatten(indices_cmap_t samples, tensor2d_map_t storage, tensor_size_t column) const override
+        {
+            for (tensor_size_t ifeature = 0, features = this->features(); ifeature < features; ++ ifeature)
+            {
+                this->iterate2(samples, ifeature, this->mapped_original1(ifeature), this->mapped_original2(ifeature),
+                    [&] (const auto&, const auto& data1, const auto& mask1,
+                         const auto&, const auto& data2, const auto& mask2,
+                         indices_cmap_t samples)
+                {
+                    loop_samples2<tcomputer::input_rank1, tcomputer::input_rank2>(
+                        data1, mask1, data2, mask2, samples, [&] (auto it)
+                    {
+                        this->do_flatten(it, ifeature, storage, column);
+                    });
+                });
+            }
+        }
     };
 }

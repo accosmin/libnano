@@ -4,14 +4,6 @@
 
 namespace nano
 {
-    enum class generator_type
-    {
-        mclass,
-        sclass,
-        scalar,
-        structured,
-    };
-
     ///
     /// \brief interface for element-wise feature generators.
     ///

@@ -141,7 +141,7 @@ static void check_select0(const dataset_generator_t& generator,
     const auto shuffle = generator.shuffled(samples, feature);
     UTEST_REQUIRE_EQUAL(shuffle.size(), samples.size());
     UTEST_CHECK(std::is_permutation(shuffle.begin(), shuffle.end(), samples.begin()));
-    UTEST_CHECK_NOT_EQUAL(shuffle, samples);
+    //UTEST_CHECK_NOT_EQUAL(shuffle, samples);
     UTEST_CHECK_NOTHROW(storage = generator.select(samples, feature, buffer));
     UTEST_CHECK_TENSOR_CLOSE(storage, expected.indexed(shuffle), 1e-12);
 
@@ -696,7 +696,7 @@ UTEST_CASE(unsupervised_quadratic_scalar)
     const auto dataset = make_dataset(10, string_t::npos);
 
     auto generator = dataset_generator_t{dataset};
-    generator.add<scalar_pairwise_generator_t<product_t>>(struct2scalar::off);
+    generator.add<pairwise_generator_t<product_t>>(struct2scalar::off);
     generator.fit(arange(0, 10), execution::par);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 3);
@@ -728,55 +728,67 @@ UTEST_CASE(unsupervised_quadratic_mixed)
     const auto dataset = make_dataset(10, string_t::npos);
 
     auto generator = dataset_generator_t{dataset};
-    generator.add<scalar_pairwise_generator_t<product_t>>(struct2scalar::on, make_indices(0, 1, 3, 4));
+    generator.add<pairwise_generator_t<product_t>>(struct2scalar::on);
     generator.fit(arange(0, 10), execution::par);
 
-    UTEST_REQUIRE_EQUAL(generator.features(), 15);
-    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"product(u8s[0],u8s[0])"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"product(u8s[0],u8s[1])"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"product(u8s[0],u8s[2])"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"product(u8s[0],u8s[3])"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(4), feature_t{"product(u8s[0],f64[0])"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(5), feature_t{"product(u8s[1],u8s[1])"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(6), feature_t{"product(u8s[1],u8s[2])"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(7), feature_t{"product(u8s[1],u8s[3])"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(8), feature_t{"product(u8s[1],f64[0])"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(9), feature_t{"product(u8s[2],u8s[2])"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(10), feature_t{"product(u8s[2],u8s[3])"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(11), feature_t{"product(u8s[2],f64[0])"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(12), feature_t{"product(u8s[3],u8s[3])"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(13), feature_t{"product(u8s[3],f64[0])"}.scalar(feature_type::float64));
-    UTEST_CHECK_EQUAL(generator.feature(14), feature_t{"product(f64[0],f64[0])"}.scalar(feature_type::float64));
+    UTEST_REQUIRE_EQUAL(generator.features(), 21);
+    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"product(f32[0],f32[0])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"product(f32[0],u8s[0])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"product(f32[0],u8s[1])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"product(f32[0],u8s[2])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(4), feature_t{"product(f32[0],u8s[3])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(5), feature_t{"product(f32[0],f64[0])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(6), feature_t{"product(u8s[0],u8s[0])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(7), feature_t{"product(u8s[0],u8s[1])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(8), feature_t{"product(u8s[0],u8s[2])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(9), feature_t{"product(u8s[0],u8s[3])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(10), feature_t{"product(u8s[0],f64[0])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(11), feature_t{"product(u8s[1],u8s[1])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(12), feature_t{"product(u8s[1],u8s[2])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(13), feature_t{"product(u8s[1],u8s[3])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(14), feature_t{"product(u8s[1],f64[0])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(15), feature_t{"product(u8s[2],u8s[2])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(16), feature_t{"product(u8s[2],u8s[3])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(17), feature_t{"product(u8s[2],f64[0])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(18), feature_t{"product(u8s[3],u8s[3])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(19), feature_t{"product(u8s[3],f64[0])"}.scalar(feature_type::float64));
+    UTEST_CHECK_EQUAL(generator.feature(20), feature_t{"product(f64[0],f64[0])"}.scalar(feature_type::float64));
 
-    check_select(generator, 0, make_tensor<scalar_t>(make_dims(10), 1, NaN, 9, NaN, 25, NaN, 49, NaN, 81, NaN));
+    check_select(generator, 0, make_tensor<scalar_t>(make_dims(10), 0, 1, 4, 9, 16, 25, 36, 49, 64, 81));
     check_select(generator, 1, make_tensor<scalar_t>(make_dims(10), 0, NaN, 6, NaN, 20, NaN, 42, NaN, 72, NaN));
-    check_select(generator, 2, make_tensor<scalar_t>(make_dims(10), 0, NaN, 6, NaN, 20, NaN, 42, NaN, 72, NaN));
-    check_select(generator, 3, make_tensor<scalar_t>(make_dims(10), 0, NaN, 6, NaN, 20, NaN, 42, NaN, 72, NaN));
-    check_select(generator, 4, make_tensor<scalar_t>(make_dims(10), 1, NaN, -3, NaN, -15, NaN, -35, NaN, -63, NaN));
-    check_select(generator, 5, make_tensor<scalar_t>(make_dims(10), 0, NaN, 4, NaN, 16, NaN, 36, NaN, 64, NaN));
-    check_select(generator, 6, make_tensor<scalar_t>(make_dims(10), 0, NaN, 4, NaN, 16, NaN, 36, NaN, 64, NaN));
-    check_select(generator, 7, make_tensor<scalar_t>(make_dims(10), 0, NaN, 4, NaN, 16, NaN, 36, NaN, 64, NaN));
-    check_select(generator, 8, make_tensor<scalar_t>(make_dims(10), 0, NaN, -2, NaN, -12, NaN, -30, NaN, -56, NaN));
-    check_select(generator, 9, make_tensor<scalar_t>(make_dims(10), 0, NaN, 4, NaN, 16, NaN, 36, NaN, 64, NaN));
-    check_select(generator, 10, make_tensor<scalar_t>(make_dims(10), 0, NaN, 4, NaN, 16, NaN, 36, NaN, 64, NaN));
-    check_select(generator, 11, make_tensor<scalar_t>(make_dims(10), 0, NaN, -2, NaN, -12, NaN, -30, NaN, -56, NaN));
+    check_select(generator, 2, make_tensor<scalar_t>(make_dims(10), 0, NaN, 4, NaN, 16, NaN, 36, NaN, 64, NaN));
+    check_select(generator, 3, make_tensor<scalar_t>(make_dims(10), 0, NaN, 4, NaN, 16, NaN, 36, NaN, 64, NaN));
+    check_select(generator, 4, make_tensor<scalar_t>(make_dims(10), 0, NaN, 4, NaN, 16, NaN, 36, NaN, 64, NaN));
+    check_select(generator, 5, make_tensor<scalar_t>(make_dims(10), 0, 0, -2, -6, -12, -20, -30, -42, -56, -72));
+    check_select(generator, 6, make_tensor<scalar_t>(make_dims(10), 1, NaN, 9, NaN, 25, NaN, 49, NaN, 81, NaN));
+    check_select(generator, 7, make_tensor<scalar_t>(make_dims(10), 0, NaN, 6, NaN, 20, NaN, 42, NaN, 72, NaN));
+    check_select(generator, 8, make_tensor<scalar_t>(make_dims(10), 0, NaN, 6, NaN, 20, NaN, 42, NaN, 72, NaN));
+    check_select(generator, 9, make_tensor<scalar_t>(make_dims(10), 0, NaN, 6, NaN, 20, NaN, 42, NaN, 72, NaN));
+    check_select(generator, 10, make_tensor<scalar_t>(make_dims(10), 1, NaN, -3, NaN, -15, NaN, -35, NaN, -63, NaN));
+    check_select(generator, 11, make_tensor<scalar_t>(make_dims(10), 0, NaN, 4, NaN, 16, NaN, 36, NaN, 64, NaN));
     check_select(generator, 12, make_tensor<scalar_t>(make_dims(10), 0, NaN, 4, NaN, 16, NaN, 36, NaN, 64, NaN));
-    check_select(generator, 13, make_tensor<scalar_t>(make_dims(10), 0, NaN, -2, NaN, -12, NaN, -30, NaN, -56, NaN));
-    check_select(generator, 14, make_tensor<scalar_t>(make_dims(10), 1, 0, 1, 4, 9, 16, 25, 36, 49, 64));
-    check_select_stats(generator, indices_t{}, indices_t{}, arange(0, 15), indices_t{});
+    check_select(generator, 13, make_tensor<scalar_t>(make_dims(10), 0, NaN, 4, NaN, 16, NaN, 36, NaN, 64, NaN));
+    check_select(generator, 14, make_tensor<scalar_t>(make_dims(10), 0, NaN, -2, NaN, -12, NaN, -30, NaN, -56, NaN));
+    check_select(generator, 15, make_tensor<scalar_t>(make_dims(10), 0, NaN, 4, NaN, 16, NaN, 36, NaN, 64, NaN));
+    check_select(generator, 16, make_tensor<scalar_t>(make_dims(10), 0, NaN, 4, NaN, 16, NaN, 36, NaN, 64, NaN));
+    check_select(generator, 17, make_tensor<scalar_t>(make_dims(10), 0, NaN, -2, NaN, -12, NaN, -30, NaN, -56, NaN));
+    check_select(generator, 18, make_tensor<scalar_t>(make_dims(10), 0, NaN, 4, NaN, 16, NaN, 36, NaN, 64, NaN));
+    check_select(generator, 19, make_tensor<scalar_t>(make_dims(10), 0, NaN, -2, NaN, -12, NaN, -30, NaN, -56, NaN));
+    check_select(generator, 20, make_tensor<scalar_t>(make_dims(10), 1, 0, 1, 4, 9, 16, 25, 36, 49, 64));
+    check_select_stats(generator, indices_t{}, indices_t{}, arange(0, 21), indices_t{});
 
-    check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 15),
-        1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        9, 6, 6, 6, -3, 4, 4, 4, -2, 4, 4, -2, 4, -2, 1,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4,
-        25, 20, 20, 20, -15, 16, 16, 16, -12, 16, 16, -12, 16, -12, 9,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16,
-        49, 42, 42, 42, -35, 36, 36, 36, -30, 36, 36, -30, 36, -30, 25,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 36,
-        81, 72, 72, 72, -63, 64, 64, 64, -56, 64, 64, -56, 64, -56, 49,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 64),
-        arange(0, 15));
+    check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 21),
+        0,  0,  0,  0,  0,  0,   1,  0,  0,  0,  1,   0,  0,  0,  0,   0,  0,  0,   0,  0,   1,
+        1,  0,  0,  0,  0,  0,   0,  0,  0,  0,  0,   0,  0,  0,  0,   0,  0,  0,   0,  0,   0,
+        4,  6,  4,  4,  4,  -2,  9,  6,  6,  6,  -3,  4,  4,  4,  -2,  4,  4,  -2,  4,  -2,  1,
+        9,  0,  0,  0,  0,  -6,  0,  0,  0,  0,  0,   0,  0,  0,  0,   0,  0,  0,   0,  0,   4,
+        16, 20, 16, 16, 16, -12, 25, 20, 20, 20, -15, 16, 16, 16, -12, 16, 16, -12, 16, -12, 9,
+        25, 0,  0,  0,  0,  -20, 0,  0,  0,  0,  0,   0,  0,  0,  0,   0,  0,  0,   0,  0,   16,
+        36, 42, 36, 36, 36, -30, 49, 42, 42, 42, -35, 36, 36, 36, -30, 36, 36, -30, 36, -30, 25,
+        49, 0,  0,  0,  0,  -42, 0, 0,  0,  0,  0,   0,  0,  0,  0,   0,  0,  0,   0,  0,   36,
+        64, 72, 64, 64, 64, -56, 81, 72, 72, 72, -63, 64, 64, 64, -56, 64, 64, -56, 64, -56, 49,
+        81, 0,  0,  0,  0,  -72, 0,  0,  0,  0,  0,   0,  0,  0,  0,   0,  0,  0,   0,  0,   64),
+        arange(0, 21));
 }
 
 UTEST_CASE(unsupervised_slog1p)

@@ -329,27 +329,32 @@ UTEST_CASE(loop_samples)
 
     {
         bool called = false;
-        loop_samples<1U>(data1, mask1, data2, mask2, samples, [&] (auto) { called = true; });
+        loop_samples2<1U, 1U>(data1, mask1, data2, mask2, samples, [&] (auto) { called = true; });
         UTEST_CHECK(!called);
     }
     {
         bool called = false;
-        loop_samples<2U>(data1, mask1, data2, mask2, samples, [&] (auto) { called = true; });
+        loop_samples2<2U, 1U>(data1, mask1, data2, mask2, samples, [&] (auto) { called = true; });
         UTEST_CHECK(!called);
     }
     {
         bool called = false;
-        loop_samples<4U>(data1, mask1, data2, mask2, samples, [&] (auto) { called = true; });
+        loop_samples2<4U, 4U>(data1, mask1, data2, mask2, samples, [&] (auto) { called = true; });
         UTEST_CHECK(!called);
     }
     {
         bool called = false;
-        loop_samples<4U>(data1, mask1, data2.reshape(4, 1, 1, 1), mask2, samples, [&] (auto) { called = true; });
+        loop_samples2<4U, 1U>(data1, mask1, data2, mask2, samples, [&] (auto) { called = true; });
         UTEST_CHECK(called);
     }
     {
         bool called = false;
-        loop_samples<1U>(data1.reshape(-1), mask1, data2, mask2, samples, [&] (auto) { called = true; });
+        loop_samples2<4U, 4U>(data1, mask1, data2.reshape(4, 1, 1, 1), mask2, samples, [&] (auto) { called = true; });
+        UTEST_CHECK(called);
+    }
+    {
+        bool called = false;
+        loop_samples2<1U, 1U>(data1.reshape(-1), mask1, data2, mask2, samples, [&] (auto) { called = true; });
         UTEST_CHECK(called);
     }
 }

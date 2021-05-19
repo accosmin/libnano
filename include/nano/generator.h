@@ -58,6 +58,17 @@ namespace nano
     };
 
     ///
+    /// \brief
+    ///
+    enum class generator_type
+    {
+        mclass,
+        sclass,
+        scalar,
+        structured,
+    };
+
+    ///
     /// \brief generate features from a given collection of samples of a dataset (e.g. the training samples).
     ///
     /// NB: optional inputs are supported.

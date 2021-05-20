@@ -4,13 +4,8 @@
 
 namespace nano
 {
+    // (original feature index, feature component, ...)
     using feature_mapping_t = tensor_mem_t<tensor_size_t, 2>;
-
-    ///
-    /// \brief
-    ///
-    NANO_PUBLIC feature_mapping_t select_scalar_components(
-        const memory_dataset_t&, struct2scalar, const indices_t& feature_indices);
 
     ///
     /// \brief utilities to filter the given dataset's (or generator's) features by their type.
@@ -97,167 +92,65 @@ namespace nano
         }
     }
 
-    template <typename tdataset, typename toperator>
-    void for_each_scalar(const tdataset& dataset, struct2scalar s2s, const toperator& op)
+    namespace detail
     {
-        for (tensor_size_t ifeature = 0, features = dataset.features(); ifeature < features; ++ ifeature)
+        template <typename tdataset, typename toperator>
+        feature_mapping_t select(const tdataset& dataset, const toperator& callback)
         {
-            call_scalar(dataset, s2s, ifeature, op);
+            tensor_size_t count = 0;
+            for (tensor_size_t ifeature = 0, features = dataset.features(); ifeature < features; ++ ifeature)
+            {
+                callback(dataset, ifeature, [&] (const auto&, auto, auto) { ++ count; });
+            }
+
+            feature_mapping_t mapping(count, 3);
+            for (tensor_size_t k = 0, ifeature = 0, features = dataset.features(); ifeature < features; ++ ifeature)
+            {
+                callback(dataset, ifeature, [&] (const auto&, tensor_size_t original, tensor_size_t component)
+                {
+                    mapping(k, 0) = original;
+                    mapping(k, 1) = std::max(component, tensor_size_t{0});
+                    mapping(k, 2) = component;
+                    ++ k;
+                });
+            }
+            return mapping;
         }
     }
 
-    template <typename tdataset, typename toperator>
-    void for_each_struct(const tdataset& dataset, const toperator& op)
+    template <typename tdataset>
+    feature_mapping_t select_sclass(const tdataset& dataset, sclass2binary s2b)
     {
-        for (tensor_size_t ifeature = 0, features = dataset.features(); ifeature < features; ++ ifeature)
-        {
-            call_struct(dataset, ifeature, op);
-        }
-    }
-
-    template <typename tdataset, typename toperator>
-    void for_each_sclass(const tdataset& dataset, sclass2binary s2b, const toperator& op)
-    {
-        for (tensor_size_t ifeature = 0, features = dataset.features(); ifeature < features; ++ ifeature)
+        return detail::select(dataset, [&] (const auto&, tensor_size_t ifeature, const auto& op)
         {
             call_sclass(dataset, s2b, ifeature, op);
-        }
+        });
     }
 
-    template <typename tdataset, typename toperator>
-    void for_each_mclass(const tdataset& dataset, mclass2binary m2b, const toperator& op)
+    template <typename tdataset>
+    feature_mapping_t select_mclass(const tdataset& dataset, mclass2binary m2b)
     {
-        for (tensor_size_t ifeature = 0, features = dataset.features(); ifeature < features; ++ ifeature)
+        return detail::select(dataset, [&] (const auto&, tensor_size_t ifeature, const auto& op)
         {
             call_mclass(dataset, m2b, ifeature, op);
-        }
+        });
     }
 
-    ///
-    /// \brief utility to write generated single-label features.
-    ///
-    /// NB: missing or dropped feature values are written as -1.
-    ///
-    template
-    <
-        template <typename, size_t> class titerator, typename tscalar, size_t trank,
-        typename tgenerator
-    >
-    void select(titerator<tscalar, trank> it, bool should_drop, sclass_map_t storage, const tgenerator& generator)
+    template <typename tdataset>
+    feature_mapping_t select_scalar(const tdataset& dataset, struct2scalar s2s)
     {
-        if (should_drop)
+        return detail::select(dataset, [&] (const auto&, tensor_size_t ifeature, const auto& op)
         {
-            storage.full(-1);
-        }
-        else
-        {
-            for (; it; ++ it)
-            {
-                if (const auto [index, given, values] = *it; given)
-                {
-                    storage(index) = generator(it.sample(), values);
-                }
-                else
-                {
-                    storage(index) = -1;
-                }
-            }
-        }
+            call_scalar(dataset, s2s, ifeature, op);
+        });
     }
 
-    ///
-    /// \brief utility to write generated multi-label features.
-    ///
-    /// NB: missing or dropped feature values are written as -1.
-    ///
-    template
-    <
-        template <typename, size_t> class titerator, typename tscalar, size_t trank,
-        typename tgenerator
-    >
-    void select(titerator<tscalar, trank> it, bool should_drop, mclass_map_t storage, const tgenerator& generator)
+    template <typename tdataset>
+    feature_mapping_t select_struct(const tdataset& dataset)
     {
-        if (should_drop)
+        return detail::select(dataset, [&] (const auto&, tensor_size_t ifeature, const auto& op)
         {
-            storage.full(-1);
-        }
-        else
-        {
-            for (; it; ++ it)
-            {
-                if (const auto [index, given, values] = *it; given)
-                {
-                    generator(it.sample(), values, storage.array(index));
-                }
-                else
-                {
-                    storage.vector(index) = -1;
-                }
-            }
-        }
-    }
-
-    ///
-    /// \brief utility to write generated scalar features.
-    ///
-    /// NB: missing or dropped feature values are written as NaNs.
-    ///
-    template
-    <
-        template <typename, size_t> class titerator, typename tscalar, size_t trank,
-        typename tgenerator
-    >
-    void select(titerator<tscalar, trank> it, bool should_drop, scalar_map_t storage, const tgenerator& generator)
-    {
-        if (should_drop)
-        {
-            storage.full(std::numeric_limits<scalar_t>::quiet_NaN());
-        }
-        else
-        {
-            for (; it; ++ it)
-            {
-                if (const auto [index, given, values] = *it; given)
-                {
-                    storage(index) = generator(it.sample(), values);
-                }
-                else
-                {
-                    storage(index) = std::numeric_limits<scalar_t>::quiet_NaN();
-                }
-            }
-        }
-    }
-
-    ///
-    /// \brief utility to write generated structured features.
-    ///
-    /// NB: missing or dropped feature values are written as NaNs.
-    ///
-    template
-    <
-        template <typename, size_t> class titerator, typename tscalar, size_t trank,
-        typename tgenerator
-    >
-    void select(titerator<tscalar, trank> it, bool should_drop, struct_map_t storage, const tgenerator& generator)
-    {
-        if (should_drop)
-        {
-            storage.full(std::numeric_limits<scalar_t>::quiet_NaN());
-        }
-        else
-        {
-            for (; it; ++ it)
-            {
-                if (const auto [index, given, values] = *it; given)
-                {
-                    generator(it.sample(), values, storage.tensor(index));
-                }
-                else
-                {
-                    storage.tensor(index).full(std::numeric_limits<scalar_t>::quiet_NaN());
-                }
-            }
-        }
+            call_struct(dataset, ifeature, op);
+        });
     }
 }

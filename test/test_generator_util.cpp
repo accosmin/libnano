@@ -80,90 +80,19 @@ static auto make_dataset(tensor_size_t samples, size_t target)
 
 UTEST_BEGIN_MODULE(test_generator_util)
 
-UTEST_CASE(select_scalar_components)
+UTEST_CASE(select_scalar)
 {
     const auto dataset = make_dataset(10, string_t::npos);
     {
-        const auto indices = select_scalar_components(dataset, struct2scalar::off, indices_t{});
-        const auto expected = make_tensor<tensor_size_t>(make_dims(2, 2), 2, 0, 4, 0);
-        UTEST_CHECK_EQUAL(indices, expected);
+        const auto mapping = select_scalar(dataset, struct2scalar::off);
+        const auto expected_mapping = make_tensor<tensor_size_t>(make_dims(2, 3), 2, 0, -1, 4, 0, -1);
+        UTEST_CHECK_TENSOR_EQUAL(mapping, expected_mapping);
     }
     {
-        const auto indices = select_scalar_components(dataset, struct2scalar::off, make_indices(2));
-        const auto expected = make_tensor<tensor_size_t>(make_dims(1, 2), 2, 0);
-        UTEST_CHECK_EQUAL(indices, expected);
-    }
-    {
-        const auto indices = select_scalar_components(dataset, struct2scalar::off, make_indices(3));
-        const auto expected = feature_mapping_t{make_dims(0, 2)};
-        UTEST_CHECK_EQUAL(indices, expected);
-    }
-    {
-        const auto indices = select_scalar_components(dataset, struct2scalar::off, make_indices(2, 3, 4));
-        const auto expected = make_tensor<tensor_size_t>(make_dims(2, 2), 2, 0, 4, 0);
-        UTEST_CHECK_EQUAL(indices, expected);
-    }
-    {
-        const auto indices = select_scalar_components(dataset, struct2scalar::on, indices_t{});
-        const auto expected = make_tensor<tensor_size_t>(make_dims(6, 2), 2, 0, 3, 0, 3, 1, 3, 2, 3, 3, 4, 0);
-        UTEST_CHECK_EQUAL(indices, expected);
-    }
-    {
-        const auto indices = select_scalar_components(dataset, struct2scalar::on, make_indices(1, 4));
-        const auto expected = make_tensor<tensor_size_t>(make_dims(1, 2), 4, 0);
-        UTEST_CHECK_EQUAL(indices, expected);
-    }
-    {
-        const auto indices = select_scalar_components(dataset, struct2scalar::on, make_indices(1, 3,  4));
-        const auto expected = make_tensor<tensor_size_t>(make_dims(5, 2), 3, 0, 3, 1, 3, 2, 3, 3, 4, 0);
-        UTEST_CHECK_EQUAL(indices, expected);
-    }
-}
-
-UTEST_CASE(for_each_scalar)
-{
-    const auto dataset = make_dataset(10, string_t::npos);
-    {
-        std::vector<std::tuple<feature_t, tensor_size_t, tensor_size_t>> history;
-        for_each_scalar(dataset, struct2scalar::off, [&] (const feature_t& feature, tensor_size_t ifeature, tensor_size_t icomponent)
-        {
-            history.emplace_back(feature, ifeature, icomponent);
-        });
-
-        UTEST_REQUIRE_EQUAL(history.size(), 2U);
-        UTEST_CHECK_EQUAL(std::get<0>(history[0]), dataset.feature(2U));
-        UTEST_CHECK_EQUAL(std::get<1>(history[0]), 2);
-        UTEST_CHECK_EQUAL(std::get<2>(history[0]), -1);
-        UTEST_CHECK_EQUAL(std::get<0>(history[1]), dataset.feature(4U));
-        UTEST_CHECK_EQUAL(std::get<1>(history[1]), 4);
-        UTEST_CHECK_EQUAL(std::get<2>(history[1]), -1);
-    }
-    {
-        std::vector<std::tuple<feature_t, tensor_size_t, tensor_size_t>> history;
-        for_each_scalar(dataset, struct2scalar::on, [&] (const feature_t& feature, tensor_size_t ifeature, tensor_size_t icomponent)
-        {
-            history.emplace_back(feature, ifeature, icomponent);
-        });
-
-        UTEST_REQUIRE_EQUAL(history.size(), 6U);
-        UTEST_CHECK_EQUAL(std::get<0>(history[0]), dataset.feature(2U));
-        UTEST_CHECK_EQUAL(std::get<1>(history[0]), 2);
-        UTEST_CHECK_EQUAL(std::get<2>(history[0]), -1);
-        UTEST_CHECK_EQUAL(std::get<0>(history[1]), dataset.feature(3U));
-        UTEST_CHECK_EQUAL(std::get<1>(history[1]), 3);
-        UTEST_CHECK_EQUAL(std::get<2>(history[1]), 0);
-        UTEST_CHECK_EQUAL(std::get<0>(history[2]), dataset.feature(3U));
-        UTEST_CHECK_EQUAL(std::get<1>(history[2]), 3);
-        UTEST_CHECK_EQUAL(std::get<2>(history[2]), 1);
-        UTEST_CHECK_EQUAL(std::get<0>(history[3]), dataset.feature(3U));
-        UTEST_CHECK_EQUAL(std::get<1>(history[3]), 3);
-        UTEST_CHECK_EQUAL(std::get<2>(history[3]), 2);
-        UTEST_CHECK_EQUAL(std::get<0>(history[4]), dataset.feature(3U));
-        UTEST_CHECK_EQUAL(std::get<1>(history[4]), 3);
-        UTEST_CHECK_EQUAL(std::get<2>(history[4]), 3);
-        UTEST_CHECK_EQUAL(std::get<0>(history[5]), dataset.feature(4U));
-        UTEST_CHECK_EQUAL(std::get<1>(history[5]), 4);
-        UTEST_CHECK_EQUAL(std::get<2>(history[5]), -1);
+        const auto mapping = select_scalar(dataset, struct2scalar::on);
+        const auto expected_mapping = make_tensor<tensor_size_t>(make_dims(6, 3),
+            2, 0, -1, 3, 0, 0, 3, 1, 1, 3, 2, 2, 3, 3, 3, 4, 0, -1);
+        UTEST_CHECK_TENSOR_EQUAL(mapping, expected_mapping);
     }
 }
 
@@ -171,16 +100,9 @@ UTEST_CASE(for_each_struct)
 {
     const auto dataset = make_dataset(10, string_t::npos);
     {
-        std::vector<std::tuple<feature_t, tensor_size_t, tensor_size_t>> history;
-        for_each_struct(dataset, [&] (const feature_t& feature, tensor_size_t ifeature, tensor_size_t icomponent)
-        {
-            history.emplace_back(feature, ifeature, icomponent);
-        });
-
-        UTEST_REQUIRE_EQUAL(history.size(), 1U);
-        UTEST_CHECK_EQUAL(std::get<0>(history[0]), dataset.feature(3U));
-        UTEST_CHECK_EQUAL(std::get<1>(history[0]), 3);
-        UTEST_CHECK_EQUAL(std::get<2>(history[0]), -1);
+        const auto mapping = select_struct(dataset);
+        const auto expected_mapping = make_tensor<tensor_size_t>(make_dims(1, 3), 3, 0, -1);
+        UTEST_CHECK_TENSOR_EQUAL(mapping, expected_mapping);
     }
 }
 
@@ -188,31 +110,14 @@ UTEST_CASE(for_each_sclass)
 {
     const auto dataset = make_dataset(10, string_t::npos);
     {
-        std::vector<std::tuple<feature_t, tensor_size_t, tensor_size_t>> history;
-        for_each_sclass(dataset, sclass2binary::off, [&] (const feature_t& feature, tensor_size_t ifeature, tensor_size_t icomponent)
-        {
-            history.emplace_back(feature, ifeature, icomponent);
-        });
-
-        UTEST_REQUIRE_EQUAL(history.size(), 1U);
-        UTEST_CHECK_EQUAL(std::get<0>(history[0]), dataset.feature(1U));
-        UTEST_CHECK_EQUAL(std::get<1>(history[0]), 1);
-        UTEST_CHECK_EQUAL(std::get<2>(history[0]), -1);
+        const auto mapping = select_sclass(dataset, sclass2binary::off);
+        const auto expected_mapping = make_tensor<tensor_size_t>(make_dims(1, 3), 1, 0, -1);
+        UTEST_CHECK_TENSOR_EQUAL(mapping, expected_mapping);
     }
     {
-        std::vector<std::tuple<feature_t, tensor_size_t, tensor_size_t>> history;
-        for_each_sclass(dataset, sclass2binary::on, [&] (const feature_t& feature, tensor_size_t ifeature, tensor_size_t icomponent)
-        {
-            history.emplace_back(feature, ifeature, icomponent);
-        });
-
-        UTEST_REQUIRE_EQUAL(history.size(), 2U);
-        UTEST_CHECK_EQUAL(std::get<0>(history[0]), dataset.feature(1U));
-        UTEST_CHECK_EQUAL(std::get<1>(history[0]), 1);
-        UTEST_CHECK_EQUAL(std::get<2>(history[0]), 0);
-        UTEST_CHECK_EQUAL(std::get<0>(history[1]), dataset.feature(1U));
-        UTEST_CHECK_EQUAL(std::get<1>(history[1]), 1);
-        UTEST_CHECK_EQUAL(std::get<2>(history[1]), 1);
+        const auto mapping = select_sclass(dataset, sclass2binary::on);
+        const auto expected_mapping = make_tensor<tensor_size_t>(make_dims(2, 3), 1, 0, 0, 1, 1, 1);
+        UTEST_CHECK_TENSOR_EQUAL(mapping, expected_mapping);
     }
 }
 
@@ -220,34 +125,14 @@ UTEST_CASE(for_each_mclass)
 {
     const auto dataset = make_dataset(10, string_t::npos);
     {
-        std::vector<std::tuple<feature_t, tensor_size_t, tensor_size_t>> history;
-        for_each_mclass(dataset, mclass2binary::off, [&] (const feature_t& feature, tensor_size_t ifeature, tensor_size_t icomponent)
-        {
-            history.emplace_back(feature, ifeature, icomponent);
-        });
-
-        UTEST_REQUIRE_EQUAL(history.size(), 1U);
-        UTEST_CHECK_EQUAL(std::get<0>(history[0]), dataset.feature(0U));
-        UTEST_CHECK_EQUAL(std::get<1>(history[0]), 0);
-        UTEST_CHECK_EQUAL(std::get<2>(history[0]), -1);
+        const auto mapping = select_mclass(dataset, mclass2binary::off);
+        const auto expected_mapping = make_tensor<tensor_size_t>(make_dims(1, 3), 0, 0, -1);
+        UTEST_CHECK_TENSOR_EQUAL(mapping, expected_mapping);
     }
     {
-        std::vector<std::tuple<feature_t, tensor_size_t, tensor_size_t>> history;
-        for_each_mclass(dataset, mclass2binary::on, [&] (const feature_t& feature, tensor_size_t ifeature, tensor_size_t icomponent)
-        {
-            history.emplace_back(feature, ifeature, icomponent);
-        });
-
-        UTEST_REQUIRE_EQUAL(history.size(), 3U);
-        UTEST_CHECK_EQUAL(std::get<0>(history[0]), dataset.feature(0U));
-        UTEST_CHECK_EQUAL(std::get<1>(history[0]), 0);
-        UTEST_CHECK_EQUAL(std::get<2>(history[0]), 0);
-        UTEST_CHECK_EQUAL(std::get<0>(history[1]), dataset.feature(0U));
-        UTEST_CHECK_EQUAL(std::get<1>(history[1]), 0);
-        UTEST_CHECK_EQUAL(std::get<2>(history[1]), 1);
-        UTEST_CHECK_EQUAL(std::get<0>(history[2]), dataset.feature(0U));
-        UTEST_CHECK_EQUAL(std::get<1>(history[2]), 0);
-        UTEST_CHECK_EQUAL(std::get<2>(history[2]), 2);
+        const auto mapping = select_mclass(dataset, mclass2binary::on);
+        const auto expected_mapping = make_tensor<tensor_size_t>(make_dims(3, 3), 0, 0, 0, 0, 1, 1, 0, 2, 2);
+        UTEST_CHECK_TENSOR_EQUAL(mapping, expected_mapping);
     }
 }
 

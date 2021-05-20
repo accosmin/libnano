@@ -23,26 +23,20 @@ namespace nano
 
         void fit(indices_cmap_t, execution) override
         {
-            std::vector<tensor_size_t> mapping;
-            for_each_scalar(dataset(), m_s2s, [&] (const feature_t&, auto original, tensor_size_t component)
+            const auto mapping = select_scalar(dataset(), m_s2s);
+
+            const auto size = mapping.size<0>();
+            m_feature_mapping.resize(size * (size + 1) / 2, 4);
+
+            for (tensor_size_t k = 0, i = 0; i < size; ++ i)
             {
-                mapping.push_back(original);
-                mapping.push_back(std::max(component, tensor_size_t{0}));
-            });
+                const auto feature1 = mapping(i, 0);
+                const auto component1 = mapping(i, 1);
 
-            const auto size = mapping.size() / 2;
-            m_feature_mapping.resize(static_cast<tensor_size_t>(size * (size + 1) / 2), 4);
-
-            tensor_size_t k = 0;
-            for (size_t i = 0; i < size; ++ i)
-            {
-                const auto feature1 = mapping[i * 2 + 0];
-                const auto component1 = mapping[i * 2 + 1];
-
-                for (size_t j = i; j < size; ++ j, ++ k)
+                for (tensor_size_t j = i; j < size; ++ j, ++ k)
                 {
-                    const auto feature2 = mapping[j * 2 + 0];
-                    const auto component2 = mapping[j * 2 + 1];
+                    const auto feature2 = mapping(j, 0);
+                    const auto component2 = mapping(j, 1);
 
                     m_feature_mapping(k, 0) = feature1;
                     m_feature_mapping(k, 1) = component1;

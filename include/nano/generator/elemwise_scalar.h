@@ -34,14 +34,7 @@ namespace nano
 
         void fit(indices_cmap_t, execution) override
         {
-            std::vector<tensor_size_t> mapping;
-            for_each_scalar(dataset(), m_s2s, [&] (const feature_t&, auto original, tensor_size_t component)
-            {
-                mapping.push_back(original);
-                mapping.push_back(std::max(component, tensor_size_t{0}));
-            });
-
-            m_feature_mapping = map_tensor(mapping.data(), static_cast<tensor_size_t>(mapping.size()) / 2, 2);
+            m_feature_mapping = select_scalar(dataset(), m_s2s);
 
             allocate(features());
         }
@@ -149,14 +142,7 @@ namespace nano
 
         void fit(indices_cmap_t, execution) override
         {
-            std::vector<tensor_size_t> mapping;
-            for_each_scalar(dataset(), m_s2s, [&] (const feature_t&, auto original, tensor_size_t component)
-            {
-                mapping.push_back(original);
-                mapping.push_back(std::max(component, tensor_size_t{0}));
-            });
-
-            m_feature_mapping = map_tensor(mapping.data(), static_cast<tensor_size_t>(mapping.size()) / 2, 2);
+            m_feature_mapping = select_scalar(dataset(), m_s2s);
 
             allocate(features());
         }
@@ -264,14 +250,7 @@ namespace nano
 
         void fit(indices_cmap_t, execution) override
         {
-            std::vector<tensor_size_t> mapping;
-            for_each_scalar(dataset(), m_s2s, [&] (const feature_t&, auto original, tensor_size_t component)
-            {
-                mapping.push_back(original);
-                mapping.push_back(std::max(component, tensor_size_t{0}));
-            });
-
-            m_feature_mapping = map_tensor(mapping.data(), static_cast<tensor_size_t>(mapping.size()) / 2, 2);
+            m_feature_mapping = select_scalar(dataset(), m_s2s);
 
             allocate(features());
         }
@@ -394,17 +373,14 @@ namespace nano
 
         void fit(indices_cmap_t samples, execution) override
         {
-            std::vector<scalar_t> percentiles;
-            for (tensor_size_t bin = 0; bin + 1 < m_bins; ++ bin)
-            {
-                percentiles.push_back(100.0 * (bin + 1) / m_bins);
-            }
+            m_feature_mapping = select_scalar(dataset(), m_s2s);
 
-            std::vector<scalar_t> thresholds;
-            std::vector<tensor_size_t> mapping;
-            for_each_scalar(dataset(), m_s2s, [&] (const feature_t&, auto original, tensor_size_t component)
+            m_thresholds.resize(features(), m_bins - 1);
+
+            for (tensor_size_t ifeature = 0; ifeature < features(); ++ ifeature)
             {
-                component = std::max(component, tensor_size_t{0});
+                const auto original = mapped_original(ifeature);
+                const auto component = mapped_component(ifeature);
 
                 std::vector<scalar_t> allvalues;
                 dataset().visit_inputs(original, [&] (const auto&, const auto& data, const auto& mask)
@@ -422,17 +398,13 @@ namespace nano
                 });
 
                 std::sort(allvalues.begin(), allvalues.end());
-                for (const auto percentile : percentiles)
+
+                for (tensor_size_t ibin = 0; ibin + 1 < m_bins; ++ ibin)
                 {
-                    thresholds.push_back(::nano::percentile(allvalues.begin(), allvalues.end(), percentile));
+                    const auto percentile = 100.0 * (ibin + 1) / m_bins;
+                    m_thresholds(ifeature, ibin) = ::nano::percentile(allvalues.begin(), allvalues.end(), percentile);
                 }
-
-                mapping.push_back(original);
-                mapping.push_back(std::max(component, tensor_size_t{0}));
-            });
-
-            m_feature_mapping = map_tensor(mapping.data(), static_cast<tensor_size_t>(mapping.size()) / 2, 2);
-            m_thresholds = map_tensor(thresholds.data(), features(), static_cast<tensor_size_t>(percentiles.size()));
+            }
 
             allocate(features());
         }

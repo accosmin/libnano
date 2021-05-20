@@ -11,7 +11,6 @@ target_sources(nano PRIVATE
     logger.cpp
     stream.cpp
     generator.cpp
-    generator/util.cpp
     generator/identity.cpp
     generator/elemwise_scalar.cpp
     dataset/dataset.cpp

@@ -103,14 +103,18 @@ namespace nano
                 callback(dataset, ifeature, [&] (const auto&, auto, auto) { ++ count; });
             }
 
-            feature_mapping_t mapping(count, 3);
+            feature_mapping_t mapping(count, 7);
             for (tensor_size_t k = 0, ifeature = 0, features = dataset.features(); ifeature < features; ++ ifeature)
             {
-                callback(dataset, ifeature, [&] (const auto&, tensor_size_t original, tensor_size_t component)
+                callback(dataset, ifeature, [&] (const auto& feature, tensor_size_t original, tensor_size_t component)
                 {
                     mapping(k, 0) = original;
                     mapping(k, 1) = std::max(component, tensor_size_t{0});
                     mapping(k, 2) = component;
+                    mapping(k, 3) = feature.classes();
+                    mapping(k, 4) = std::get<0>(feature.dims());
+                    mapping(k, 5) = std::get<1>(feature.dims());
+                    mapping(k, 6) = std::get<2>(feature.dims());
                     ++ k;
                 });
             }

@@ -56,7 +56,7 @@ try \
 #define UTEST_END_MODULE() \
     if (utest_n_failures > 0) \
     { \
-        std::cout << "  failed with " << utest_n_failures << " errors in " << utest_n_checks \
+        std::cout << " failed with " << utest_n_failures << " errors in " << utest_n_checks \
               << " check" << (utest_n_checks > 0 ? "s" : "") << "!" << std::endl; \
         exit(EXIT_FAILURE); \
     } \
@@ -70,11 +70,15 @@ try \
 catch (std::exception& e) \
 { \
     std::cout << " failed with uncaught exception <" << e.what() << ">!" << std::endl; \
+    std::cout << " failed with " << utest_n_failures << " errors in " << utest_n_checks \
+          << " check" << (utest_n_checks > 0 ? "s" : "") << "!" << std::endl; \
     exit(EXIT_FAILURE); \
 } \
 catch (...) \
 { \
     std::cout << " failed with uncaught unknown exception!" << std::endl; \
+    std::cout << " failed with " << utest_n_failures << " errors in " << utest_n_checks \
+          << " check" << (utest_n_checks > 0 ? "s" : "") << "!" << std::endl; \
     exit(EXIT_FAILURE); \
 } \
 }

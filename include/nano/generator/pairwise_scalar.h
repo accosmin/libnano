@@ -56,13 +56,13 @@ namespace nano
         feature_t feature(tensor_size_t ifeature) const override
         {
             assert(ifeature >= 0 && ifeature < features());
-            const auto original1 = this->mapped_original1(ifeature);
-            const auto original2 = this->mapped_original2(ifeature);
-            const auto component1 = this->mapped_component1(ifeature);
-            const auto component2 = this->mapped_component2(ifeature);
+            const auto original1 = mapped_original1(ifeature);
+            const auto original2 = mapped_original2(ifeature);
+            const auto component1 = mapped_component1(ifeature);
+            const auto component2 = mapped_component2(ifeature);
 
-            const auto& feature1 = this->dataset().feature(original1);
-            const auto& feature2 = this->dataset().feature(original2);
+            const auto& feature1 = dataset().feature(original1);
+            const auto& feature2 = dataset().feature(original2);
 
             auto name = scat("product(", feature1.name(), "[", component1, "],", feature2.name(), "[", component2, "])");
             return feature_t{std::move(name)}.scalar(feature_type::float64);
@@ -102,13 +102,13 @@ namespace nano
             dataset_pairwise_iterator_t<tscalar1, input_rank1, tscalar2, input_rank2> it,
             tensor_size_t ifeature, scalar_map_t storage) const
         {
-            const auto component1 = this->mapped_component1(ifeature);
-            const auto component2 = this->mapped_component2(ifeature);
+            const auto component1 = mapped_component1(ifeature);
+            const auto component2 = mapped_component2(ifeature);
             for (; it; ++ it)
             {
                 if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
                 {
-                    storage(index) = this->make_value(values1(component1), values2(component2));
+                    storage(index) = make_value(values1(component1), values2(component2));
                 }
                 else
                 {
@@ -128,8 +128,8 @@ namespace nano
             tensor_size_t ifeature, tensor2d_map_t storage, tensor_size_t& column) const
         {
             const auto should_drop = this->should_drop(ifeature);
-            const auto component1 = this->mapped_component1(ifeature);
-            const auto component2 = this->mapped_component2(ifeature);
+            const auto component1 = mapped_component1(ifeature);
+            const auto component2 = mapped_component2(ifeature);
             for (; it; ++ it)
             {
                 if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
@@ -140,7 +140,7 @@ namespace nano
                     }
                     else
                     {
-                        storage(index, column) = this->make_value(values1(component1), values2(component2));
+                        storage(index, column) = make_value(values1(component1), values2(component2));
                     }
                 }
                 else

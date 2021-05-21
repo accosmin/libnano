@@ -42,10 +42,10 @@ namespace nano
         feature_t feature(tensor_size_t ifeature) const override
         {
             assert(ifeature >= 0 && ifeature < features());
-            const auto original = this->mapped_original(ifeature);
-            const auto component = this->mapped_component(ifeature);
+            const auto original = mapped_original(ifeature);
+            const auto component = mapped_component(ifeature);
 
-            const auto& feature = this->dataset().feature(original);
+            const auto& feature = dataset().feature(original);
             return feature_t{scat("slog1p(", feature.name(), "[", component, "])")}.scalar(feature_type::float64);
         }
 
@@ -64,12 +64,12 @@ namespace nano
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
         void do_select(dataset_iterator_t<tscalar, input_rank> it, tensor_size_t ifeature, scalar_map_t storage) const
         {
-            const auto component = this->mapped_component(ifeature);
+            const auto component = mapped_component(ifeature);
             for (; it; ++ it)
             {
                 if (const auto [index, given, values] = *it; given)
                 {
-                    storage(index) = this->make_value(values(component));
+                    storage(index) = make_value(values(component));
                 }
                 else
                 {
@@ -83,7 +83,7 @@ namespace nano
             tensor_size_t ifeature, tensor2d_map_t storage, tensor_size_t& column) const
         {
             const auto should_drop = this->should_drop(ifeature);
-            const auto component = this->mapped_component(ifeature);
+            const auto component = mapped_component(ifeature);
             for (; it; ++ it)
             {
                 if (const auto [index, given, values] = *it; given)
@@ -94,7 +94,7 @@ namespace nano
                     }
                     else
                     {
-                        storage(index, column) = this->make_value(values(component));
+                        storage(index, column) = make_value(values(component));
                     }
                 }
                 else
@@ -150,10 +150,10 @@ namespace nano
         feature_t feature(tensor_size_t ifeature) const override
         {
             assert(ifeature >= 0 && ifeature < features());
-            const auto original = this->mapped_original(ifeature);
-            const auto component = this->mapped_component(ifeature);
+            const auto original = mapped_original(ifeature);
+            const auto component = mapped_component(ifeature);
 
-            const auto& feature = this->dataset().feature(original);
+            const auto& feature = dataset().feature(original);
             return feature_t{scat("sign(", feature.name(), "[", component, "])")}.scalar(feature_type::float64);
         }
 
@@ -172,12 +172,12 @@ namespace nano
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
         void do_select(dataset_iterator_t<tscalar, input_rank> it, tensor_size_t ifeature, scalar_map_t storage) const
         {
-            const auto component = this->mapped_component(ifeature);
+            const auto component = mapped_component(ifeature);
             for (; it; ++ it)
             {
                 if (const auto [index, given, values] = *it; given)
                 {
-                    storage(index) = this->make_value(values(component));
+                    storage(index) = make_value(values(component));
                 }
                 else
                 {
@@ -191,7 +191,7 @@ namespace nano
             tensor_size_t ifeature, tensor2d_map_t storage, tensor_size_t& column) const
         {
             const auto should_drop = this->should_drop(ifeature);
-            const auto component = this->mapped_component(ifeature);
+            const auto component = mapped_component(ifeature);
             for (; it; ++ it)
             {
                 if (const auto [index, given, values] = *it; given)
@@ -202,7 +202,7 @@ namespace nano
                     }
                     else
                     {
-                        storage(index, column) = this->make_value(values(component));
+                        storage(index, column) = make_value(values(component));
                     }
                 }
                 else
@@ -258,10 +258,10 @@ namespace nano
         feature_t feature(tensor_size_t ifeature) const override
         {
             assert(ifeature >= 0 && ifeature < features());
-            const auto original = this->mapped_original(ifeature);
-            const auto component = this->mapped_component(ifeature);
+            const auto original = mapped_original(ifeature);
+            const auto component = mapped_component(ifeature);
 
-            const auto& feature = this->dataset().feature(original);
+            const auto& feature = dataset().feature(original);
             return feature_t{scat("sign_class(", feature.name(), "[", component, "])")}.sclass(strings_t{"neg", "pos"});
         }
 
@@ -280,12 +280,12 @@ namespace nano
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
         void do_select(dataset_iterator_t<tscalar, input_rank> it, tensor_size_t ifeature, sclass_map_t storage) const
         {
-            const auto component = this->mapped_component(ifeature);
+            const auto component = mapped_component(ifeature);
             for (; it; ++ it)
             {
                 if (const auto [index, given, values] = *it; given)
                 {
-                    storage(index) = this->make_value(values(component));
+                    storage(index) = make_value(values(component));
                 }
                 else
                 {
@@ -299,7 +299,7 @@ namespace nano
             tensor_size_t ifeature, tensor2d_map_t storage, tensor_size_t& column) const
         {
             const auto should_drop = this->should_drop(ifeature);
-            const auto component = this->mapped_component(ifeature);
+            const auto component = mapped_component(ifeature);
             for (; it; ++ it)
             {
                 if (const auto [index, given, values] = *it; given)
@@ -311,7 +311,7 @@ namespace nano
                     }
                     else
                     {
-                        const auto label = this->make_value(values(component));
+                        const auto label = make_value(values(component));
                         if (label == 0)
                         {
                             storage(index, column + 0) = +1.0;
@@ -412,10 +412,10 @@ namespace nano
         feature_t feature(tensor_size_t ifeature) const override
         {
             assert(ifeature >= 0 && ifeature < features());
-            const auto original = this->mapped_original(ifeature);
-            const auto component = this->mapped_component(ifeature);
+            const auto original = mapped_original(ifeature);
+            const auto component = mapped_component(ifeature);
 
-            const auto& feature = this->dataset().feature(original);
+            const auto& feature = dataset().feature(original);
             return  feature_t{scat("percbin(", feature.name(), "[", component, "])")}.
                     sclass(static_cast<size_t>(m_bins));
         }
@@ -436,12 +436,12 @@ namespace nano
         void do_select(dataset_iterator_t<tscalar, input_rank> it, tensor_size_t ifeature, sclass_map_t storage) const
         {
             const auto thresholds = m_thresholds.vector(ifeature);
-            const auto component = this->mapped_component(ifeature);
+            const auto component = mapped_component(ifeature);
             for (; it; ++ it)
             {
                 if (const auto [index, given, values] = *it; given)
                 {
-                    storage(index) = this->make_value(thresholds, values(component));
+                    storage(index) = make_value(thresholds, values(component));
                 }
                 else
                 {
@@ -456,7 +456,7 @@ namespace nano
         {
             const auto should_drop = this->should_drop(ifeature);
             const auto thresholds = m_thresholds.vector(ifeature);
-            const auto component = this->mapped_component(ifeature);
+            const auto component = mapped_component(ifeature);
             for (; it; ++ it)
             {
                 if (const auto [index, given, values] = *it; given)
@@ -468,7 +468,7 @@ namespace nano
                     }
                     else
                     {
-                        const auto label = this->make_value(thresholds, values(component));
+                        const auto label = make_value(thresholds, values(component));
                         segment.setConstant(-1.0);
                         segment(label) = +1.0;
                     }

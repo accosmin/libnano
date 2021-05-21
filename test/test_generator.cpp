@@ -1,6 +1,6 @@
 #include <utest/utest.h>
 #include "fixture/generator.h"
-#include <nano/generator/identity.h>
+#include <nano/generator/elemwise_identity.h>
 #include <nano/generator/elemwise_scalar.h>
 #include <nano/generator/pairwise_scalar.h>
 
@@ -130,86 +130,89 @@ UTEST_CASE(unsupervised)
     const auto dataset = make_dataset(10, string_t::npos);
 
     auto generator = dataset_generator_t{dataset};
-    generator.add<identity_generator_t>();
+    generator.add<elemwise_generator_t<sclass_identity_t>>();
+    generator.add<elemwise_generator_t<mclass_identity_t>>();
+    generator.add<elemwise_generator_t<scalar_identity_t>>();
+    generator.add<elemwise_generator_t<struct_identity_t>>();
     generator.fit(arange(0, 10), execution::par);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 5);
-    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"mclass3"}.mclass(strings_t{"m0", "m1", "m2"}));
-    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"sclass2"}.sclass(strings_t{"s0", "s1"}));
+    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"sclass2"}.sclass(strings_t{"s0", "s1"}));
+    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"mclass3"}.mclass(strings_t{"m0", "m1", "m2"}));
     UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"f32"}.scalar(feature_type::float32, make_dims(1, 1, 1)));
-    UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"u8s"}.scalar(feature_type::uint8, make_dims(2, 1, 2)));
-    UTEST_CHECK_EQUAL(generator.feature(4), feature_t{"f64"}.scalar(feature_type::float64, make_dims(1, 1, 1)));
+    UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"f64"}.scalar(feature_type::float64, make_dims(1, 1, 1)));
+    UTEST_CHECK_EQUAL(generator.feature(4), feature_t{"u8s"}.scalar(feature_type::uint8, make_dims(2, 1, 2)));
 
-    check_select(generator, 0, dataset.expected_select0());
-    check_select(generator, 1, dataset.expected_select1());
+    check_select(generator, 0, dataset.expected_select1());
+    check_select(generator, 1, dataset.expected_select0());
     check_select(generator, 2, dataset.expected_select2());
-    check_select(generator, 3, dataset.expected_select3());
-    check_select(generator, 4, dataset.expected_select4());
-    check_select_stats(generator, make_indices(1), make_indices(0), make_indices(2, 4), make_indices(3));
+    check_select(generator, 3, dataset.expected_select4());
+    check_select(generator, 4, dataset.expected_select3());
+    check_select_stats(generator, make_indices(0), make_indices(1), make_indices(2, 3), make_indices(4));
 
     check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 11),
-        -1, +1, +1, +1, -1, 0, 1, 0, 0, 0, +1,
-        +0, +0, +0, -1, +1, 1, 0, 0, 0, 0, +0,
-        +0, +0, +0, -1, +1, 2, 3, 2, 2, 2, -1,
-        +1, -1, -1, +1, -1, 3, 0, 0, 0, 0, -2,
-        +0, +0, +0, -1, +1, 4, 5, 4, 4, 4, -3,
-        +0, +0, +0, -1, +1, 5, 0, 0, 0, 0, -4,
-        -1, +1, +1, +1, -1, 6, 7, 6, 6, 6, -5,
-        +0, +0, +0, -1, +1, 7, 0, 0, 0, 0, -6,
-        +0, +0, +0, -1, +1, 8, 9, 8, 8, 8, -7,
-        +1, -1, -1, +1, -1, 9, 0, 0, 0, 0, -8),
-        make_indices(0, 0, 0, 1, 1, 2, 3, 3, 3, 3, 4));
+        +1, -1, -1, +1, +1, 0, +1, 1, 0, 0, 0,
+        -1, +1, +0, +0, +0, 1, +0, 0, 0, 0, 0,
+        -1, +1, +0, +0, +0, 2, -1, 3, 2, 2, 2,
+        +1, -1, +1, -1, -1, 3, -2, 0, 0, 0, 0,
+        -1, +1, +0, +0, +0, 4, -3, 5, 4, 4, 4,
+        -1, +1, +0, +0, +0, 5, -4, 0, 0, 0, 0,
+        +1, -1, -1, +1, +1, 6, -5, 7, 6, 6, 6,
+        -1, +1, +0, +0, +0, 7, -6, 0, 0, 0, 0,
+        -1, +1, +0, +0, +0, 8, -7, 9, 8, 8, 8,
+        +1, -1, +1, -1, -1, 9, -8, 0, 0, 0, 0),
+        make_indices(0, 0, 1, 1, 1, 2, 3, 4, 4, 4, 4));
 
     generator.drop(0);
     check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 11),
-        +0, +0, +0, +1, -1, 0, 1, 0, 0, 0, +1,
-        +0, +0, +0, -1, +1, 1, 0, 0, 0, 0, +0,
-        +0, +0, +0, -1, +1, 2, 3, 2, 2, 2, -1,
-        +0, +0, +0, +1, -1, 3, 0, 0, 0, 0, -2,
-        +0, +0, +0, -1, +1, 4, 5, 4, 4, 4, -3,
-        +0, +0, +0, -1, +1, 5, 0, 0, 0, 0, -4,
-        +0, +0, +0, +1, -1, 6, 7, 6, 6, 6, -5,
-        +0, +0, +0, -1, +1, 7, 0, 0, 0, 0, -6,
-        +0, +0, +0, -1, +1, 8, 9, 8, 8, 8, -7,
-        +0, +0, +0, +1, -1, 9, 0, 0, 0, 0, -8),
-        make_indices(0, 0, 0, 1, 1, 2, 3, 3, 3, 3, 4));
+        +0, +0, -1, +1, +1, 0, +1, 1, 0, 0, 0,
+        +0, +0, +0, +0, +0, 1, +0, 0, 0, 0, 0,
+        +0, +0, +0, +0, +0, 2, -1, 3, 2, 2, 2,
+        +0, +0, +1, -1, -1, 3, -2, 0, 0, 0, 0,
+        +0, +0, +0, +0, +0, 4, -3, 5, 4, 4, 4,
+        +0, +0, +0, +0, +0, 5, -4, 0, 0, 0, 0,
+        +0, +0, -1, +1, +1, 6, -5, 7, 6, 6, 6,
+        +0, +0, +0, +0, +0, 7, -6, 0, 0, 0, 0,
+        +0, +0, +0, +0, +0, 8, -7, 9, 8, 8, 8,
+        +0, +0, +1, -1, -1, 9, -8, 0, 0, 0, 0),
+        make_indices(0, 0, 1, 1, 1, 2, 3, 4, 4, 4, 4));
 
     generator.drop(2);
     check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 11),
-        +0, +0, +0, +1, -1, 0, 1, 0, 0, 0, +1,
-        +0, +0, +0, -1, +1, 0, 0, 0, 0, 0, +0,
-        +0, +0, +0, -1, +1, 0, 3, 2, 2, 2, -1,
-        +0, +0, +0, +1, -1, 0, 0, 0, 0, 0, -2,
-        +0, +0, +0, -1, +1, 0, 5, 4, 4, 4, -3,
-        +0, +0, +0, -1, +1, 0, 0, 0, 0, 0, -4,
-        +0, +0, +0, +1, -1, 0, 7, 6, 6, 6, -5,
-        +0, +0, +0, -1, +1, 0, 0, 0, 0, 0, -6,
-        +0, +0, +0, -1, +1, 0, 9, 8, 8, 8, -7,
-        +0, +0, +0, +1, -1, 0, 0, 0, 0, 0, -8),
-        make_indices(0, 0, 0, 1, 1, 2, 3, 3, 3, 3, 4));
+        +0, +0, -1, +1, +1, 0, +1, 1, 0, 0, 0,
+        +0, +0, +0, +0, +0, 0, +0, 0, 0, 0, 0,
+        +0, +0, +0, +0, +0, 0, -1, 3, 2, 2, 2,
+        +0, +0, +1, -1, -1, 0, -2, 0, 0, 0, 0,
+        +0, +0, +0, +0, +0, 0, -3, 5, 4, 4, 4,
+        +0, +0, +0, +0, +0, 0, -4, 0, 0, 0, 0,
+        +0, +0, -1, +1, +1, 0, -5, 7, 6, 6, 6,
+        +0, +0, +0, +0, +0, 0, -6, 0, 0, 0, 0,
+        +0, +0, +0, +0, +0, 0, -7, 9, 8, 8, 8,
+        +0, +0, +1, -1, -1, 0, -8, 0, 0, 0, 0),
+        make_indices(0, 0, 1, 1, 1, 2, 3, 4, 4, 4, 4));
 
     generator.undrop();
     check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 11),
-        -1, +1, +1, +1, -1, 0, 1, 0, 0, 0, +1,
-        +0, +0, +0, -1, +1, 1, 0, 0, 0, 0, +0,
-        +0, +0, +0, -1, +1, 2, 3, 2, 2, 2, -1,
-        +1, -1, -1, +1, -1, 3, 0, 0, 0, 0, -2,
-        +0, +0, +0, -1, +1, 4, 5, 4, 4, 4, -3,
-        +0, +0, +0, -1, +1, 5, 0, 0, 0, 0, -4,
-        -1, +1, +1, +1, -1, 6, 7, 6, 6, 6, -5,
-        +0, +0, +0, -1, +1, 7, 0, 0, 0, 0, -6,
-        +0, +0, +0, -1, +1, 8, 9, 8, 8, 8, -7,
-        +1, -1, -1, +1, -1, 9, 0, 0, 0, 0, -8),
-        make_indices(0, 0, 0, 1, 1,  2, 3, 3, 3, 3, 4));
+        +1, -1, -1, +1, +1, 0, +1, 1, 0, 0, 0,
+        -1, +1, +0, +0, +0, 1, +0, 0, 0, 0, 0,
+        -1, +1, +0, +0, +0, 2, -1, 3, 2, 2, 2,
+        +1, -1, +1, -1, -1, 3, -2, 0, 0, 0, 0,
+        -1, +1, +0, +0, +0, 4, -3, 5, 4, 4, 4,
+        -1, +1, +0, +0, +0, 5, -4, 0, 0, 0, 0,
+        +1, -1, -1, +1, +1, 6, -5, 7, 6, 6, 6,
+        -1, +1, +0, +0, +0, 7, -6, 0, 0, 0, 0,
+        -1, +1, +0, +0, +0, 8, -7, 9, 8, 8, 8,
+        +1, -1, +1, -1, -1, 9, -8, 0, 0, 0, 0),
+        make_indices(0, 0, 1, 1, 1, 2, 3, 4, 4, 4, 4));
 
     check_flatten_stats(
         generator, 10,
-        make_tensor<scalar_t>(make_dims(11), -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, -8),
-        make_tensor<scalar_t>(make_dims(11), +1, +1, +1, +1, +1, 9, 9, 8, 8, 8, +1),
-        make_tensor<scalar_t>(make_dims(11), 0, 0, 0, -0.2, +0.2, 4.5, 2.5, 2, 2, 2, -3.5),
+        make_tensor<scalar_t>(make_dims(11), -1, -1, -1, -1, -1, 0, -8, 0, 0, 0, 0),
+        make_tensor<scalar_t>(make_dims(11), +1, +1, +1, +1, +1, 9, +1, 9, 8, 8, 8),
+        make_tensor<scalar_t>(make_dims(11), -0.2, +0.2, 0, 0, 0, 4.5, -3.5, 2.5, 2, 2, 2),
         make_tensor<scalar_t>(make_dims(11),
-            0.666666666667, 0.666666666667, 0.666666666667, 1.032795558989, 1.032795558989,
-            3.027650354097, 3.374742788553, 2.981423970000, 2.981423970000, 2.981423970000, 3.027650354097));
+            1.032795558989, 1.032795558989, 0.666666666667, 0.666666666667, 0.666666666667,
+            3.027650354097, 3.027650354097, 3.374742788553, 2.981423970000, 2.981423970000, 2.981423970000));
 
     const auto samples = arange(0, generator.dataset().samples());
     {
@@ -234,41 +237,44 @@ UTEST_CASE(sclassification)
     const auto dataset = make_dataset(10, 1U);
 
     auto generator = dataset_generator_t{dataset};
-    generator.add<identity_generator_t>();
+    generator.add<elemwise_generator_t<sclass_identity_t>>();
+    generator.add<elemwise_generator_t<mclass_identity_t>>();
+    generator.add<elemwise_generator_t<scalar_identity_t>>();
+    generator.add<elemwise_generator_t<struct_identity_t>>();
     generator.fit(arange(0, 10), execution::par);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 4);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"mclass3"}.mclass(strings_t{"m0", "m1", "m2"}));
     UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"f32"}.scalar(feature_type::float32, make_dims(1, 1, 1)));
-    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"u8s"}.scalar(feature_type::uint8, make_dims(2, 1, 2)));
-    UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"f64"}.scalar(feature_type::float64, make_dims(1, 1, 1)));
+    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"f64"}.scalar(feature_type::float64, make_dims(1, 1, 1)));
+    UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"u8s"}.scalar(feature_type::uint8, make_dims(2, 1, 2)));
 
     check_select(generator, 0, dataset.expected_select0());
     check_select(generator, 1, dataset.expected_select2());
-    check_select(generator, 2, dataset.expected_select3());
-    check_select(generator, 3, dataset.expected_select4());
-    check_select_stats(generator, indices_t{}, make_indices(0), make_indices(1, 3), make_indices(2));
+    check_select(generator, 2, dataset.expected_select4());
+    check_select(generator, 3, dataset.expected_select3());
+    check_select_stats(generator, indices_t{}, make_indices(0), make_indices(1, 2), make_indices(3));
 
     check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 9),
-        -1, +1, +1, 0, 1, 0, 0, 0, +1,
-        +0, +0, +0, 1, 0, 0, 0, 0, +0,
-        +0, +0, +0, 2, 3, 2, 2, 2, -1,
-        +1, -1, -1, 3, 0, 0, 0, 0, -2,
-        +0, +0, +0, 4, 5, 4, 4, 4, -3,
-        +0, +0, +0, 5, 0, 0, 0, 0, -4,
-        -1, +1, +1, 6, 7, 6, 6, 6, -5,
-        +0, +0, +0, 7, 0, 0, 0, 0, -6,
-        +0, +0, +0, 8, 9, 8, 8, 8, -7,
-        +1, -1, -1, 9, 0, 0, 0, 0, -8),
-        make_indices(0, 0, 0, 1, 2, 2, 2, 2, 3));
+        -1, +1, +1, 0, +1, 1, 0, 0, 0,
+        +0, +0, +0, 1, +0, 0, 0, 0, 0,
+        +0, +0, +0, 2, -1, 3, 2, 2, 2,
+        +1, -1, -1, 3, -2, 0, 0, 0, 0,
+        +0, +0, +0, 4, -3, 5, 4, 4, 4,
+        +0, +0, +0, 5, -4, 0, 0, 0, 0,
+        -1, +1, +1, 6, -5, 7, 6, 6, 6,
+        +0, +0, +0, 7, -6, 0, 0, 0, 0,
+        +0, +0, +0, 8, -7, 9, 8, 8, 8,
+        +1, -1, -1, 9, -8, 0, 0, 0, 0),
+        make_indices(0, 0, 0, 1, 2, 3, 3, 3, 3));
 
     check_flatten_stats(generator, 10,
-        make_tensor<scalar_t>(make_dims(9), -1, -1, -1, 0, 0, 0, 0, 0, -8),
-        make_tensor<scalar_t>(make_dims(9), +1, +1, +1, 9, 9, 8, 8, 8, +1),
-        make_tensor<scalar_t>(make_dims(9), 0.0, 0.0, 0.0, 4.5, 2.5, 2.0, 2.0, 2.0, -3.5),
+        make_tensor<scalar_t>(make_dims(9), -1, -1, -1, 0, -8, 0, 0, 0, 0),
+        make_tensor<scalar_t>(make_dims(9), +1, +1, +1, 9, +1, 9, 8, 8, 8),
+        make_tensor<scalar_t>(make_dims(9), 0.0, 0.0, 0.0, 4.5, -3.5, 2.5, 2.0, 2.0, 2.0),
         make_tensor<scalar_t>(make_dims(9),
             0.666666666667, 0.666666666667, 0.666666666667,
-            3.027650354097, 3.374742788553, 2.981423970000, 2.981423970000, 2.981423970000, 3.027650354097));
+            3.027650354097, 3.027650354097, 3.374742788553, 2.981423970000, 2.981423970000, 2.981423970000));
 
     check_targets(generator, feature_t{"sclass2"}.sclass(strings_t{"s0", "s1"}), make_dims(2, 1, 1),
         make_tensor<scalar_t>(make_dims(10, 2, 1, 1),
@@ -285,40 +291,44 @@ UTEST_CASE(mclassification)
     const auto dataset = make_dataset(10, 0U);
 
     auto generator = dataset_generator_t{dataset};
-    generator.add<identity_generator_t>();
+    generator.add<elemwise_generator_t<sclass_identity_t>>();
+    generator.add<elemwise_generator_t<mclass_identity_t>>();
+    generator.add<elemwise_generator_t<scalar_identity_t>>();
+    generator.add<elemwise_generator_t<struct_identity_t>>();
+    generator.fit(arange(0, 10), execution::par);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 4);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"sclass2"}.sclass(strings_t{"s0", "s1"}));
     UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"f32"}.scalar(feature_type::float32, make_dims(1, 1, 1)));
-    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"u8s"}.scalar(feature_type::uint8, make_dims(2, 1, 2)));
-    UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"f64"}.scalar(feature_type::float64, make_dims(1, 1, 1)));
+    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"f64"}.scalar(feature_type::float64, make_dims(1, 1, 1)));
+    UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"u8s"}.scalar(feature_type::uint8, make_dims(2, 1, 2)));
 
     check_select(generator, 0, dataset.expected_select1());
     check_select(generator, 1, dataset.expected_select2());
-    check_select(generator, 2, dataset.expected_select3());
-    check_select(generator, 3, dataset.expected_select4());
-    check_select_stats(generator, make_indices(0), indices_t{}, make_indices(1, 3), make_indices(2));
+    check_select(generator, 2, dataset.expected_select4());
+    check_select(generator, 3, dataset.expected_select3());
+    check_select_stats(generator, make_indices(0), indices_t{}, make_indices(1, 2), make_indices(3));
 
     check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 8),
-        +1, -1, 0, 1, 0, 0, 0, +1,
-        -1, +1, 1, 0, 0, 0, 0, +0,
-        -1, +1, 2, 3, 2, 2, 2, -1,
-        +1, -1, 3, 0, 0, 0, 0, -2,
-        -1, +1, 4, 5, 4, 4, 4, -3,
-        -1, +1, 5, 0, 0, 0, 0, -4,
-        +1, -1, 6, 7, 6, 6, 6, -5,
-        -1, +1, 7, 0, 0, 0, 0, -6,
-        -1, +1, 8, 9, 8, 8, 8, -7,
-        +1, -1, 9, 0, 0, 0, 0, -8),
-        make_indices(0, 0, 1, 2, 2, 2, 2, 3));
+        +1, -1, 0, +1, 1, 0, 0, 0,
+        -1, +1, 1, +0, 0, 0, 0, 0,
+        -1, +1, 2, -1, 3, 2, 2, 2,
+        +1, -1, 3, -2, 0, 0, 0, 0,
+        -1, +1, 4, -3, 5, 4, 4, 4,
+        -1, +1, 5, -4, 0, 0, 0, 0,
+        +1, -1, 6, -5, 7, 6, 6, 6,
+        -1, +1, 7, -6, 0, 0, 0, 0,
+        -1, +1, 8, -7, 9, 8, 8, 8,
+        +1, -1, 9, -8, 0, 0, 0, 0),
+        make_indices(0, 0, 1, 2, 3, 3, 3, 3));
 
     check_flatten_stats(generator, 10,
-        make_tensor<scalar_t>(make_dims(8), -1, -1, 0, 0, 0, 0, 0, -8),
-        make_tensor<scalar_t>(make_dims(8), +1, +1, 9, 9, 8, 8, 8, +1),
-        make_tensor<scalar_t>(make_dims(8), -0.2, +0.2, 4.5, 2.5, 2.0, 2.0, 2.0, -3.5),
+        make_tensor<scalar_t>(make_dims(8), -1, -1, 0, -8, 0, 0, 0, 0),
+        make_tensor<scalar_t>(make_dims(8), +1, +1, 9, +1, 9, 8, 8, 8),
+        make_tensor<scalar_t>(make_dims(8), -0.2, +0.2, 4.5, -3.5, 2.5, 2.0, 2.0, 2.0),
         make_tensor<scalar_t>(make_dims(8),
             1.032795558989, 1.032795558989,
-            3.027650354097, 3.374742788553, 2.981423970000, 2.981423970000, 2.981423970000, 3.027650354097));
+            3.027650354097, 3.027650354097, 3.374742788553, 2.981423970000, 2.981423970000, 2.981423970000));
 
     check_targets(generator, feature_t{"mclass3"}.mclass(strings_t{"m0", "m1", "m2"}), make_dims(3, 1, 1),
         make_tensor<scalar_t>(make_dims(10, 3, 1, 1),
@@ -336,41 +346,44 @@ UTEST_CASE(regression)
     const auto dataset = make_dataset(10, 2U);
 
     auto generator = dataset_generator_t{dataset};
-    generator.add<identity_generator_t>();
+    generator.add<elemwise_generator_t<sclass_identity_t>>();
+    generator.add<elemwise_generator_t<mclass_identity_t>>();
+    generator.add<elemwise_generator_t<scalar_identity_t>>();
+    generator.add<elemwise_generator_t<struct_identity_t>>();
     generator.fit(arange(0, 10), execution::par);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 4);
-    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"mclass3"}.mclass(strings_t{"m0", "m1", "m2"}));
-    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"sclass2"}.sclass(strings_t{"s0", "s1"}));
-    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"u8s"}.scalar(feature_type::uint8, make_dims(2, 1, 2)));
-    UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"f64"}.scalar(feature_type::float64, make_dims(1, 1, 1)));
+    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"sclass2"}.sclass(strings_t{"s0", "s1"}));
+    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"mclass3"}.mclass(strings_t{"m0", "m1", "m2"}));
+    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"f64"}.scalar(feature_type::float64, make_dims(1, 1, 1)));
+    UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"u8s"}.scalar(feature_type::uint8, make_dims(2, 1, 2)));
 
-    check_select(generator, 0, dataset.expected_select0());
-    check_select(generator, 1, dataset.expected_select1());
-    check_select(generator, 2, dataset.expected_select3());
-    check_select(generator, 3, dataset.expected_select4());
-    check_select_stats(generator, make_indices(1), make_indices(0), make_indices(3), make_indices(2));
+    check_select(generator, 0, dataset.expected_select1());
+    check_select(generator, 1, dataset.expected_select0());
+    check_select(generator, 2, dataset.expected_select4());
+    check_select(generator, 3, dataset.expected_select3());
+    check_select_stats(generator, make_indices(0), make_indices(1), make_indices(2), make_indices(3));
 
     check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 10),
-        -1, +1, +1, +1, -1, 1, 0, 0, 0, +1,
-        +0, +0, +0, -1, +1, 0, 0, 0, 0, +0,
-        +0, +0, +0, -1, +1, 3, 2, 2, 2, -1,
-        +1, -1, -1, +1, -1, 0, 0, 0, 0, -2,
-        +0, +0, +0, -1, +1, 5, 4, 4, 4, -3,
-        +0, +0, +0, -1, +1, 0, 0, 0, 0, -4,
-        -1, +1, +1, +1, -1, 7, 6, 6, 6, -5,
-        +0, +0, +0, -1, +1, 0, 0, 0, 0, -6,
-        +0, +0, +0, -1, +1, 9, 8, 8, 8, -7,
-        +1, -1, -1, +1, -1, 0, 0, 0, 0, -8),
-        make_indices(0, 0, 0, 1, 1, 2, 2, 2, 2, 3));
+        +1, -1, -1, +1, +1, +1, 1, 0, 0, 0,
+        -1, +1, +0, +0, +0, +0, 0, 0, 0, 0,
+        -1, +1, +0, +0, +0, -1, 3, 2, 2, 2,
+        +1, -1, +1, -1, -1, -2, 0, 0, 0, 0,
+        -1, +1, +0, +0, +0, -3, 5, 4, 4, 4,
+        -1, +1, +0, +0, +0, -4, 0, 0, 0, 0,
+        +1, -1, -1, +1, +1, -5, 7, 6, 6, 6,
+        -1, +1, +0, +0, +0, -6, 0, 0, 0, 0,
+        -1, +1, +0, +0, +0, -7, 9, 8, 8, 8,
+        +1, -1, +1, -1, -1, -8, 0, 0, 0, 0),
+        make_indices(0, 0, 1, 1, 1, 2, 3, 3, 3, 3));
 
     check_flatten_stats(generator, 10,
-        make_tensor<scalar_t>(make_dims(10), -1, -1, -1, -1, -1, 0, 0, 0, 0, -8),
-        make_tensor<scalar_t>(make_dims(10), +1, +1, +1, +1, +1, 9, 8, 8, 8, +1),
-        make_tensor<scalar_t>(make_dims(10), 0, 0, 0, -0.2, 0.2, 2.5, 2, 2, 2, -3.5),
+        make_tensor<scalar_t>(make_dims(10), -1, -1, -1, -1, -1, -8, 0, 0, 0, 0),
+        make_tensor<scalar_t>(make_dims(10), +1, +1, +1, +1, +1, +1, 9, 8, 8, 8),
+        make_tensor<scalar_t>(make_dims(10), -0.2, +0.2, 0, 0, 0, -3.5, 2.5, 2, 2, 2),
         make_tensor<scalar_t>(make_dims(10),
-            0.666666666667, 0.666666666667, 0.666666666667, 1.032795558989, 1.032795558989,
-            3.374742788553, 2.981423970000, 2.981423970000, 2.981423970000, 3.027650354097));
+            1.032795558989, 1.032795558989, 0.666666666667, 0.666666666667, 0.666666666667,
+            3.027650354097, 3.374742788553, 2.981423970000, 2.981423970000, 2.981423970000));
 
     check_targets(generator, feature_t{"f32"}.scalar(feature_type::float32, make_dims(1, 1, 1)), make_dims(1, 1, 1),
         make_tensor<scalar_t>(make_dims(10, 1, 1, 1), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9));
@@ -386,40 +399,43 @@ UTEST_CASE(mvregression)
     const auto dataset = make_dataset(10, 3U);
 
     auto generator = dataset_generator_t{dataset};
-    generator.add<identity_generator_t>();
+    generator.add<elemwise_generator_t<sclass_identity_t>>();
+    generator.add<elemwise_generator_t<mclass_identity_t>>();
+    generator.add<elemwise_generator_t<scalar_identity_t>>();
+    generator.add<elemwise_generator_t<struct_identity_t>>();
     generator.fit(arange(0, 10), execution::par);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 4);
-    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"mclass3"}.mclass(strings_t{"m0", "m1", "m2"}));
-    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"sclass2"}.sclass(strings_t{"s0", "s1"}));
+    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"sclass2"}.sclass(strings_t{"s0", "s1"}));
+    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"mclass3"}.mclass(strings_t{"m0", "m1", "m2"}));
     UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"f32"}.scalar(feature_type::float32, make_dims(1, 1, 1)));
     UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"f64"}.scalar(feature_type::float64, make_dims(1, 1, 1)));
 
-    check_select(generator, 0, dataset.expected_select0());
-    check_select(generator, 1, dataset.expected_select1());
+    check_select(generator, 0, dataset.expected_select1());
+    check_select(generator, 1, dataset.expected_select0());
     check_select(generator, 2, dataset.expected_select2());
     check_select(generator, 3, dataset.expected_select4());
-    check_select_stats(generator, make_indices(1), make_indices(0), make_indices(2, 3), indices_t{});
+    check_select_stats(generator, make_indices(0), make_indices(1), make_indices(2, 3), indices_t{});
 
     check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 7),
-        -1, +1, +1, +1, -1, 0, +1,
-        +0, +0, +0, -1, +1, 1, +0,
-        +0, +0, +0, -1, +1, 2, -1,
-        +1, -1, -1, +1, -1, 3, -2,
-        +0, +0, +0, -1, +1, 4, -3,
-        +0, +0, +0, -1, +1, 5, -4,
-        -1, +1, +1, +1, -1, 6, -5,
-        +0, +0, +0, -1, +1, 7, -6,
-        +0, +0, +0, -1, +1, 8, -7,
-        +1, -1, -1, +1, -1, 9, -8),
-        make_indices(0, 0, 0, 1, 1, 2, 3));
+        +1, -1, -1, +1, +1, 0, +1,
+        -1, +1, +0, +0, +0, 1, +0,
+        -1, +1, +0, +0, +0, 2, -1,
+        +1, -1, +1, -1, -1, 3, -2,
+        -1, +1, +0, +0, +0, 4, -3,
+        -1, +1, +0, +0, +0, 5, -4,
+        +1, -1, -1, +1, +1, 6, -5,
+        -1, +1, +0, +0, +0, 7, -6,
+        -1, +1, +0, +0, +0, 8, -7,
+        +1, -1, +1, -1, -1, 9, -8),
+        make_indices(0, 0, 1, 1, 1, 2, 3));
 
     check_flatten_stats(generator, 10,
         make_tensor<scalar_t>(make_dims(7), -1, -1, -1, -1, -1, 0, -8),
         make_tensor<scalar_t>(make_dims(7), +1, +1, +1, +1, +1, 9, +1),
-        make_tensor<scalar_t>(make_dims(7), 0, 0, 0, -0.2, +0.2, 4.5, -3.5),
+        make_tensor<scalar_t>(make_dims(7), -0.2, +0.2, 0, 0, 0, 4.5, -3.5),
         make_tensor<scalar_t>(make_dims(7),
-            0.666666666667, 0.666666666667, 0.666666666667, 1.032795558989, 1.032795558989, 3.027650354097, 3.027650354097));
+            1.032795558989, 1.032795558989, 0.666666666667, 0.666666666667, 0.666666666667, 3.027650354097, 3.027650354097));
 
     check_targets(generator, feature_t{"u8s"}.scalar(feature_type::uint8, make_dims(2, 1, 2)), make_dims(2, 1, 2),
         make_tensor<scalar_t>(make_dims(10, 2, 1, 2),

@@ -156,15 +156,15 @@ namespace nano
             indices_cmap_t samples, tensor_size_t ifeature, tensor_size_t ioriginal,
             const toperator& op) const
         {
-            dataset().visit_inputs(ioriginal, [&] (const auto& feature, const auto& data, const auto& mask)
+            dataset().visit_inputs(ioriginal, [&] (const auto&, const auto& data, const auto& mask)
             {
                 if (should_shuffle(ifeature))
                 {
-                    op(feature, data, mask, shuffled(samples, ifeature));
+                    op(data, mask, shuffled(samples, ifeature));
                 }
                 else
                 {
-                    op(feature, data, mask, samples);
+                    op(data, mask, samples);
                 }
             });
         }
@@ -174,17 +174,17 @@ namespace nano
             indices_cmap_t samples, tensor_size_t ifeature, tensor_size_t ioriginal1, tensor_size_t ioriginal2,
             const toperator& op) const
         {
-            m_dataset.visit_inputs(ioriginal1, [&] (const auto& feature1, const auto& data1, const auto& mask1)
+            m_dataset.visit_inputs(ioriginal1, [&] (const auto&, const auto& data1, const auto& mask1)
             {
-                m_dataset.visit_inputs(ioriginal2, [&] (const auto& feature2, const auto& data2, const auto& mask2)
+                m_dataset.visit_inputs(ioriginal2, [&] (const auto&, const auto& data2, const auto& mask2)
                 {
                     if (should_shuffle(ifeature))
                     {
-                        op(feature1, data1, mask1, feature2, data2, mask2, shuffled(samples, ifeature));
+                        op(data1, mask1, data2, mask2, shuffled(samples, ifeature));
                     }
                     else
                     {
-                        op(feature1, data1, mask1, feature2, data2, mask2, samples);
+                        op(data1, mask1, data2, mask2, samples);
                     }
                 });
             });

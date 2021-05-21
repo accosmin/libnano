@@ -29,8 +29,8 @@ namespace nano
             if constexpr (tcomputer::generated_type == generator_type::scalar)
             {
                 this->iterate2(samples, ifeature, this->mapped_original1(ifeature), this->mapped_original2(ifeature),
-                    [&] (const auto&, const auto& data1, const auto& mask1,
-                         const auto&, const auto& data2, const auto& mask2,
+                    [&] (const auto& data1, const auto& mask1,
+                         const auto& data2, const auto& mask2,
                          indices_cmap_t samples)
                 {
                     loop_samples2<tcomputer::input_rank1, tcomputer::input_rank2>(
@@ -58,8 +58,8 @@ namespace nano
             if constexpr (tcomputer::generated_type == generator_type::sclass)
             {
                 this->iterate2(samples, ifeature, this->mapped_original1(ifeature), this->mapped_original2(ifeature),
-                    [&] (const auto&, const auto& data1, const auto& mask1,
-                         const auto&, const auto& data2, const auto& mask2,
+                    [&] (const auto& data1, const auto& mask1,
+                         const auto& data2, const auto& mask2,
                          indices_cmap_t samples)
                 {
                     loop_samples2<tcomputer::input_rank1, tcomputer::input_rank2>(
@@ -87,8 +87,8 @@ namespace nano
             if constexpr (tcomputer::generated_type == generator_type::mclass)
             {
                 this->iterate2(samples, ifeature, this->mapped_original1(ifeature), this->mapped_original2(ifeature),
-                    [&] (const auto&, const auto& data1, const auto& mask1,
-                         const auto&, const auto& data2, const auto& mask2,
+                    [&] (const auto& data1, const auto& mask1,
+                         const auto& data2, const auto& mask2,
                          indices_cmap_t samples)
                 {
                     loop_samples2<tcomputer::input_rank1, tcomputer::input_rank2>(
@@ -116,8 +116,8 @@ namespace nano
             if constexpr (tcomputer::generated_type == generator_type::structured)
             {
                 this->iterate2(samples, ifeature, this->mapped_original1(ifeature), this->mapped_original2(ifeature),
-                    [&] (const auto&, const auto& data1, const auto& mask1,
-                         const auto&, const auto& data2, const auto& mask2,
+                    [&] (const auto& data1, const auto& mask1,
+                         const auto& data2, const auto& mask2,
                          indices_cmap_t samples)
                 {
                     loop_samples2<tcomputer::input_rank1, tcomputer::input_rank2>(
@@ -145,8 +145,8 @@ namespace nano
             for (tensor_size_t ifeature = 0, features = this->features(); ifeature < features; ++ ifeature)
             {
                 this->iterate2(samples, ifeature, this->mapped_original1(ifeature), this->mapped_original2(ifeature),
-                    [&] (const auto&, const auto& data1, const auto& mask1,
-                         const auto&, const auto& data2, const auto& mask2,
+                    [&] (const auto& data1, const auto& mask1,
+                         const auto& data2, const auto& mask2,
                          indices_cmap_t samples)
                 {
                     loop_samples2<tcomputer::input_rank1, tcomputer::input_rank2>(

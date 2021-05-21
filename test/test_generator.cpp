@@ -116,6 +116,15 @@ static auto make_dataset(tensor_size_t samples, size_t target)
 
 UTEST_BEGIN_MODULE(test_dataset_generator)
 
+UTEST_CASE(empty)
+{
+    const auto dataset = make_dataset(10, string_t::npos);
+    const auto generator = dataset_generator_t{dataset};
+
+    UTEST_CHECK_EQUAL(generator.columns(), 0);
+    UTEST_CHECK_EQUAL(generator.features(), 0);
+}
+
 UTEST_CASE(unsupervised)
 {
     const auto dataset = make_dataset(10, string_t::npos);

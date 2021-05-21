@@ -6,11 +6,6 @@
 
 namespace nano
 {
-    // TODO: generic single and paired generator to handle the mapping and the dropping and shuffling part
-    // TODO: polynomial features
-    // TODO: basic image-based features: gradients, magnitude, orientation, HoG
-    // TODO: support for stateful generators (e.g. automatically find which scalar features need to scaled, percentiles)
-
     // TODO: generic utilities for
     //  * percentiles & histogram classes
     //  * averages in percentiles and histogram bins
@@ -63,7 +58,7 @@ namespace nano
         tensor_size_t mapped_component(tensor_size_t ifeature) const
         {
             assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 1);
+            return std::max(m_feature_mapping(ifeature, 1), tensor_size_t{0});
         }
 
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
@@ -171,7 +166,7 @@ namespace nano
         tensor_size_t mapped_component(tensor_size_t ifeature) const
         {
             assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 1);
+            return std::max(m_feature_mapping(ifeature, 1), tensor_size_t{0});
         }
 
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
@@ -279,7 +274,7 @@ namespace nano
         tensor_size_t mapped_component(tensor_size_t ifeature) const
         {
             assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 1);
+            return std::max(m_feature_mapping(ifeature, 1), tensor_size_t{0});
         }
 
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
@@ -434,7 +429,7 @@ namespace nano
         tensor_size_t mapped_component(tensor_size_t ifeature) const
         {
             assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 1);
+            return std::max(m_feature_mapping(ifeature, 1), tensor_size_t{0});
         }
 
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>

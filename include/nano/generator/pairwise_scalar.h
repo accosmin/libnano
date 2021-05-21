@@ -83,13 +83,13 @@ namespace nano
         tensor_size_t mapped_component1(tensor_size_t ifeature) const
         {
             assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 1);
+            return std::max(m_feature_mapping(ifeature, 1), tensor_size_t{0});
         }
 
         tensor_size_t mapped_component2(tensor_size_t ifeature) const
         {
             assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 3);
+            return std::max(m_feature_mapping(ifeature, 3), tensor_size_t{0});
         }
 
         template

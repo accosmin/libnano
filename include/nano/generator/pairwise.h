@@ -13,7 +13,11 @@ namespace nano
     ///         * original feature2,
     ///         * component index of the original feature2.
     ///
-    template <typename tcomputer, std::enable_if_t<std::is_base_of_v<generator_t, tcomputer>, bool> = true>
+    template
+    <
+        typename tcomputer,
+        std::enable_if_t<std::is_base_of_v<generator_t, tcomputer>, bool> = true
+    >
     class NANO_PUBLIC pairwise_generator_t : public tcomputer
     {
     public:

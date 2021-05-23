@@ -8,7 +8,7 @@ namespace nano
     ///
     /// \brief
     ///
-    class sclass_identity_t : public generator_t
+    class sclass_identity_t : public base_elemwise_generator_t
     {
     public:
 
@@ -16,38 +16,18 @@ namespace nano
         static constexpr auto generated_type = generator_type::sclass;
 
         sclass_identity_t(const memory_dataset_t& dataset) :
-            generator_t(dataset)
+            base_elemwise_generator_t(dataset)
         {
-        }
-
-        void fit(indices_cmap_t, execution) override
-        {
-            m_feature_mapping = select_sclass(dataset(), sclass2binary::off);
-
-            allocate(features());
-        }
-
-        tensor_size_t features() const override
-        {
-            return m_feature_mapping.size<0>();
         }
 
         feature_t feature(tensor_size_t ifeature) const override
         {
-            assert(ifeature >= 0 && ifeature < features());
             return dataset().feature(mapped_original(ifeature));
         }
 
-        tensor_size_t mapped_original(tensor_size_t ifeature) const
+        feature_mapping_t do_fit(indices_cmap_t, execution) override
         {
-            assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 0);
-        }
-
-        tensor_size_t mapped_classes(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 2);
+            return select_sclass(dataset(), sclass2binary::off);
         }
 
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
@@ -95,17 +75,12 @@ namespace nano
             }
             column += colsize;
         }
-
-    private:
-
-        // attributes
-        feature_mapping_t   m_feature_mapping;          ///< (feature index, original feature index, ...)
     };
 
     ///
     /// \brief
     ///
-    class mclass_identity_t : public generator_t
+    class mclass_identity_t : public base_elemwise_generator_t
     {
     public:
 
@@ -113,38 +88,18 @@ namespace nano
         static constexpr auto generated_type = generator_type::mclass;
 
         mclass_identity_t(const memory_dataset_t& dataset) :
-            generator_t(dataset)
+            base_elemwise_generator_t(dataset)
         {
-        }
-
-        void fit(indices_cmap_t, execution) override
-        {
-            m_feature_mapping = select_mclass(dataset(), mclass2binary::off);
-
-            allocate(features());
-        }
-
-        tensor_size_t features() const override
-        {
-            return m_feature_mapping.size<0>();
         }
 
         feature_t feature(tensor_size_t ifeature) const override
         {
-            assert(ifeature >= 0 && ifeature < features());
             return dataset().feature(mapped_original(ifeature));
         }
 
-        tensor_size_t mapped_original(tensor_size_t ifeature) const
+        feature_mapping_t do_fit(indices_cmap_t, execution) override
         {
-            assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 0);
-        }
-
-        tensor_size_t mapped_classes(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 2);
+            return select_mclass(dataset(), mclass2binary::off);
         }
 
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
@@ -191,17 +146,12 @@ namespace nano
             }
             column += colsize;
         }
-
-    private:
-
-        // attributes
-        feature_mapping_t   m_feature_mapping;          ///< (feature index, original feature index, ...)
     };
 
     ///
     /// \brief
     ///
-    class scalar_identity_t : public generator_t
+    class scalar_identity_t : public base_elemwise_generator_t
     {
     public:
 
@@ -209,32 +159,18 @@ namespace nano
         static constexpr auto generated_type = generator_type::scalar;
 
         scalar_identity_t(const memory_dataset_t& dataset) :
-            generator_t(dataset)
+            base_elemwise_generator_t(dataset)
         {
-        }
-
-        void fit(indices_cmap_t, execution) override
-        {
-            m_feature_mapping = select_scalar(dataset(), struct2scalar::off);
-
-            allocate(features());
-        }
-
-        tensor_size_t features() const override
-        {
-            return m_feature_mapping.size<0>();
         }
 
         feature_t feature(tensor_size_t ifeature) const override
         {
-            assert(ifeature >= 0 && ifeature < features());
             return dataset().feature(mapped_original(ifeature));
         }
 
-        tensor_size_t mapped_original(tensor_size_t ifeature) const
+        feature_mapping_t do_fit(indices_cmap_t, execution) override
         {
-            assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 0);
+            return select_scalar(dataset(), struct2scalar::off);
         }
 
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
@@ -278,17 +214,12 @@ namespace nano
             }
             ++ column;
         }
-
-    private:
-
-        // attributes
-        feature_mapping_t   m_feature_mapping;          ///< (feature index, original feature index, ...)
     };
 
     ///
     /// \brief
     ///
-    class struct_identity_t : public generator_t
+    class struct_identity_t : public base_elemwise_generator_t
     {
     public:
 
@@ -296,41 +227,18 @@ namespace nano
         static constexpr auto generated_type = generator_type::structured;
 
         struct_identity_t(const memory_dataset_t& dataset) :
-            generator_t(dataset)
+            base_elemwise_generator_t(dataset)
         {
-        }
-
-        void fit(indices_cmap_t, execution) override
-        {
-            m_feature_mapping = select_struct(dataset());
-
-            allocate(features());
-        }
-
-        tensor_size_t features() const override
-        {
-            return m_feature_mapping.size<0>();
         }
 
         feature_t feature(tensor_size_t ifeature) const override
         {
-            assert(ifeature >= 0 && ifeature < features());
             return dataset().feature(mapped_original(ifeature));
         }
 
-        tensor_size_t mapped_original(tensor_size_t ifeature) const
+        feature_mapping_t do_fit(indices_cmap_t, execution) override
         {
-            assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 0);
-        }
-
-        tensor3d_dims_t mapped_dims(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return make_dims(
-                m_feature_mapping(ifeature, 3),
-                m_feature_mapping(ifeature, 4),
-                m_feature_mapping(ifeature, 5));
+            return select_struct(dataset());
         }
 
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
@@ -377,10 +285,5 @@ namespace nano
             }
             column += colsize;
         }
-
-    private:
-
-        // attributes
-        feature_mapping_t   m_feature_mapping;          ///< (feature index, original feature index, ...)
     };
 }

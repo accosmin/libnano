@@ -14,7 +14,7 @@ namespace nano
     ///
     /// \brief log-scale the feature values while preserving their signs.
     ///
-    class slog1p_t : public generator_t
+    class slog1p_t : public base_elemwise_generator_t
     {
     public:
 
@@ -22,21 +22,14 @@ namespace nano
         static constexpr auto generated_type = generator_type::scalar;
 
         slog1p_t(const memory_dataset_t& dataset, struct2scalar s2s = struct2scalar::off) :
-            generator_t(dataset),
+            base_elemwise_generator_t(dataset),
             m_s2s(s2s)
         {
         }
 
-        void fit(indices_cmap_t, execution) override
+        feature_mapping_t do_fit(indices_cmap_t, execution) override
         {
-            m_feature_mapping = select_scalar(dataset(), m_s2s);
-
-            allocate(features());
-        }
-
-        tensor_size_t features() const override
-        {
-            return m_feature_mapping.size<0>();
+            return select_scalar(dataset(), m_s2s);
         }
 
         feature_t feature(tensor_size_t ifeature) const override
@@ -47,18 +40,6 @@ namespace nano
 
             const auto& feature = dataset().feature(original);
             return feature_t{scat("slog1p(", feature.name(), "[", component, "])")}.scalar(feature_type::float64);
-        }
-
-        tensor_size_t mapped_original(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 0);
-        }
-
-        tensor_size_t mapped_component(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return std::max(m_feature_mapping(ifeature, 1), tensor_size_t{0});
         }
 
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
@@ -116,13 +97,12 @@ namespace nano
 
         // attributes
         struct2scalar       m_s2s{struct2scalar::off};  ///<
-        feature_mapping_t   m_feature_mapping;          ///< (feature index, original feature index, ...)
     };
 
     ///
     /// \brief
     ///
-    class sign_t : public generator_t
+    class sign_t : public base_elemwise_generator_t
     {
     public:
 
@@ -130,21 +110,14 @@ namespace nano
         static constexpr auto generated_type = generator_type::scalar;
 
         sign_t(const memory_dataset_t& dataset, struct2scalar s2s = struct2scalar::off) :
-            generator_t(dataset),
+            base_elemwise_generator_t(dataset),
             m_s2s(s2s)
         {
         }
 
-        void fit(indices_cmap_t, execution) override
+        feature_mapping_t do_fit(indices_cmap_t, execution) override
         {
-            m_feature_mapping = select_scalar(dataset(), m_s2s);
-
-            allocate(features());
-        }
-
-        tensor_size_t features() const override
-        {
-            return m_feature_mapping.size<0>();
+            return select_scalar(dataset(), m_s2s);
         }
 
         feature_t feature(tensor_size_t ifeature) const override
@@ -155,18 +128,6 @@ namespace nano
 
             const auto& feature = dataset().feature(original);
             return feature_t{scat("sign(", feature.name(), "[", component, "])")}.scalar(feature_type::float64);
-        }
-
-        tensor_size_t mapped_original(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 0);
-        }
-
-        tensor_size_t mapped_component(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return std::max(m_feature_mapping(ifeature, 1), tensor_size_t{0});
         }
 
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
@@ -224,13 +185,12 @@ namespace nano
 
         // attributes
         struct2scalar       m_s2s{struct2scalar::off};  ///<
-        feature_mapping_t   m_feature_mapping;          ///< (feature index, original feature index, ...)
     };
 
     ///
     /// \brief
     ///
-    class sign_class_t : public generator_t
+    class sign_class_t : public base_elemwise_generator_t
     {
     public:
 
@@ -238,21 +198,14 @@ namespace nano
         static constexpr auto generated_type = generator_type::sclass;
 
         sign_class_t(const memory_dataset_t& dataset, struct2scalar s2s = struct2scalar::off) :
-            generator_t(dataset),
+            base_elemwise_generator_t(dataset),
             m_s2s(s2s)
         {
         }
 
-        void fit(indices_cmap_t, execution) override
+        feature_mapping_t do_fit(indices_cmap_t, execution) override
         {
-            m_feature_mapping = select_scalar(dataset(), m_s2s);
-
-            allocate(features());
-        }
-
-        tensor_size_t features() const override
-        {
-            return m_feature_mapping.size<0>();
+            return select_scalar(dataset(), m_s2s);
         }
 
         feature_t feature(tensor_size_t ifeature) const override
@@ -263,18 +216,6 @@ namespace nano
 
             const auto& feature = dataset().feature(original);
             return feature_t{scat("sign_class(", feature.name(), "[", component, "])")}.sclass(strings_t{"neg", "pos"});
-        }
-
-        tensor_size_t mapped_original(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 0);
-        }
-
-        tensor_size_t mapped_component(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return std::max(m_feature_mapping(ifeature, 1), tensor_size_t{0});
         }
 
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
@@ -344,13 +285,12 @@ namespace nano
 
         // attributes
         struct2scalar       m_s2s{struct2scalar::off};  ///<
-        feature_mapping_t   m_feature_mapping;          ///< (feature index, original feature index, ...)
     };
 
     ///
     /// \brief
     ///
-    class percentile_bin_class_t : public generator_t
+    class percentile_bin_class_t : public base_elemwise_generator_t
     {
     public:
 
@@ -359,23 +299,23 @@ namespace nano
 
         percentile_bin_class_t(const memory_dataset_t& dataset, struct2scalar s2s = struct2scalar::off,
             tensor_size_t bins = 10) :
-            generator_t(dataset),
+            base_elemwise_generator_t(dataset),
             m_s2s(s2s),
             m_bins(bins)
         {
             assert(bins > 0);
         }
 
-        void fit(indices_cmap_t samples, execution) override
+        feature_mapping_t do_fit(indices_cmap_t samples, execution) override
         {
-            m_feature_mapping = select_scalar(dataset(), m_s2s);
+            const auto mapping = select_scalar(dataset(), m_s2s);
 
             m_thresholds.resize(features(), m_bins - 1);
 
-            for (tensor_size_t ifeature = 0; ifeature < features(); ++ ifeature)
+            for (tensor_size_t ifeature = 0; ifeature < mapping.size<0>(); ++ ifeature)
             {
-                const auto original = mapped_original(ifeature);
-                const auto component = mapped_component(ifeature);
+                const auto original = mapping(ifeature, 0);
+                const auto component = mapping(ifeature, 1);
 
                 std::vector<scalar_t> allvalues;
                 dataset().visit_inputs(original, [&] (const auto&, const auto& data, const auto& mask)
@@ -401,12 +341,7 @@ namespace nano
                 }
             }
 
-            allocate(features());
-        }
-
-        tensor_size_t features() const override
-        {
-            return m_feature_mapping.size<0>();
+            return mapping;
         }
 
         feature_t feature(tensor_size_t ifeature) const override
@@ -418,18 +353,6 @@ namespace nano
             const auto& feature = dataset().feature(original);
             return  feature_t{scat("percbin(", feature.name(), "[", component, "])")}.
                     sclass(static_cast<size_t>(m_bins));
-        }
-
-        tensor_size_t mapped_original(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 0);
-        }
-
-        tensor_size_t mapped_component(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return std::max(m_feature_mapping(ifeature, 1), tensor_size_t{0});
         }
 
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
@@ -498,7 +421,6 @@ namespace nano
         // attributes
         struct2scalar       m_s2s{struct2scalar::off};  ///<
         tensor_size_t       m_bins{10};                 ///<
-        feature_mapping_t   m_feature_mapping;          ///< (feature index, original feature index, ...)
         tensor2d_t          m_thresholds;               ///< (feature index, threshold)
     };
 }

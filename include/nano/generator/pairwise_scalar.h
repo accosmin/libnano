@@ -1,5 +1,6 @@
 #pragma once
 
+#include <nano/generator/util.h>
 #include <nano/generator/pairwise.h>
 
 namespace nano
@@ -7,7 +8,7 @@ namespace nano
     ///
     /// \brief
     ///
-    class product_t : public generator_t
+    class product_t : public base_pairwise_generator_t
     {
     public:
 
@@ -16,41 +17,28 @@ namespace nano
         static constexpr auto generated_type = generator_type::scalar;
 
         product_t(const memory_dataset_t& dataset, struct2scalar s2s = struct2scalar::off) :
-            generator_t(dataset),
+            base_pairwise_generator_t(dataset),
             m_s2s(s2s)
         {
         }
 
-        void fit(indices_cmap_t, execution) override
+        feature_mapping_t do_fit(indices_cmap_t, execution) override
         {
             const auto mapping = select_scalar(dataset(), m_s2s);
 
             const auto size = mapping.size<0>();
-            m_feature_mapping.resize(size * (size + 1) / 2, 4);
+            auto feature_mapping = feature_mapping_t{size * (size + 1) / 2, 12};
 
             for (tensor_size_t k = 0, i = 0; i < size; ++ i)
             {
-                const auto feature1 = mapping(i, 0);
-                const auto component1 = mapping(i, 1);
-
                 for (tensor_size_t j = i; j < size; ++ j, ++ k)
                 {
-                    const auto feature2 = mapping(j, 0);
-                    const auto component2 = mapping(j, 1);
-
-                    m_feature_mapping(k, 0) = feature1;
-                    m_feature_mapping(k, 1) = component1;
-                    m_feature_mapping(k, 2) = feature2;
-                    m_feature_mapping(k, 3) = component2;
+                    feature_mapping.array(k).segment(0, 6) = mapping.array(i);
+                    feature_mapping.array(k).segment(6, 6) = mapping.array(j);
                 }
             }
 
-            allocate(features());
-        }
-
-        tensor_size_t features() const override
-        {
-            return m_feature_mapping.size<0>();
+            return feature_mapping;
         }
 
         feature_t feature(tensor_size_t ifeature) const override
@@ -66,30 +54,6 @@ namespace nano
 
             auto name = scat("product(", feature1.name(), "[", component1, "],", feature2.name(), "[", component2, "])");
             return feature_t{std::move(name)}.scalar(feature_type::float64);
-        }
-
-        tensor_size_t mapped_original1(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 0);
-        }
-
-        tensor_size_t mapped_original2(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 2);
-        }
-
-        tensor_size_t mapped_component1(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return std::max(m_feature_mapping(ifeature, 1), tensor_size_t{0});
-        }
-
-        tensor_size_t mapped_component2(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return std::max(m_feature_mapping(ifeature, 3), tensor_size_t{0});
         }
 
         template
@@ -167,6 +131,5 @@ namespace nano
 
         // attributes
         struct2scalar       m_s2s{struct2scalar::off};  ///<
-        feature_mapping_t   m_feature_mapping;          ///< (feature index, original feature index, ...)
     };
 }

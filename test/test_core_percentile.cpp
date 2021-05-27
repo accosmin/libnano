@@ -70,6 +70,9 @@ UTEST_CASE(median4)
 
     const auto value50 = median(begin(data), end(data));
     UTEST_CHECK_CLOSE(value50, 1.5, 1e-12);
+
+    const auto value50s = median_sorted(begin(data), end(data));
+    UTEST_CHECK_CLOSE(value50s, 1.5, 1e-12);
 }
 
 UTEST_CASE(median5)

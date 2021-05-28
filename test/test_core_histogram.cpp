@@ -5,6 +5,50 @@ using namespace nano;
 
 UTEST_BEGIN_MODULE(test_core_histogram)
 
+UTEST_CASE(exponent_bounds)
+{
+    {
+        const auto [lower, upper] = exponent_bounds(-3e+4, 10.0);
+        UTEST_CHECK_EQUAL(lower, +4);
+        UTEST_CHECK_EQUAL(upper, +5);
+    }
+    {
+        const auto [lower, upper] = exponent_bounds(-3e-6, 10.0);
+        UTEST_CHECK_EQUAL(lower, -6);
+        UTEST_CHECK_EQUAL(upper, -5);
+    }
+    {
+        const auto [lower, upper] = exponent_bounds(-3e-12, 10.0);
+        UTEST_CHECK_EQUAL(lower, -12);
+        UTEST_CHECK_EQUAL(upper, -11);
+    }
+    {
+        const auto [lower, upper] = exponent_bounds(1e-16, 10.0);
+        UTEST_CHECK_EQUAL(lower, -16);
+        UTEST_CHECK_EQUAL(upper, -15);
+    }
+    {
+        const auto [lower, upper] = exponent_bounds(2e-16, 10.0);
+        UTEST_CHECK_EQUAL(lower, -16);
+        UTEST_CHECK_EQUAL(upper, -15);
+    }
+    {
+        const auto [lower, upper] = exponent_bounds(1e-3, 10.0);
+        UTEST_CHECK_EQUAL(lower, -3);
+        UTEST_CHECK_EQUAL(upper, -2);
+    }
+    {
+        const auto [lower, upper] = exponent_bounds(1e+2, 10.0);
+        UTEST_CHECK_EQUAL(lower, +2);
+        UTEST_CHECK_EQUAL(upper, +3);
+    }
+    {
+        const auto [lower, upper] = exponent_bounds(3e+2, 10.0);
+        UTEST_CHECK_EQUAL(lower, +2);
+        UTEST_CHECK_EQUAL(upper, +3);
+    }
+}
+
 UTEST_CASE(make_equidistant_ratios)
 {
     {

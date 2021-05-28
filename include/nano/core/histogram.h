@@ -11,6 +11,7 @@ namespace nano
     inline tensor_mem_t<scalar_t, 1> make_equidistant_percentiles(tensor_size_t bins)
     {
         assert(bins > 1);
+
         const auto delta = 100.0 / static_cast<scalar_t>(bins);
 
         tensor_mem_t<scalar_t, 1> percentiles(bins - 1);
@@ -24,11 +25,28 @@ namespace nano
     inline tensor_mem_t<scalar_t, 1> make_equidistant_ratios(tensor_size_t bins)
     {
         assert(bins > 1);
+
         const auto delta = 1.0 / static_cast<scalar_t>(bins);
 
         tensor_mem_t<scalar_t, 1> ratios(bins - 1);
         ratios.lin_spaced(delta, 1.0 - delta);
         return ratios;
+    }
+
+    ///
+    /// \brief return the lower and the upper bounds of the exponent so that:
+    ///     base^lower <= |value| < base^upper.
+    ///
+    inline auto exponent_bounds(scalar_t value, scalar_t base)
+    {
+        assert(base > 1.0);
+
+        const auto log_value = std::log(std::fabs(value)) / std::log(base);
+
+        const auto lower = static_cast<int>(std::floor(log_value));
+        const auto upper = std::max(static_cast<int>(std::ceil(log_value)), lower + 1);
+
+        return std::make_tuple(lower, upper);
     }
 
     ///
@@ -134,6 +152,23 @@ namespace nano
             {
                 thresholds(i) = min + ratios(i) * delta;
             }
+
+            return histogram_t(begin, end, thresholds);
+        }
+
+        template <typename titerator>
+        static histogram_t make_from_powers(
+            titerator begin, titerator end, scalar_t base)
+        {
+            std::sort(begin, end);
+
+            assert(std::distance(begin, end) > 0);
+            assert(base > 1.0);
+
+            tensor_mem_t<scalar_t, 1> thresholds;
+
+            // TODO
+
 
             return histogram_t(begin, end, thresholds);
         }

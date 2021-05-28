@@ -8,8 +8,8 @@ namespace nano
     /// \brief interface for element-wise feature generators.
     ///
     ///     new features are generated as a function of:
-    ///         * original feature,
-    ///         * component index of the original feature.
+    ///         * the original feature and
+    ///         * the component index of the original feature.
     ///
     class NANO_PUBLIC base_elemwise_generator_t : public generator_t
     {

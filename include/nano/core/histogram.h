@@ -32,7 +32,16 @@ namespace nano
     }
 
     ///
-    /// \brief
+    /// \brief histogram utility for scalar values.
+    ///
+    /// the bins can be initialized:
+    ///     - from equidistant or user-defined [0, 1] ratios of the [min, max] range of values or
+    ///     - from equidistant or user-defined [0, 100] percentiles or
+    ///     - from user-defined scalar thresholds in the [min, max] range of values.
+    ///
+    /// the following values are made available for each bin:
+    ///     - the number of samples and
+    ///     - the mean and the median of the values falling in the bin.
     ///
     class histogram_t
     {
@@ -101,7 +110,7 @@ namespace nano
 
         template <typename titerator>
         static histogram_t make_from_ratios(
-            titerator begin, titerator end, const tensor_mem_t<scalar_t, 1>& ratios)
+            titerator begin, titerator end, tensor_mem_t<scalar_t, 1> ratios)
         {
             std::sort(begin, end);
             std::sort(::nano::begin(ratios), ::nano::end(ratios));
@@ -112,13 +121,13 @@ namespace nano
             assert(ratios(ratios.size() - 1) < 1.0);
 
             auto min = static_cast<scalar_t>(*begin);
-            auto max = static_cast<scalar_t>(*end);
+            auto max = static_cast<scalar_t>(*--end); ++ end;
             if (max < min + std::numeric_limits<scalar_t>::epsilon())
             {
                 min -= std::numeric_limits<scalar_t>::epsilon();
                 max += std::numeric_limits<scalar_t>::epsilon();
             }
-            const auto delta = 1.0 / (max - min);
+            const auto delta = (max - min);
 
             tensor_mem_t<scalar_t, 1> thresholds(ratios.size());
             for (tensor_size_t i = 0; i < thresholds.size(); ++ i)

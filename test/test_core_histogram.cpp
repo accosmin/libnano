@@ -59,6 +59,55 @@ UTEST_CASE(default_histogram)
     UTEST_CHECK_EQUAL(histogram.bins(), 0);
 }
 
+UTEST_CASE(histogram_from_ratios)
+{
+    {
+        auto data = make_tensor<scalar_t>(make_dims(11), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+        const auto ratios = make_tensor<scalar_t>(make_dims(3), 0.15, 0.55, 0.85);
+        const auto histogram = histogram_t::make_from_ratios(begin(data), end(data), ratios);
+
+        const auto expected_means = make_tensor<scalar_t>(make_dims(4), 0.5, 3.5, 7.0, 9.5);
+        const auto expected_counts = make_tensor<tensor_size_t>(make_dims(4), 2, 4, 3, 2);
+        const auto expected_medians = make_tensor<scalar_t>(make_dims(4), 0.5, 3.5, 7.0, 9.5);
+        const auto expected_thresholds = make_tensor<scalar_t>(make_dims(3), 1.5, 5.5, 8.5);
+
+        UTEST_CHECK_EQUAL(histogram.bins(), 4);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.means(), expected_means, 1e-12);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.counts(), expected_counts, 1e-12);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.medians(), expected_medians, 1e-12);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.thresholds(), expected_thresholds, 1e-12);
+    }
+    {
+
+        auto data = make_tensor<scalar_t>(make_dims(11), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+        const auto ratios = 4;
+        const auto histogram = histogram_t::make_from_ratios(begin(data), end(data), ratios);
+
+        const auto expected_means = make_tensor<scalar_t>(make_dims(4), 1.0, 4.0, 6.5, 9.0);
+        const auto expected_counts = make_tensor<tensor_size_t>(make_dims(4), 3, 3, 2, 3);
+        const auto expected_medians = make_tensor<scalar_t>(make_dims(4), 1.0, 4.0, 6.5, 9.0);
+        const auto expected_thresholds = make_tensor<scalar_t>(make_dims(3), 2.5, 5.0, 7.5);
+
+        UTEST_CHECK_EQUAL(histogram.bins(), 4);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.means(), expected_means, 1e-12);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.counts(), expected_counts, 1e-12);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.medians(), expected_medians, 1e-12);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.thresholds(), expected_thresholds, 1e-12);
+
+        UTEST_CHECK_EQUAL(histogram.bin(-1), 0);
+        UTEST_CHECK_EQUAL(histogram.bin(+0), 0);
+        UTEST_CHECK_EQUAL(histogram.bin(+2), 0);
+        UTEST_CHECK_EQUAL(histogram.bin(+3), 1);
+        UTEST_CHECK_EQUAL(histogram.bin(+4), 1);
+        UTEST_CHECK_EQUAL(histogram.bin(+6), 2);
+        UTEST_CHECK_EQUAL(histogram.bin(+7), 2);
+        UTEST_CHECK_EQUAL(histogram.bin(+8), 3);
+        UTEST_CHECK_EQUAL(histogram.bin(+9), 3);
+        UTEST_CHECK_EQUAL(histogram.bin(+10), 3);
+        UTEST_CHECK_EQUAL(histogram.bin(+11), 3);
+    }
+}
+
 UTEST_CASE(histogram_from_thresholds)
 {
     {
@@ -91,6 +140,75 @@ UTEST_CASE(histogram_from_thresholds)
         UTEST_CHECK_EQUAL(histogram.bin(+8), 2);
         UTEST_CHECK_EQUAL(histogram.bin(+9), 2);
         UTEST_CHECK_EQUAL(histogram.bin(+10), 2);
+    }
+    {
+
+        auto data = make_tensor<scalar_t>(make_dims(10), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+        const auto thresholds = make_tensor<scalar_t>(make_dims(1), 5.3);
+        const auto histogram = histogram_t::make_from_thresholds(begin(data), end(data), thresholds);
+
+        const auto expected_means = make_tensor<scalar_t>(make_dims(2), 2.5, 7.5);
+        const auto expected_counts = make_tensor<tensor_size_t>(make_dims(2), 6, 4);
+        const auto expected_medians = make_tensor<scalar_t>(make_dims(2), 2.5, 7.5);
+        const auto expected_thresholds = make_tensor<scalar_t>(make_dims(1), 5.3);
+
+        UTEST_CHECK_EQUAL(histogram.bins(), 2);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.means(), expected_means, 1e-12);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.counts(), expected_counts, 1e-12);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.medians(), expected_medians, 1e-12);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.thresholds(), expected_thresholds, 1e-12);
+
+        UTEST_CHECK_CLOSE(histogram.mean(0), 2.5, 1e-12);
+        UTEST_CHECK_EQUAL(histogram.count(0), 6);
+        UTEST_CHECK_CLOSE(histogram.median(0), 2.5, 1e-12);
+
+        UTEST_CHECK_EQUAL(histogram.bin(-1), 0);
+        UTEST_CHECK_EQUAL(histogram.bin(+0), 0);
+        UTEST_CHECK_EQUAL(histogram.bin(+2), 0);
+        UTEST_CHECK_EQUAL(histogram.bin(+3), 0);
+        UTEST_CHECK_EQUAL(histogram.bin(+4), 0);
+        UTEST_CHECK_EQUAL(histogram.bin(+6), 1);
+        UTEST_CHECK_EQUAL(histogram.bin(+7), 1);
+        UTEST_CHECK_EQUAL(histogram.bin(+8), 1);
+        UTEST_CHECK_EQUAL(histogram.bin(+9), 1);
+        UTEST_CHECK_EQUAL(histogram.bin(+10), 1);
+    }
+}
+
+UTEST_CASE(histogram_from_percentiles)
+{
+    {
+        auto data = make_tensor<scalar_t>(make_dims(11), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+        const auto percentiles = make_tensor<scalar_t>(make_dims(3), 15.0, 55.0, 85.0);
+        const auto histogram = histogram_t::make_from_percentiles(begin(data), end(data), percentiles);
+
+        const auto expected_means = make_tensor<scalar_t>(make_dims(4), 0.5, 3.5, 7.0, 9.5);
+        const auto expected_counts = make_tensor<tensor_size_t>(make_dims(4), 2, 4, 3, 2);
+        const auto expected_medians = make_tensor<scalar_t>(make_dims(4), 0.5, 3.5, 7.0, 9.5);
+        const auto expected_thresholds = make_tensor<scalar_t>(make_dims(3), 1.5, 5.5, 8.5);
+
+        UTEST_CHECK_EQUAL(histogram.bins(), 4);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.means(), expected_means, 1e-12);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.counts(), expected_counts, 1e-12);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.medians(), expected_medians, 1e-12);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.thresholds(), expected_thresholds, 1e-12);
+    }
+    {
+
+        auto data = make_tensor<scalar_t>(make_dims(11), 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+        const auto percentiles = 4;
+        const auto histogram = histogram_t::make_from_percentiles(begin(data), end(data), percentiles);
+
+        const auto expected_means = make_tensor<scalar_t>(make_dims(4), 1.0, 4.0, 6.5, 9.0);
+        const auto expected_counts = make_tensor<tensor_size_t>(make_dims(4), 3, 3, 2, 3);
+        const auto expected_medians = make_tensor<scalar_t>(make_dims(4), 1.0, 4.0, 6.5, 9.0);
+        const auto expected_thresholds = make_tensor<scalar_t>(make_dims(3), 2.5, 5.0, 7.5);
+
+        UTEST_CHECK_EQUAL(histogram.bins(), 4);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.means(), expected_means, 1e-12);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.counts(), expected_counts, 1e-12);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.medians(), expected_medians, 1e-12);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.thresholds(), expected_thresholds, 1e-12);
     }
 }
 

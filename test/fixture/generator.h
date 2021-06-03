@@ -18,7 +18,7 @@ static auto make_samples(const dataset_generator_t& generator)
 }
 
 template <template <typename, size_t> class tstorage, typename tscalar, size_t trank>
-static void check_select0(const dataset_generator_t& generator,
+[[maybe_unused]] static void check_select0(const dataset_generator_t& generator,
     indices_cmap_t samples, tensor_size_t feature, const tensor_t<tstorage, tscalar, trank>& expected)
 {
     tensor_t<tstorage, tscalar, trank> buffer;
@@ -58,7 +58,7 @@ static void check_select0(const dataset_generator_t& generator,
     UTEST_CHECK_TENSOR_CLOSE(storage, expected.indexed(samples), 1e-12);
 }
 
-static void check_select(const dataset_generator_t& generator, tensor_size_t feature, const sclass_mem_t& expected)
+[[maybe_unused]] static void check_select(const dataset_generator_t& generator, tensor_size_t feature, const sclass_mem_t& expected)
 {
     mclass_mem_t mclass_buffer;
     scalar_mem_t scalar_buffer;
@@ -73,7 +73,7 @@ static void check_select(const dataset_generator_t& generator, tensor_size_t fea
     }
 }
 
-static void check_select(const dataset_generator_t& generator, tensor_size_t feature, const mclass_mem_t& expected)
+[[maybe_unused]] static void check_select(const dataset_generator_t& generator, tensor_size_t feature, const mclass_mem_t& expected)
 {
     sclass_mem_t sclass_buffer;
     scalar_mem_t scalar_buffer;
@@ -88,7 +88,7 @@ static void check_select(const dataset_generator_t& generator, tensor_size_t fea
     }
 }
 
-static void check_select(const dataset_generator_t& generator, tensor_size_t feature, const scalar_mem_t& expected)
+[[maybe_unused]] static void check_select(const dataset_generator_t& generator, tensor_size_t feature, const scalar_mem_t& expected)
 {
     sclass_mem_t sclass_buffer;
     mclass_mem_t mclass_buffer;
@@ -103,7 +103,7 @@ static void check_select(const dataset_generator_t& generator, tensor_size_t fea
     }
 }
 
-static void check_select(const dataset_generator_t& generator, tensor_size_t feature, const struct_mem_t& expected)
+[[maybe_unused]] static void check_select(const dataset_generator_t& generator, tensor_size_t feature, const struct_mem_t& expected)
 {
     sclass_mem_t sclass_buffer;
     mclass_mem_t mclass_buffer;
@@ -155,7 +155,7 @@ static void check_select_stats(const dataset_generator_t& generator,
     }
 }
 
-static void check_flatten_stats0(const dataset_generator_t& generator,
+[[maybe_unused]] static void check_flatten_stats0(const dataset_generator_t& generator,
     tensor_size_t expected_samples,
     const tensor1d_t& expected_min, const tensor1d_t& expected_max,
     const tensor1d_t& expected_mean, const tensor1d_t& expected_stdev, scalar_t eps = 1e-12)
@@ -173,7 +173,7 @@ static void check_flatten_stats0(const dataset_generator_t& generator,
     }
 }
 
-static void check_flatten_stats(const dataset_generator_t& generator,
+[[maybe_unused]] static void check_flatten_stats(const dataset_generator_t& generator,
     tensor_size_t expected_samples,
     const tensor1d_t& expected_min, const tensor1d_t& expected_max,
     const tensor1d_t& expected_mean, const tensor1d_t& expected_stdev)
@@ -190,7 +190,7 @@ static void check_flatten_stats(const dataset_generator_t& generator,
     check_flatten_stats0(generator, expected_samples, expected_min, expected_max, expected_mean, expected_stdev);
 }
 
-static void check_targets(const dataset_generator_t& generator,
+[[maybe_unused]] static void check_targets(const dataset_generator_t& generator,
     const feature_t& expected_target, tensor3d_dims_t expected_target_dims,
     const tensor4d_t& expected_targets, scalar_t eps = 1e-12)
 {
@@ -204,7 +204,7 @@ static void check_targets(const dataset_generator_t& generator,
     UTEST_CHECK_TENSOR_CLOSE(targets_cmap, expected_targets, eps);
 }
 
-static void check_targets_sclass_stats(const dataset_generator_t& generator,
+[[maybe_unused]] static void check_targets_sclass_stats(const dataset_generator_t& generator,
     const indices_t& expected_class_counts,
     const tensor1d_t& expected_sample_weights, scalar_t eps = 1e-12)
 {
@@ -225,7 +225,7 @@ static void check_targets_sclass_stats(const dataset_generator_t& generator,
     }
 }
 
-static void check_targets_mclass_stats(const dataset_generator_t& generator,
+[[maybe_unused]] static void check_targets_mclass_stats(const dataset_generator_t& generator,
     const indices_t& expected_class_counts,
     const tensor1d_t& expected_sample_weights, scalar_t eps = 1e-12)
 {
@@ -246,7 +246,7 @@ static void check_targets_mclass_stats(const dataset_generator_t& generator,
     }
 }
 
-static void check_targets_scalar_stats(const dataset_generator_t& generator,
+[[maybe_unused]] static void check_targets_scalar_stats(const dataset_generator_t& generator,
     tensor_size_t expected_samples,
     const tensor1d_t& expected_min, const tensor1d_t& expected_max,
     const tensor1d_t& expected_mean, const tensor1d_t& expected_stdev, scalar_t eps = 1e-12)

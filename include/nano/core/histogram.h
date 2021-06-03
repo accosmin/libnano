@@ -1,5 +1,6 @@
 #pragma once
 
+#include <set>
 #include <nano/tensor.h>
 #include <nano/core/percentile.h>
 
@@ -31,22 +32,6 @@ namespace nano
         tensor_mem_t<scalar_t, 1> ratios(bins - 1);
         ratios.lin_spaced(delta, 1.0 - delta);
         return ratios;
-    }
-
-    ///
-    /// \brief return the lower and the upper bounds of the exponent so that:
-    ///     base^lower <= |value| < base^upper.
-    ///
-    inline auto exponent_bounds(scalar_t value, scalar_t base)
-    {
-        assert(base > 1.0);
-
-        const auto log_value = std::log(std::fabs(value)) / std::log(base);
-
-        const auto lower = static_cast<int>(std::floor(log_value));
-        const auto upper = std::max(static_cast<int>(std::ceil(log_value)), lower + 1);
-
-        return std::make_tuple(lower, upper);
     }
 
     ///
@@ -85,15 +70,13 @@ namespace nano
         }
 
         template <typename titerator>
-        static histogram_t make_from_percentiles(
-            titerator begin, titerator end, tensor_size_t bins)
+        static histogram_t make_from_percentiles(titerator begin, titerator end, tensor_size_t bins)
         {
             return make_from_percentiles(begin, end, make_equidistant_percentiles(bins));
         }
 
         template <typename titerator>
-        static histogram_t make_from_percentiles(
-            titerator begin, titerator end, tensor_mem_t<scalar_t, 1> percentiles)
+        static histogram_t make_from_percentiles(titerator begin, titerator end, tensor_mem_t<scalar_t, 1> percentiles)
         {
             std::sort(begin, end);
             std::sort(::nano::begin(percentiles), ::nano::end(percentiles));
@@ -113,22 +96,19 @@ namespace nano
         }
 
         template <typename titerator>
-        static histogram_t make_from_thresholds(
-            titerator begin, titerator end, const tensor_mem_t<scalar_t, 1>& thresholds)
+        static histogram_t make_from_thresholds(titerator begin, titerator end, tensor_mem_t<scalar_t, 1> thresholds)
         {
-            return histogram_t(begin, end, thresholds);
+            return histogram_t(begin, end, std::move(thresholds));
         }
 
         template <typename titerator>
-        static histogram_t make_from_ratios(
-            titerator begin, titerator end, tensor_size_t bins)
+        static histogram_t make_from_ratios(titerator begin, titerator end, tensor_size_t bins)
         {
             return make_from_ratios(begin, end, make_equidistant_ratios(bins));
         }
 
         template <typename titerator>
-        static histogram_t make_from_ratios(
-            titerator begin, titerator end, tensor_mem_t<scalar_t, 1> ratios)
+        static histogram_t make_from_ratios(titerator begin, titerator end, tensor_mem_t<scalar_t, 1> ratios)
         {
             std::sort(begin, end);
             std::sort(::nano::begin(ratios), ::nano::end(ratios));
@@ -157,18 +137,58 @@ namespace nano
         }
 
         template <typename titerator>
-        static histogram_t make_from_powers(
-            titerator begin, titerator end, scalar_t base)
+        static histogram_t make_from_exponents(titerator begin, titerator end, scalar_t base,
+            scalar_t epsilon = std::numeric_limits<scalar_t>::epsilon())
         {
             std::sort(begin, end);
 
             assert(std::distance(begin, end) > 0);
             assert(base > 1.0);
+            assert(epsilon > 0.0);
 
-            tensor_mem_t<scalar_t, 1> thresholds;
+            const auto get_exponent = [=] (scalar_t value)
+            {
+                const auto log_value = std::log(std::fabs(value)) / std::log(base);
+                return static_cast<int>(std::floor(log_value));
+            };
 
-            // TODO
+            const auto neg_max = -epsilon;
+            const auto pos_min = +epsilon;
 
+            std::set<int> neg_exponents, pos_exponents;
+            for (auto it = begin; it != end; ++ it)
+            {
+                const auto value = static_cast<scalar_t>(*it);
+                if (value >= pos_min)
+                {
+                    pos_exponents.insert(get_exponent(value));
+                }
+                else if (value >= 0.0)
+                {
+                    pos_exponents.insert(get_exponent(pos_min));
+                }
+                else if (value <= neg_max)
+                {
+                    neg_exponents.insert(get_exponent(value));
+                }
+                else
+                {
+                    neg_exponents.insert(get_exponent(neg_max));
+                }
+            }
+
+            tensor_mem_t<scalar_t, 1> thresholds(static_cast<tensor_size_t>(
+                neg_exponents.size() + pos_exponents.size()));
+
+            tensor_size_t i = 0;
+            for (auto itexp = neg_exponents.rbegin(); itexp != neg_exponents.rend(); ++ itexp, ++ i)
+            {
+                thresholds(i) = -std::pow(base, static_cast<scalar_t>(*itexp));
+            }
+            for (auto itexp = pos_exponents.begin(); itexp != pos_exponents.end(); ++ itexp, ++ i)
+            {
+                thresholds(i) = +std::pow(base, static_cast<scalar_t>(*itexp));
+            }
 
             return histogram_t(begin, end, thresholds);
         }
@@ -221,7 +241,8 @@ namespace nano
             {
                 if (bin + 1 < bins)
                 {
-                    const auto it = std::upper_bound(begin, end, m_thresholds(bin));
+                    const auto op = [] (scalar_t threshold, scalar_t value) { return value >= threshold; };
+                    const auto it = std::upper_bound(begin, end, m_thresholds(bin), op);
                     update_bin(begin, it, bin);
                     begin = it;
                 }
@@ -240,8 +261,7 @@ namespace nano
             m_bin_counts(bin) = count;
             if (count > 0)
             {
-                const auto accumulator = [] (scalar_t acc, auto value) { return acc + static_cast<scalar_t>(value); };
-                m_bin_means(bin) = std::accumulate(begin, end, 0.0, accumulator) / static_cast<scalar_t>(count);
+                m_bin_means(bin) = mean(begin, end, count);
                 m_bin_medians(bin) = median_sorted(begin, end);
             }
             else
@@ -249,6 +269,16 @@ namespace nano
                 m_bin_means(bin) = std::numeric_limits<scalar_t>::quiet_NaN();
                 m_bin_medians(bin) = std::numeric_limits<scalar_t>::quiet_NaN();
             }
+        }
+
+        template <typename titerator>
+        static scalar_t mean(titerator begin, titerator end, tensor_size_t count)
+        {
+            const auto accumulator = [] (scalar_t acc, auto value)
+            {
+                return acc + static_cast<scalar_t>(value);
+            };
+            return std::accumulate(begin, end, 0.0, accumulator) / static_cast<scalar_t>(count);
         }
 
         // attributes

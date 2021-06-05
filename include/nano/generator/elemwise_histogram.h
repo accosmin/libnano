@@ -7,62 +7,21 @@
 namespace nano
 {
     ///
-    /// \brief
+    /// \brief generate features by (histogram) binning the original feature values independently.
     ///
-    class histogram_medians_t : public base_elemwise_generator_t
+    /// the resulting feature value is the median of the bin the original feature value belongs to.
+    ///
+    class NANO_PUBLIC histogram_medians_t : public base_elemwise_generator_t
     {
     public:
 
         static constexpr auto input_rank = 4U;
         static constexpr auto generated_type = generator_type::scalar;
 
-        histogram_medians_t(const memory_dataset_t& dataset, struct2scalar s2s = struct2scalar::off) :
-            base_elemwise_generator_t(dataset),
-            m_s2s(s2s)
-        {
-        }
+        histogram_medians_t(const memory_dataset_t& dataset, struct2scalar s2s = struct2scalar::off);
 
-        feature_mapping_t do_fit(indices_cmap_t samples, execution) override
-        {
-            const auto mapping = select_scalar(dataset(), m_s2s);
-
-            m_histograms.clear();
-
-            for (tensor_size_t ifeature = 0; ifeature < mapping.size<0>(); ++ ifeature)
-            {
-                const auto original = mapping(ifeature, 0);
-                const auto component = std::max(mapping(ifeature, 1), tensor_size_t{0});
-
-                std::vector<scalar_t> allvalues;
-                dataset().visit_inputs(original, [&] (const auto&, const auto& data, const auto& mask)
-                {
-                    loop_samples<input_rank>(data, mask, samples, [&] (auto it)
-                    {
-                        for (; it; ++ it)
-                        {
-                            if (const auto [index, given, values] = *it; given)
-                            {
-                                allvalues.push_back(static_cast<scalar_t>(values(component)));
-                            }
-                        }
-                    });
-                });
-
-                m_histograms.push_back(make_histogram(allvalues));
-            }
-
-            return mapping;
-        }
-
-        feature_t feature(tensor_size_t ifeature) const override
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            const auto original = mapped_original(ifeature);
-            const auto component = mapped_component(ifeature);
-
-            const auto& feature = dataset().feature(original);
-            return feature_t{scat(suffix(), "(", feature.name(), "[", component, "])")}.scalar(feature_type::float64);
-        }
+        feature_t feature(tensor_size_t ifeature) const override;
+        feature_mapping_t do_fit(indices_cmap_t samples, execution) override;
 
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
         void do_select(dataset_iterator_t<tscalar, input_rank> it, tensor_size_t ifeature, scalar_map_t storage) const
@@ -117,7 +76,7 @@ namespace nano
         virtual string_t suffix() const = 0;
         virtual histogram_t make_histogram(std::vector<scalar_t>& values) const = 0;
 
-    private:
+   private:
 
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
         static scalar_t make_value(const histogram_t& histogram, tscalar value)
@@ -133,7 +92,7 @@ namespace nano
     };
 
     ///
-    /// \brief
+    /// \brief construct histograms using equidistant ratios of the original feature values.
     ///
     class ratio_histogram_medians_t : public histogram_medians_t
     {
@@ -163,7 +122,7 @@ namespace nano
     };
 
     ///
-    /// \brief
+    /// \brief construct histograms using equidistant percentiles of the original feature values.
     ///
     class percentile_histogram_medians_t : public histogram_medians_t
     {

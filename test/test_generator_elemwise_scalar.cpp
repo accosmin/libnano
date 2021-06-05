@@ -64,39 +64,6 @@ public:
         }
     }
 
-    static auto expected_select0()
-    {
-        return make_tensor<int8_t>(make_dims(10, 3),
-            0, 1, 1, -1, -1, -1, -1, -1, -1,
-            1, 0, 0, -1, -1, -1, -1, -1, -1,
-            0, 1, 1, -1, -1, -1, -1, -1, -1,
-            1, 0, 0);
-    }
-    static auto expected_select1()
-    {
-        return make_tensor<int32_t>(make_dims(10),
-            0, 1, 1, 0, 1, 1, 0, 1, 1, 0);
-    }
-    static auto expected_select2()
-    {
-        return make_tensor<scalar_t>(make_dims(10),
-            0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-    }
-    static auto expected_select3()
-    {
-        return make_tensor<scalar_t>(make_dims(10, 2, 1, 2),
-            1.0, 0.0, 0.0, 0.0, NaN, NaN, NaN, NaN,
-            3.0, 2.0, 2.0, 2.0, NaN, NaN, NaN, NaN,
-            5.0, 4.0, 4.0, 4.0, NaN, NaN, NaN, NaN,
-            7.0, 6.0, 6.0, 6.0, NaN, NaN, NaN, NaN,
-            9.0, 8.0, 8.0, 8.0, NaN, NaN, NaN, NaN);
-    }
-    static auto expected_select4()
-    {
-        return make_tensor<scalar_t>(make_dims(10),
-            1, 0, -1, -2, -3, -4, -5, -6, -7, -8);
-    }
-
 private:
 
     tensor_size_t   m_samples{0};
@@ -112,7 +79,7 @@ static auto make_dataset(tensor_size_t samples, size_t target)
     return dataset;
 }
 
-UTEST_BEGIN_MODULE(test_dataset_generator)
+UTEST_BEGIN_MODULE(test_generator_elemwise_scalar)
 
 UTEST_CASE(empty)
 {

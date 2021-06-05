@@ -37,6 +37,7 @@ make_test(test_mlearn_elemwise NANO::nano)
 make_test(test_generator_util NANO::nano)
 make_test(test_generator_elemwise_scalar NANO::nano)
 make_test(test_generator_elemwise_identity NANO::nano)
+make_test(test_generator_elemwise_histogram NANO::nano)
 make_test(test_generator_pairwise_scalar NANO::nano)
 
 make_test(test_dataset_mask NANO::nano)

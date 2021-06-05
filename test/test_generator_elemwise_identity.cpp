@@ -112,7 +112,7 @@ static auto make_dataset(tensor_size_t samples, size_t target)
     return dataset;
 }
 
-UTEST_BEGIN_MODULE(test_dataset_generator)
+UTEST_BEGIN_MODULE(test_generator_elemwise_identity)
 
 UTEST_CASE(empty)
 {

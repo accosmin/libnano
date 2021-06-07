@@ -16,15 +16,19 @@ namespace nano
         static constexpr auto input_rank = 4U;
         static constexpr auto generated_type = generator_type::scalar;
 
-        elemwise_scalar2scalar_t(const memory_dataset_t& dataset, struct2scalar s2s = struct2scalar::off) :
+        elemwise_scalar2scalar_t(
+            const memory_dataset_t& dataset,
+            struct2scalar s2s = struct2scalar::off,
+            const indices_t& original_features = indices_t{}) :
             base_elemwise_generator_t(dataset),
-            m_s2s(s2s)
+            m_s2s(s2s),
+            m_original_features(original_features)
         {
         }
 
         feature_mapping_t do_fit(indices_cmap_t, execution) override
         {
-            return select_scalar(dataset(), m_s2s);
+            return select_scalar(dataset(), m_s2s, m_original_features);
         }
 
         feature_t feature(tensor_size_t ifeature) const override
@@ -79,7 +83,8 @@ namespace nano
     private:
 
         // attributes
-        struct2scalar       m_s2s{struct2scalar::off};  ///<
+        struct2scalar   m_s2s{struct2scalar::off};  ///<
+        indices_t       m_original_features;        ///<
     };
 
     class slog1p_t

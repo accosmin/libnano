@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nano/generator.h>
+#include <nano/generator/util.h>
 
 namespace nano
 {
@@ -95,6 +96,12 @@ namespace nano
         }
 
         virtual feature_mapping_t do_fit(indices_cmap_t samples, execution ex) = 0;
+
+    protected:
+
+        static feature_mapping_t make_pairwise(const feature_mapping_t& mapping);
+        feature_t make_scalar_feature(tensor_size_t ifeature, const char* name) const;
+        feature_t make_sclass_feature(tensor_size_t ifeature, const char* name, strings_t labels) const;
 
     private:
 

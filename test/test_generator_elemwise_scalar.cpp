@@ -1,6 +1,7 @@
 #include <utest/utest.h>
 #include "fixture/generator.h"
-#include <nano/generator/elemwise_scalar.h>
+#include <nano/generator/elemwise_scalar2scalar.h>
+#include <nano/generator/elemwise_scalar2sclass.h>
 
 using namespace nano;
 
@@ -95,7 +96,7 @@ UTEST_CASE(unsupervised_slog1p)
     const auto dataset = make_dataset(10, string_t::npos);
 
     auto generator = dataset_generator_t{dataset};
-    generator.add<elemwise_generator_t<scalar2scalar_t<slog1p_t>>>(struct2scalar::off);
+    generator.add<elemwise_generator_t<elemwise_scalar2scalar_t<slog1p_t>>>(struct2scalar::off);
     generator.fit(arange(0, 10), execution::par);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 2);
@@ -129,7 +130,7 @@ UTEST_CASE(unsupervised_sign)
     const auto dataset = make_dataset(10, string_t::npos);
 
     auto generator = dataset_generator_t{dataset};
-    generator.add<elemwise_generator_t<scalar2scalar_t<sign_t>>>(struct2scalar::on);
+    generator.add<elemwise_generator_t<elemwise_scalar2scalar_t<sign_t>>>(struct2scalar::on);
     generator.fit(arange(0, 10), execution::par);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 6);
@@ -167,7 +168,7 @@ UTEST_CASE(unsupervised_sign_class)
     const auto dataset = make_dataset(10, string_t::npos);
 
     auto generator = dataset_generator_t{dataset};
-    generator.add<elemwise_generator_t<scalar2sclass_t<sign_class_t>>>(struct2scalar::on);
+    generator.add<elemwise_generator_t<elemwise_scalar2sclass_t<sign_class_t>>>(struct2scalar::on);
     generator.fit(arange(0, 10), execution::par);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 6);

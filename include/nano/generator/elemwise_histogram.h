@@ -1,7 +1,6 @@
 #pragma once
 
 #include <nano/core/histogram.h>
-#include <nano/generator/util.h>
 #include <nano/generator/elemwise.h>
 
 namespace nano

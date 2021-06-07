@@ -1,6 +1,7 @@
 #include <utest/utest.h>
 #include "fixture/generator.h"
-#include <nano/generator/pairwise_scalar.h>
+#include <nano/generator/pairwise_scalar2scalar.h>
+#include <nano/generator/pairwise_scalar2sclass.h>
 
 using namespace nano;
 
@@ -64,39 +65,6 @@ public:
         }
     }
 
-    static auto expected_select0()
-    {
-        return make_tensor<int8_t>(make_dims(10, 3),
-            0, 1, 1, -1, -1, -1, -1, -1, -1,
-            1, 0, 0, -1, -1, -1, -1, -1, -1,
-            0, 1, 1, -1, -1, -1, -1, -1, -1,
-            1, 0, 0);
-    }
-    static auto expected_select1()
-    {
-        return make_tensor<int32_t>(make_dims(10),
-            0, 1, 1, 0, 1, 1, 0, 1, 1, 0);
-    }
-    static auto expected_select2()
-    {
-        return make_tensor<scalar_t>(make_dims(10),
-            0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-    }
-    static auto expected_select3()
-    {
-        return make_tensor<scalar_t>(make_dims(10, 2, 1, 2),
-            1.0, 0.0, 0.0, 0.0, NaN, NaN, NaN, NaN,
-            3.0, 2.0, 2.0, 2.0, NaN, NaN, NaN, NaN,
-            5.0, 4.0, 4.0, 4.0, NaN, NaN, NaN, NaN,
-            7.0, 6.0, 6.0, 6.0, NaN, NaN, NaN, NaN,
-            9.0, 8.0, 8.0, 8.0, NaN, NaN, NaN, NaN);
-    }
-    static auto expected_select4()
-    {
-        return make_tensor<scalar_t>(make_dims(10),
-            1, 0, -1, -2, -3, -4, -5, -6, -7, -8);
-    }
-
 private:
 
     tensor_size_t   m_samples{0};
@@ -123,12 +91,12 @@ UTEST_CASE(empty)
     UTEST_CHECK_EQUAL(generator.features(), 0);
 }
 
-UTEST_CASE(unsupervised_quadratic_scalar)
+UTEST_CASE(unsupervised_product_scalar)
 {
     const auto dataset = make_dataset(10, string_t::npos);
 
     auto generator = dataset_generator_t{dataset};
-    generator.add<pairwise_generator_t<product_t>>(struct2scalar::off);
+    generator.add<pairwise_generator_t<pairwise_scalar2scalar_t<product_t>>>(struct2scalar::off);
     generator.fit(arange(0, 10), execution::par);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 3);
@@ -155,12 +123,44 @@ UTEST_CASE(unsupervised_quadratic_scalar)
         make_indices(0, 1, 2));
 }
 
-UTEST_CASE(unsupervised_quadratic_mixed)
+UTEST_CASE(unsupervised_product_sclass)
 {
     const auto dataset = make_dataset(10, string_t::npos);
 
     auto generator = dataset_generator_t{dataset};
-    generator.add<pairwise_generator_t<product_t>>(struct2scalar::on);
+    generator.add<pairwise_generator_t<pairwise_scalar2sclass_t<product_sign_class_t>>>(struct2scalar::off);
+    generator.fit(arange(0, 10), execution::par);
+
+    UTEST_REQUIRE_EQUAL(generator.features(), 3);
+    UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"product_sign_class(f32[0],f32[0])"}.sclass({"neg", "pos"}));
+    UTEST_CHECK_EQUAL(generator.feature(1), feature_t{"product_sign_class(f32[0],f64[0])"}.sclass({"neg", "pos"}));
+    UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"product_sign_class(f64[0],f64[0])"}.sclass({"neg", "pos"}));
+
+    check_select(generator, 0, make_tensor<int32_t>(make_dims(10), 1, 1, 1, 1, 1, 1, 1, 1, 1, 1));
+    check_select(generator, 1, make_tensor<int32_t>(make_dims(10), 1, 1, 0, 0, 0, 0, 0, 0, 0, 0));
+    check_select(generator, 2, make_tensor<int32_t>(make_dims(10), 1, 1, 1, 1, 1, 1, 1, 1, 1, 1));
+    check_select_stats(generator, make_indices(0, 1, 2), indices_t{}, indices_t{}, indices_t{});
+
+    check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 6),
+        -1, +1, -1, +1, -1, +1,
+        -1, +1, -1, +1, -1, +1,
+        -1, +1, +1, -1, -1, +1,
+        -1, +1, +1, -1, -1, +1,
+        -1, +1, +1, -1, -1, +1,
+        -1, +1, +1, -1, -1, +1,
+        -1, +1, +1, -1, -1, +1,
+        -1, +1, +1, -1, -1, +1,
+        -1, +1, +1, -1, -1, +1,
+        -1, +1, +1, -1, -1, +1),
+        make_indices(0, 0, 1, 1, 2, 2));
+}
+
+UTEST_CASE(unsupervised_product_mixed)
+{
+    const auto dataset = make_dataset(10, string_t::npos);
+
+    auto generator = dataset_generator_t{dataset};
+    generator.add<pairwise_generator_t<pairwise_scalar2scalar_t<product_t>>>(struct2scalar::on);
     generator.fit(arange(0, 10), execution::par);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 21);

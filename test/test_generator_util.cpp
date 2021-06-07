@@ -29,38 +29,6 @@ public:
     void load() override
     {
         resize(m_samples, m_features, m_target);
-
-        tensor_mem_t<tensor_size_t, 1> hits(3);
-        for (tensor_size_t sample = 0; sample < m_samples; sample += 3)
-        {
-            hits(0) = sample % 2;
-            hits(1) = 1 - (sample % 2);
-            hits(2) = (sample % 6) == 0;
-            set(sample, 0, hits);
-        }
-
-        for (tensor_size_t sample = 0; sample < m_samples; sample ++)
-        {
-            set(sample, 1, (sample % 3 == 0) ? 0 : 1);
-        }
-
-        for (tensor_size_t sample = 0; sample < m_samples; sample ++)
-        {
-            set(sample, 2, sample);
-        }
-
-        tensor_mem_t<tensor_size_t, 3> values(2, 1, 2);
-        for (tensor_size_t sample = 0; sample < m_samples; sample += 2)
-        {
-            values.full(sample);
-            values(0) = sample + 1;
-            set(sample, 3, values);
-        }
-
-        for (tensor_size_t sample = 0; sample < m_samples; sample ++)
-        {
-            set(sample, 4, 1 - sample);
-        }
     }
 
 private:
@@ -101,6 +69,16 @@ UTEST_CASE(select_scalar)
             4, -1, 0, 1, 1, 1);
         UTEST_CHECK_TENSOR_EQUAL(mapping, expected_mapping);
     }
+    {
+        const auto mapping = select_scalar(dataset, struct2scalar::on, make_indices(0, 1, 3, 4));
+        const auto expected_mapping = make_tensor<tensor_size_t>(make_dims(5, 6),
+            3, 0, 0, 2, 1, 2,
+            3, 1, 0, 2, 1, 2,
+            3, 2, 0, 2, 1, 2,
+            3, 3, 0, 2, 1, 2,
+            4, -1, 0, 1, 1, 1);
+        UTEST_CHECK_TENSOR_EQUAL(mapping, expected_mapping);
+    }
 }
 
 UTEST_CASE(for_each_struct)
@@ -110,6 +88,17 @@ UTEST_CASE(for_each_struct)
         const auto mapping = select_struct(dataset);
         const auto expected_mapping = make_tensor<tensor_size_t>(make_dims(1, 6),
             3, -1, 0, 2, 1, 2);
+        UTEST_CHECK_TENSOR_EQUAL(mapping, expected_mapping);
+    }
+    {
+        const auto mapping = select_struct(dataset, make_indices(2, 3, 4));
+        const auto expected_mapping = make_tensor<tensor_size_t>(make_dims(1, 6),
+            3, -1, 0, 2, 1, 2);
+        UTEST_CHECK_TENSOR_EQUAL(mapping, expected_mapping);
+    }
+    {
+        const auto mapping = select_struct(dataset, make_indices(2, 4));
+        const auto expected_mapping = feature_mapping_t{0, 6};
         UTEST_CHECK_TENSOR_EQUAL(mapping, expected_mapping);
     }
 }
@@ -130,6 +119,13 @@ UTEST_CASE(for_each_sclass)
             1, 1, 2, 1, 1, 1);
         UTEST_CHECK_TENSOR_EQUAL(mapping, expected_mapping);
     }
+    {
+        const auto mapping = select_sclass(dataset, sclass2binary::on, make_indices(0, 1, 2));
+        const auto expected_mapping = make_tensor<tensor_size_t>(make_dims(2, 6),
+            1, 0, 2, 1, 1, 1,
+            1, 1, 2, 1, 1, 1);
+        UTEST_CHECK_TENSOR_EQUAL(mapping, expected_mapping);
+    }
 }
 
 UTEST_CASE(for_each_mclass)
@@ -143,6 +139,14 @@ UTEST_CASE(for_each_mclass)
     }
     {
         const auto mapping = select_mclass(dataset, mclass2binary::on);
+        const auto expected_mapping = make_tensor<tensor_size_t>(make_dims(3, 6),
+            0, 0, 3, 1, 1, 1,
+            0, 1, 3, 1, 1, 1,
+            0, 2, 3, 1, 1, 1);
+        UTEST_CHECK_TENSOR_EQUAL(mapping, expected_mapping);
+    }
+    {
+        const auto mapping = select_mclass(dataset, mclass2binary::on, make_indices(0, 1, 2, 3, 4));
         const auto expected_mapping = make_tensor<tensor_size_t>(make_dims(3, 6),
             0, 0, 3, 1, 1, 1,
             0, 1, 3, 1, 1, 1,

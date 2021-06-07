@@ -1,6 +1,5 @@
 #pragma once
 
-#include <set>
 #include <nano/tensor.h>
 #include <nano/core/percentile.h>
 
@@ -152,42 +151,41 @@ namespace nano
                 return static_cast<int>(std::floor(log_value));
             };
 
-            const auto neg_max = -epsilon;
-            const auto pos_min = +epsilon;
+            int min_pos_exponent = std::numeric_limits<int>::max(), max_pos_exponent = std::numeric_limits<int>::min();
+            int min_neg_exponent = std::numeric_limits<int>::max(), max_neg_exponent = std::numeric_limits<int>::min();
 
-            std::set<int> neg_exponents, pos_exponents;
             for (auto it = begin; it != end; ++ it)
             {
                 const auto value = static_cast<scalar_t>(*it);
-                if (value >= pos_min)
+                if (value < 0.0)
                 {
-                    pos_exponents.insert(get_exponent(value));
-                }
-                else if (value >= 0.0)
-                {
-                    pos_exponents.insert(get_exponent(pos_min));
-                }
-                else if (value <= neg_max)
-                {
-                    neg_exponents.insert(get_exponent(value));
+                    const auto exponent = get_exponent(std::min(value, -epsilon));
+                    min_neg_exponent = std::min(min_neg_exponent, exponent);
+                    max_neg_exponent = std::max(max_neg_exponent, exponent);
                 }
                 else
                 {
-                    neg_exponents.insert(get_exponent(neg_max));
+                    const auto exponent = get_exponent(std::max(value, +epsilon));
+                    min_pos_exponent = std::min(min_pos_exponent, exponent);
+                    max_pos_exponent = std::max(max_pos_exponent, exponent);
                 }
             }
 
+            const auto has_pos = min_pos_exponent != std::numeric_limits<int>::max();
+            const auto has_neg = min_neg_exponent != std::numeric_limits<int>::max();
+
             tensor_mem_t<scalar_t, 1> thresholds(static_cast<tensor_size_t>(
-                neg_exponents.size() + pos_exponents.size()));
+                (has_pos ? (max_pos_exponent - min_pos_exponent + 1) : 0) +
+                (has_neg ? (max_neg_exponent - min_neg_exponent + 1) : 0)));
 
             tensor_size_t i = 0;
-            for (auto itexp = neg_exponents.rbegin(); itexp != neg_exponents.rend(); ++ itexp, ++ i)
+            for (auto exponent = max_neg_exponent; has_neg && exponent != min_neg_exponent - 1; -- exponent, ++ i)
             {
-                thresholds(i) = -std::pow(base, static_cast<scalar_t>(*itexp));
+                thresholds(i) = -std::pow(base, static_cast<scalar_t>(exponent));
             }
-            for (auto itexp = pos_exponents.begin(); itexp != pos_exponents.end(); ++ itexp, ++ i)
+            for (auto exponent = min_pos_exponent; has_pos && exponent != max_pos_exponent + 1; ++ exponent, ++ i)
             {
-                thresholds(i) = +std::pow(base, static_cast<scalar_t>(*itexp));
+                thresholds(i) = +std::pow(base, static_cast<scalar_t>(exponent));
             }
 
             return histogram_t(begin, end, thresholds);

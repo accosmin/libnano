@@ -219,21 +219,21 @@ UTEST_CASE(histogram_from_exponents)
     static constexpr auto NaN = std::numeric_limits<scalar_t>::quiet_NaN();
     {
         auto data = make_tensor<scalar_t>(make_dims(12),
-            2e-32, 3e-16, 2e-6, 3e-6, 5e-6, 2e-5, 3e-5, 1e+0, 2e+0, 3e+0, 3e+1, 4e+2);
+            2e-32, 3e-16, 2e-15, 3e-15, 5e-15, 2e-14, 3e-14, 1e-13, 2e-13, 3e-13, 3e-12, 4e-12);
         const auto base = 10.0;
         const auto epsilon = 1e-16;
         const auto histogram = histogram_t::make_from_exponents(begin(data), end(data), base, epsilon);
 
-        const auto expected_means = make_tensor<scalar_t>(make_dims(7),
-            2e-32, 3e-16, (10.0/3.0)*1e-6, 2.5e-5, 2e+0, 3e+1, 4e+2);
-        const auto expected_counts = make_tensor<tensor_size_t>(make_dims(7),
-            1, 1, 3, 2, 3, 1, 1);
-        const auto expected_medians = make_tensor<scalar_t>(make_dims(7),
-            2e-32, 3e-16, 3e-6, 2.5e-5, 2e+0, 3e+1, 4e+2);
-        const auto expected_thresholds = make_tensor<scalar_t>(make_dims(6),
-            1e-16, 1e-6, 1e-5, 1e+0, 1e+1, 1e+2);
+        const auto expected_means = make_tensor<scalar_t>(make_dims(6),
+            2e-32, 3e-16, (10.0/3.0)*1e-15, 2.5e-14, 2e-13, 3.5e-12);
+        const auto expected_counts = make_tensor<tensor_size_t>(make_dims(6),
+            1, 1, 3, 2, 3, 2);
+        const auto expected_medians = make_tensor<scalar_t>(make_dims(6),
+            2e-32, 3e-16, 3e-15, 2.5e-14, 2e-13, 3.5e-12);
+        const auto expected_thresholds = make_tensor<scalar_t>(make_dims(5),
+            1e-16, 1e-15, 1e-14, 1e-13, 1e-12);
 
-        UTEST_CHECK_EQUAL(histogram.bins(), 7);
+        UTEST_CHECK_EQUAL(histogram.bins(), 6);
         UTEST_CHECK_TENSOR_CLOSE(histogram.means(), expected_means, 1e-15);
         UTEST_CHECK_TENSOR_CLOSE(histogram.counts(), expected_counts, 1e-15);
         UTEST_CHECK_TENSOR_CLOSE(histogram.medians(), expected_medians, 1e-15);
@@ -246,42 +246,87 @@ UTEST_CASE(histogram_from_exponents)
         const auto epsilon = 1e-16;
         const auto histogram = histogram_t::make_from_exponents(begin(data), end(data), base, epsilon);
 
-        const auto expected_means = make_tensor<scalar_t>(make_dims(6),
-            NaN, 2e-6, 2e-5, 4e-4, (13.0/4.0)*1e-3, 1.5e+0);
-        const auto expected_counts = make_tensor<tensor_size_t>(make_dims(6),
-            0, 2, 2, 4, 4, 2);
-        const auto expected_medians = make_tensor<scalar_t>(make_dims(6),
-            NaN, 2e-6, 2e-5, 4e-4, 3.5*1e-3, 1.5e+0);
-        const auto expected_thresholds = make_tensor<scalar_t>(make_dims(5),
-            1e-6, 1e-5, 1e-4, 1e-3, 1e+0);
+        const auto expected_means = make_tensor<scalar_t>(make_dims(8),
+            NaN, 2e-6, 2e-5, 4e-4, (13.0/4.0)*1e-3, NaN, NaN, 1.5e+0);
+        const auto expected_counts = make_tensor<tensor_size_t>(make_dims(8),
+            0, 2, 2, 4, 4, 0, 0, 2);
+        const auto expected_medians = make_tensor<scalar_t>(make_dims(8),
+            NaN, 2e-6, 2e-5, 4e-4, 3.5*1e-3, NaN, NaN, 1.5e+0);
+        const auto expected_thresholds = make_tensor<scalar_t>(make_dims(7),
+            1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1e+0);
 
-        UTEST_CHECK_EQUAL(histogram.bins(), 6);
+        UTEST_CHECK_EQUAL(histogram.bins(), 8);
         UTEST_CHECK_TENSOR_CLOSE(histogram.means(), expected_means, 1e-15);
         UTEST_CHECK_TENSOR_CLOSE(histogram.counts(), expected_counts, 1e-15);
         UTEST_CHECK_TENSOR_CLOSE(histogram.medians(), expected_medians, 1e-15);
         UTEST_CHECK_TENSOR_CLOSE(histogram.thresholds(), expected_thresholds, 1e-15);
     }
     {
-        auto data = make_tensor<scalar_t>(make_dims(16),
-            -1e-1, -3e-2, -3e-2, -1e-2, -1e-18, -0.0, +0.0, 1e-18, 1e-1, 3e-1, 1e+0, 2e+0, 5e+0, 1e+1, 3e+1, 1e+2);
+        auto data = make_tensor<scalar_t>(make_dims(11),
+            -1e-1, -8e-2, -3e-2, -1e-2, -9e-3, -5e-3, -2e-3, -1e-3, -8e-4, -4e-4, -2e-4);
         const auto base = 10.0;
         const auto epsilon = 1e-16;
         const auto histogram = histogram_t::make_from_exponents(begin(data), end(data), base, epsilon);
 
-        const auto expected_means = make_tensor<scalar_t>(make_dims(9),
-            NaN, -16.0/3.0*1e-2, -1e-2, +0.0, NaN, 2e-1, 8.0/3.0*1e+0, 2e+1, 1e+2);
-        const auto expected_counts = make_tensor<tensor_size_t>(make_dims(9),
-            0, 3, 1, 4, 0, 2, 3, 2, 1);
-        const auto expected_medians = make_tensor<scalar_t>(make_dims(9),
-            NaN, -3e-2, -1e-2, +0.0, NaN, 2e-1, 2e+0, 2e+1, 1e+2);
-        const auto expected_thresholds = make_tensor<scalar_t>(make_dims(8),
-            -1e-1, -1e-2, -1e-16, +1e-16, +1e-1, +1e+0, +1e+1, +1e+2);
+        const auto expected_means = make_tensor<scalar_t>(make_dims(5),
+            NaN, -21.0/3.0*1e-2, -26.0/4.0*1e-3, -24.0/4.0*1e-4, NaN);
+        const auto expected_counts = make_tensor<tensor_size_t>(make_dims(5),
+            0, 3, 4, 4, 0);
+        const auto expected_medians = make_tensor<scalar_t>(make_dims(5),
+            NaN, -8.0*1e-2, -7.0*1e-3, -6.0*1e-4, NaN);
+        const auto expected_thresholds = make_tensor<scalar_t>(make_dims(4),
+            -1e-1, -1e-2, -1e-3, -1e-4);
 
-        UTEST_CHECK_EQUAL(histogram.bins(), 9);
+        UTEST_CHECK_EQUAL(histogram.bins(), 5);
         UTEST_CHECK_TENSOR_CLOSE(histogram.means(), expected_means, 1e-15);
         UTEST_CHECK_TENSOR_CLOSE(histogram.counts(), expected_counts, 1e-15);
         UTEST_CHECK_TENSOR_CLOSE(histogram.medians(), expected_medians, 1e-15);
         UTEST_CHECK_TENSOR_CLOSE(histogram.thresholds(), expected_thresholds, 1e-15);
+    }
+    {
+        auto data = make_tensor<scalar_t>(make_dims(12),
+            -2e-32, -3e-16, -2e-15, -3e-15, -5e-15, -2e-14, -3e-14, -1e-13, -2e-13, -3e-13, -3e-12, -4e-12);
+        const auto base = 10.0;
+        const auto epsilon = 1e-16;
+        const auto histogram = histogram_t::make_from_exponents(begin(data), end(data), base, epsilon);
+
+        const auto expected_means = make_tensor<scalar_t>(make_dims(6),
+            -3.5*1e-12, -2.5*1e-13, -15.0/3.0*1e-14, -10.0/3.0*1e-15, -3e-16, -2e-32);
+        const auto expected_counts = make_tensor<tensor_size_t>(make_dims(6),
+            2, 2, 3, 3, 1, 1);
+        const auto expected_medians = make_tensor<scalar_t>(make_dims(6),
+            -3.5*1e-12, -2.5*1e-13, -3.0*1e-14, -3.0*1e-15, -3e-16, -2e-32);
+        const auto expected_thresholds = make_tensor<scalar_t>(make_dims(5),
+            -1e-12, -1e-13, -1e-14, -1e-15, -1e-16);
+
+        UTEST_CHECK_EQUAL(histogram.bins(), 6);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.means(), expected_means, 1e-15);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.counts(), expected_counts, 1e-15);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.medians(), expected_medians, 1e-15);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.thresholds(), expected_thresholds, 1e-16);
+    }
+    {
+        auto data = make_tensor<scalar_t>(make_dims(16),
+            -5e-15, -2e-15, -1e-15, -8e-16, -3e-16, -2e-16, -1e-16, -2e-32, 0.0, +1e-30,
+            +1e-16, +2e-16, +9e-16, +1e-15, +2e-15, +7e-15);
+        const auto base = 10.0;
+        const auto epsilon = 1e-16;
+        const auto histogram = histogram_t::make_from_exponents(begin(data), end(data), base, epsilon);
+
+        const auto expected_means = make_tensor<scalar_t>(make_dims(5),
+            -2.5*1e-15, -23.0/4.0*1e-16, 0.0, +12.0/3.0*1e-16, +10.0/3.0*1e-15);
+        const auto expected_counts = make_tensor<tensor_size_t>(make_dims(5),
+            2, 4, 4, 3, 3);
+        const auto expected_medians = make_tensor<scalar_t>(make_dims(5),
+            -2.5*1e-15, -5.5*1e-16, -0.0, +2e-16, +2e-15);
+        const auto expected_thresholds = make_tensor<scalar_t>(make_dims(4),
+            -1e-15, -1e-16, +1e-16, +1e-15);
+
+        UTEST_CHECK_EQUAL(histogram.bins(), 5);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.means(), expected_means, 1e-15);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.counts(), expected_counts, 1e-15);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.medians(), expected_medians, 1e-15);
+        UTEST_CHECK_TENSOR_CLOSE(histogram.thresholds(), expected_thresholds, 1e-16);
     }
 }
 

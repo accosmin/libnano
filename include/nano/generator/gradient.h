@@ -1,35 +1,74 @@
 #pragma once
 
-#include <nano/generator.h>
+#include <nano/tensor/tensor.h>
 
 namespace nano
 {
-    // TODO: generic single and paired generator to handle the mapping and the dropping and shuffling part
-    // TODO: feature-wise non-linear transformations of scalar features - sign(x)*log(1+x*x), x/sqrt(1+x*x)
-    // TODO: polynomial features
-    // TODO: basic image-based features: gradients, magnitude, orientation, HoG
-    // TODO: histogram-based scalar features - assign scalar value into its percentile range index
-    // TODO: sign -> transform scalar value to its sign class or sign scalar value
-    // TODO: clamp_perc -> clamp scalar value outside a given percentile range
-    // TODO: clamp -> clamp scalar value to given range
-
-    ///
-    /// \brief
-    ///
-    class NANO_PUBLIC gradient_generator_t : public generator_t
+    enum class gradient_mode
     {
-    public:
-
-        gradient_generator_t(const memory_dataset_t& dataset, const indices_t& samples);
-
-        tensor_size_t features() const override;
-        feature_t feature(tensor_size_t) const override;
-
-        void select(tensor_size_t, tensor_range_t, struct_map_t) const override;
-        void flatten(tensor_range_t, tensor2d_map_t, tensor_size_t) const override;
-
-    private:
-
-        // attributes
+        gradx, grady, magnitude, angle
     };
+
+    ///
+    /// \brief compute the gradients, the edge magnitude and the edge orientation
+    ///     in a 2D image using a symetric 3x3 kernel.
+    ///
+    template <gradient_mode mode, typename tscalar_input, typename tscalar_output>
+    void gradient3x3(
+        tensor_cmap_t<tscalar_input, 3> input, tensor_size_t channel, const tscalar_output kernel[3],
+        tensor_map_t<tscalar_output, 2> output)
+    {
+        const auto rows = output.template size<0>();
+        const auto cols = output.template size<1>();
+
+        assert(input.template size<0>() == rows + 2);
+        assert(input.template size<1>() == cols + 2);
+        assert(input.template size<2>() > channel && channel >= 0);
+
+        for (tensor_size_t row = 0; row < rows; ++ row)
+        {
+            for (tensor_size_t col = 0; col < cols; ++ col)
+            {
+                if constexpr(mode == gradient_mode::gradx)
+                {
+                    const auto gx =
+                        input(row + 0, col + 2, channel) * kernel[0] - input(row + 0, col, channel) * kernel[0] +
+                        input(row + 1, col + 2, channel) * kernel[1] - input(row + 1, col, channel) * kernel[1] +
+                        input(row + 2, col + 2, channel) * kernel[2] - input(row + 2, col, channel) * kernel[2];
+
+                    output(row, col) = gx;
+                }
+                else if constexpr (mode == gradient_mode::grady)
+                {
+                    const auto gy =
+                        input(row + 2, col + 0, channel) * kernel[0] - input(row, col + 0, channel) * kernel[0] +
+                        input(row + 2, col + 1, channel) * kernel[1] - input(row, col + 1, channel) * kernel[1] +
+                        input(row + 2, col + 2, channel) * kernel[2] - input(row, col + 2, channel) * kernel[2];
+
+                    output(row, col) = gy;
+                }
+                else
+                {
+                    const auto gx =
+                        input(row + 0, col + 2, channel) * kernel[0] - input(row + 0, col, channel) * kernel[0] +
+                        input(row + 1, col + 2, channel) * kernel[1] - input(row + 1, col, channel) * kernel[1] +
+                        input(row + 2, col + 2, channel) * kernel[2] - input(row + 2, col, channel) * kernel[2];
+
+                    const auto gy =
+                        input(row + 2, col + 0, channel) * kernel[0] - input(row, col + 0, channel) * kernel[0] +
+                        input(row + 2, col + 1, channel) * kernel[1] - input(row, col + 1, channel) * kernel[1] +
+                        input(row + 2, col + 2, channel) * kernel[2] - input(row, col + 2, channel) * kernel[2];
+
+                    if constexpr (mode == gradient_mode::magnitude)
+                    {
+                        output(row, col) = std::sqrt(gx * gx + gy * gy);
+                    }
+                    else
+                    {
+                        output(row, col) = std::atan2(gy, gx);
+                    }
+                }
+            }
+        }
+    }
 }

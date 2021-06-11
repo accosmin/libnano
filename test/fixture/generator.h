@@ -118,7 +118,7 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
     }
 }
 
-static void check_flatten(const dataset_generator_t& generator,
+[[maybe_unused]] static void check_flatten(const dataset_generator_t& generator,
     const tensor2d_t& expected_flatten, const indices_t& expected_column2features, scalar_t eps = 1e-12)
 {
     tensor2d_t flatten_buffer;
@@ -138,7 +138,7 @@ static void check_flatten(const dataset_generator_t& generator,
     }
 }
 
-static void check_select_stats(const dataset_generator_t& generator,
+[[maybe_unused]] static void check_select_stats(const dataset_generator_t& generator,
     const indices_t& expected_sclass_features,
     const indices_t& expected_mclass_features,
     const indices_t& expected_scalar_features,

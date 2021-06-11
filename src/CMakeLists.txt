@@ -12,6 +12,7 @@ target_sources(nano PRIVATE
     stream.cpp
     generator.cpp
     generator/elemwise.cpp
+    generator/elemwise_gradient.cpp
     generator/elemwise_identity.cpp
     generator/elemwise_histogram.cpp
     generator/pairwise.cpp

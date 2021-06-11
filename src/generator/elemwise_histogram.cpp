@@ -43,7 +43,6 @@ feature_mapping_t histogram_medians_t::do_fit(indices_cmap_t samples, execution)
 
 feature_t histogram_medians_t::feature(tensor_size_t ifeature) const
 {
-    assert(ifeature >= 0 && ifeature < features());
     const auto original = mapped_original(ifeature);
     const auto component = mapped_component(ifeature);
 

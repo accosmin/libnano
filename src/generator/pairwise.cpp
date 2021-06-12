@@ -5,14 +5,15 @@ using namespace nano;
 feature_mapping_t base_pairwise_generator_t::make_pairwise(const feature_mapping_t& mapping)
 {
     const auto size = mapping.template size<0>();
-    auto feature_mapping = feature_mapping_t{size * (size + 1) / 2, 12};
+    const auto vals = mapping.template size<1>();
+    auto feature_mapping = feature_mapping_t{size * (size + 1) / 2, 2 * vals};
 
     for (tensor_size_t k = 0, i = 0; i < size; ++ i)
     {
         for (tensor_size_t j = i; j < size; ++ j, ++ k)
         {
-            feature_mapping.array(k).segment(0, 6) = mapping.array(i);
-            feature_mapping.array(k).segment(6, 6) = mapping.array(j);
+            feature_mapping.array(k).segment(0 * vals, vals) = mapping.array(i);
+            feature_mapping.array(k).segment(1 * vals, vals) = mapping.array(j);
         }
     }
 

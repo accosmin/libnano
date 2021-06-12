@@ -6,37 +6,11 @@
 namespace nano
 {
     ///
-    /// \brief image gradient type.
-    ///
-    enum class gradient_type
-    {
-        sobel,
-        scharr,
-        prewitt,
-    };
-
-    template <>
-    inline enum_map_t<gradient_type> enum_string<gradient_type>()
-    {
-        return
-        {
-            { gradient_type::sobel,         "sobel" },
-            { gradient_type::scharr,        "scharr" },
-            { gradient_type::prewitt,       "prewitt" },
-        };
-    }
-
-    inline std::ostream& operator<<(std::ostream& stream, gradient_type value)
-    {
-        return stream << scat(value);
-    }
-
-    ///
     /// \brief generate image gradient-like structured features:
     ///     - vertical and horizontal gradients,
     ///     - edge orientation and magnitude.
     ///
-    class elemwise_gradient_t : public base_elemwise_generator_t
+    class NANO_PUBLIC elemwise_gradient_t : public base_elemwise_generator_t
     {
     public:
 
@@ -45,7 +19,7 @@ namespace nano
 
         elemwise_gradient_t(
             const memory_dataset_t& dataset,
-            gradient_type = gradient_type::sobel,
+            kernel3x3_type = kernel3x3_type::sobel,
             const indices_t& original_features = indices_t{});
 
         feature_t feature(tensor_size_t ifeature) const override;
@@ -54,16 +28,19 @@ namespace nano
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
         void do_select(dataset_iterator_t<tscalar, input_rank> it, tensor_size_t ifeature, struct_map_t storage) const
         {
-            const auto component = mapped_component(ifeature);
+            const auto mode = mapped_mode(ifeature);
+            const auto channel = mapped_channel(ifeature);
+            const auto kernel = make_kernel3x3<scalar_t>(m_type);
+            [[maybe_unused]] const auto [rows, cols, _] = mapped_dims(ifeature);
             for (; it; ++ it)
             {
                 if (const auto [index, given, values] = *it; given)
                 {
-                    storage(index) = values(component); //toperator::scalar(values(component));
+                    gradient3x3(mode, values, channel, kernel, storage.tensor(index).reshape(rows, cols));
                 }
                 else
                 {
-                    storage(index) = std::numeric_limits<scalar_t>::quiet_NaN();
+                    storage.tensor(index).full(std::numeric_limits<scalar_t>::quiet_NaN());
                 }
             }
         }
@@ -73,38 +50,50 @@ namespace nano
             tensor_size_t ifeature, tensor2d_map_t storage, tensor_size_t& column) const
         {
             const auto should_drop = this->should_drop(ifeature);
-            const auto component = mapped_component(ifeature);
+            const auto mode = mapped_mode(ifeature);
+            const auto channel = mapped_channel(ifeature);
+            const auto kernel = make_kernel3x3<scalar_t>(m_type);
+            [[maybe_unused]] const auto [rows, cols, _] = mapped_dims(ifeature);
+            const auto colsize = rows * cols;
             for (; it; ++ it)
             {
                 if (const auto [index, given, values] = *it; given)
                 {
+                    auto segment = storage.vector(index).segment(column, colsize);
                     if (should_drop)
                     {
-                        storage(index, column) = +0.0;
+                        segment.setConstant(+0.0);
                     }
                     else
                     {
-                        storage(index, column) = values(component); //toperator::scalar(values(component));
+                        gradient3x3(mode, values, channel, kernel, map_tensor(segment.data(), rows, cols));
                     }
                 }
                 else
                 {
-                    storage(index, column) = +0.0;
+                    auto segment = storage.vector(index).segment(column, colsize);
+                    segment.setConstant(+0.0);
                 }
             }
-            ++ column;
+            column += rows * cols;
         }
 
     private:
 
-        tensor_size_t mapped_feature_type(tensor_size_t ifeature) const
+        tensor_size_t mapped_channel(tensor_size_t ifeature) const
         {
             assert(ifeature >= 0 && ifeature < features());
             return mapping()(ifeature, 6);
         }
 
+        gradient3x3_mode mapped_mode(tensor_size_t ifeature) const
+        {
+            assert(ifeature >= 0 && ifeature < features());
+            return static_cast<gradient3x3_mode>(mapping()(ifeature, 7));
+        }
+
         // attributes
-        gradient_type   m_type{gradient_type::sobel};   ///<
+        kernel3x3_type  m_type{kernel3x3_type::sobel};  ///<
         indices_t       m_original_features;            ///<
     };
 }

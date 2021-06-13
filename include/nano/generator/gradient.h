@@ -103,16 +103,16 @@ namespace nano
 
         const auto make_gx = [&] (tensor_size_t row, tensor_size_t col)
         {
-            return  input(row + 0, col + 2, channel) * kernel[0] - input(row + 0, col, channel) * kernel[0] +
-                    input(row + 1, col + 2, channel) * kernel[1] - input(row + 1, col, channel) * kernel[1] +
-                    input(row + 2, col + 2, channel) * kernel[2] - input(row + 2, col, channel) * kernel[2];
+            return  kernel[0] * (input(row + 0, col + 2, channel) - input(row + 0, col, channel)) +
+                    kernel[1] * (input(row + 1, col + 2, channel) - input(row + 1, col, channel)) +
+                    kernel[2] * (input(row + 2, col + 2, channel) - input(row + 2, col, channel));
         };
 
         const auto make_gy = [&] (tensor_size_t row, tensor_size_t col)
         {
-            return  input(row + 2, col + 0, channel) * kernel[0] - input(row, col + 0, channel) * kernel[0] +
-                    input(row + 2, col + 1, channel) * kernel[1] - input(row, col + 1, channel) * kernel[1] +
-                    input(row + 2, col + 2, channel) * kernel[2] - input(row, col + 2, channel) * kernel[2];
+            return  kernel[0] * (input(row + 2, col + 0, channel) - input(row, col + 0, channel)) +
+                    kernel[1] * (input(row + 2, col + 1, channel) - input(row, col + 1, channel)) +
+                    kernel[2] * (input(row + 2, col + 2, channel) - input(row, col + 2, channel));
         };
 
         switch (mode)

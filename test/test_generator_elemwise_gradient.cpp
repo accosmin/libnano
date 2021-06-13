@@ -5,6 +5,25 @@
 using namespace std;
 using namespace nano;
 
+#define INPUT_DATA \
+    make_dims(4, 4, 2), \
+    1, 0, 2, 1, 3, 1, 4, 1, \
+    2, 0, 3, 0, 4, 1, 5, 1, \
+    3, 0, 4, 0, 5, 1, 6, 1, \
+    4, 1, 4, 0, 4, 0, 5, 0
+
+#define GX0(scale) scale * 2.00, scale * 2.00, scale * 1.50, scale * 1.75
+#define GX1(scale) scale * 1.00, scale * 0.75, scale * 0.50, scale * 0.75
+
+#define GY0(scale) scale * +2.00, scale * +2.00, scale * 1.00, scale * +0.25
+#define GY1(scale) scale * -0.50, scale * -0.25, scale * 0.00, scale * -0.75
+
+#define GG0(scale) scale * sqrt(8.00), scale * sqrt(8.000), scale * sqrt(3.25), scale * sqrt(3.125)
+#define GG1(scale) scale * sqrt(1.25), scale * sqrt(0.625), scale * sqrt(0.25), scale * sqrt(1.125)
+
+#define THETA0 atan2(+2.0, 2.0), atan2(+2.00, 2.00), atan2(1.0, 1.5), atan2(+0.25, 1.75)
+#define THETA1 atan2(-0.5, 1.0), atan2(-0.25, 0.75), atan2(0.0, 0.5), atan2(-0.75, 0.75)
+
 static auto make_features()
 {
     return features_t
@@ -34,11 +53,8 @@ public:
 
         for (tensor_size_t sample = 0; sample < m_samples; sample += 2)
         {
-            auto values = make_tensor<uint8_t>(make_dims(4, 4, 2),
-                1, 0, 2, 1, 3, 1, 4, 1,
-                2, 0, 3, 0, 4, 1, 5, 1,
-                3, 0, 4, 0, 5, 1, 6, 1,
-                4, 1, 4, 0, 4, 0, 5, 0
+            auto values = make_tensor<uint8_t>(
+                INPUT_DATA
             );
             values.array() *= (sample + 1);
             set(sample, 3, values);
@@ -94,11 +110,7 @@ UTEST_CASE(gradient)
 {
     const auto input = make_tensor<int>
     (
-        make_dims(4, 4, 2),
-        1, 0, 2, 1, 3, 1, 4, 1,
-        2, 0, 3, 0, 4, 1, 5, 1,
-        3, 0, 4, 0, 5, 1, 6, 1,
-        4, 1, 4, 0, 4, 0, 5, 0
+        INPUT_DATA
     );
 
     const std::array<scalar_t, 3> kernel = {+0.25, +0.50, +0.25};
@@ -106,46 +118,42 @@ UTEST_CASE(gradient)
     auto output = tensor_mem_t<scalar_t, 2>(2, 2);
     {
         gradient3x3(gradient3x3_mode::gradx, input.tensor(), 0, kernel, output.tensor());
-        const auto expected_output = make_tensor<scalar_t>(make_dims(2, 2), 2.00, 2.00, 1.50, 1.75);
+        const auto expected_output = make_tensor<scalar_t>(make_dims(2, 2), GX0(1));
         UTEST_CHECK_TENSOR_CLOSE(output, expected_output, 1e-15);
     }
     {
         gradient3x3(gradient3x3_mode::gradx, input.tensor(), 1, kernel, output.tensor());
-        const auto expected_output = make_tensor<scalar_t>(make_dims(2, 2), 1.00, 0.75, 0.50, 0.75);
+        const auto expected_output = make_tensor<scalar_t>(make_dims(2, 2), GX1(1));
         UTEST_CHECK_TENSOR_CLOSE(output, expected_output, 1e-15);
     }
     {
         gradient3x3(gradient3x3_mode::grady, input.tensor(), 0, kernel, output.tensor());
-        const auto expected_output = make_tensor<scalar_t>(make_dims(2, 2), 2.00, 2.00, 1.00, 0.25);
+        const auto expected_output = make_tensor<scalar_t>(make_dims(2, 2), GY0(1));
         UTEST_CHECK_TENSOR_CLOSE(output, expected_output, 1e-15);
     }
     {
         gradient3x3(gradient3x3_mode::grady, input.tensor(), 1, kernel, output.tensor());
-        const auto expected_output = make_tensor<scalar_t>(make_dims(2, 2), -0.50, -0.25, 0.00, -0.75);
+        const auto expected_output = make_tensor<scalar_t>(make_dims(2, 2), GY1(1));
         UTEST_CHECK_TENSOR_CLOSE(output, expected_output, 1e-15);
     }
     {
         gradient3x3(gradient3x3_mode::magnitude, input.tensor(), 0, kernel, output.tensor());
-        const auto expected_output = make_tensor<scalar_t>(make_dims(2, 2),
-            sqrt(8.0), sqrt(8.0), sqrt(3.25), sqrt(3.125));
+        const auto expected_output = make_tensor<scalar_t>(make_dims(2, 2), GG0(1));
         UTEST_CHECK_TENSOR_CLOSE(output, expected_output, 1e-15);
     }
     {
         gradient3x3(gradient3x3_mode::magnitude, input.tensor(), 1, kernel, output.tensor());
-        const auto expected_output = make_tensor<scalar_t>(make_dims(2, 2),
-            sqrt(1.25), sqrt(0.625), sqrt(0.25), sqrt(1.125));
+        const auto expected_output = make_tensor<scalar_t>(make_dims(2, 2), GG1(1));
         UTEST_CHECK_TENSOR_CLOSE(output, expected_output, 1e-15);
     }
     {
         gradient3x3(gradient3x3_mode::angle, input.tensor(), 0, kernel, output.tensor());
-        const auto expected_output = make_tensor<scalar_t>(make_dims(2, 2),
-            atan2(2.0, 2.0), atan2(2.0, 2.0), atan2(1.0, 1.5), atan2(0.25, 1.75));
+        const auto expected_output = make_tensor<scalar_t>(make_dims(2, 2), THETA0);
         UTEST_CHECK_TENSOR_CLOSE(output, expected_output, 1e-15);
     }
     {
         gradient3x3(gradient3x3_mode::angle, input.tensor(), 1, kernel, output.tensor());
-        const auto expected_output = make_tensor<scalar_t>(make_dims(2, 2),
-            atan2(-0.5, 1.0), atan2(-0.25, 0.75), atan2(0.0, 0.5), atan2(-0.75, 0.75));
+        const auto expected_output = make_tensor<scalar_t>(make_dims(2, 2), THETA1);
         UTEST_CHECK_TENSOR_CLOSE(output, expected_output, 1e-15);
     }
 }
@@ -169,55 +177,37 @@ UTEST_CASE(unsupervised_gradient)
     UTEST_CHECK_EQUAL(generator.feature(7), feature_t{"sobel::theta(u8s[channel::1])"}.scalar(feature_type::float64, make_dims(2, 2, 1)));
 
     check_select(generator, 0, make_tensor<scalar_t>(make_dims(4, 2, 2, 1),
-        2.0, 2.0, 1.5, 1.75, NaN, NaN, NaN, NaN,
-        6.0, 6.0, 4.5, 5.25, NaN, NaN, NaN, NaN));
+        GX0(1), NaN, NaN, NaN, NaN,
+        GX0(3), NaN, NaN, NaN, NaN));
     check_select(generator, 1, make_tensor<scalar_t>(make_dims(4, 2, 2, 1),
-        2.0, 2.0, 1.0, 0.25, NaN, NaN, NaN, NaN,
-        6.0, 6.0, 3.0, 0.75, NaN, NaN, NaN, NaN));
+        GY0(1), NaN, NaN, NaN, NaN,
+        GY0(3), NaN, NaN, NaN, NaN));
     check_select(generator, 2, make_tensor<scalar_t>(make_dims(4, 2, 2, 1),
-        1*sqrt(8.0), 1*sqrt(8.0), 1*sqrt(3.25), 1*sqrt(3.125), NaN, NaN, NaN, NaN,
-        3*sqrt(8.0), 3*sqrt(8.0), 3*sqrt(3.25), 3*sqrt(3.125), NaN, NaN, NaN, NaN));
+        GG0(1), NaN, NaN, NaN, NaN,
+        GG0(3), NaN, NaN, NaN, NaN));
     check_select(generator, 3, make_tensor<scalar_t>(make_dims(4, 2, 2, 1),
-        atan2(2.0, 2.0), atan2(2.0, 2.0), atan2(1.0, 1.5), atan2(0.25, 1.75), NaN, NaN, NaN, NaN,
-        atan2(2.0, 2.0), atan2(2.0, 2.0), atan2(1.0, 1.5), atan2(0.25, 1.75), NaN, NaN, NaN, NaN));
+        THETA0, NaN, NaN, NaN, NaN,
+        THETA0, NaN, NaN, NaN, NaN));
     check_select(generator, 4, make_tensor<scalar_t>(make_dims(4, 2, 2, 1),
-        1.00, 0.75, 0.50, 0.75, NaN, NaN, NaN, NaN,
-        3.00, 2.25, 1.50, 2.25, NaN, NaN, NaN, NaN));
+        GX1(1), NaN, NaN, NaN, NaN,
+        GX1(3), NaN, NaN, NaN, NaN));
     check_select(generator, 5, make_tensor<scalar_t>(make_dims(4, 2, 2, 1),
-        -0.50, -0.25, 0.00, -0.75, NaN, NaN, NaN, NaN,
-        -1.50, -0.75, 0.00, -2.25, NaN, NaN, NaN, NaN));
+        GY1(1), NaN, NaN, NaN, NaN,
+        GY1(3), NaN, NaN, NaN, NaN));
     check_select(generator, 6, make_tensor<scalar_t>(make_dims(4, 2, 2, 1),
-        1*sqrt(1.25), 1*sqrt(0.625), 1*sqrt(0.25), 1*sqrt(1.125), NaN, NaN, NaN, NaN,
-        3*sqrt(1.25), 3*sqrt(0.625), 3*sqrt(0.25), 3*sqrt(1.125), NaN, NaN, NaN, NaN));
+        GG1(1), NaN, NaN, NaN, NaN,
+        GG1(3), NaN, NaN, NaN, NaN));
     check_select(generator, 7, make_tensor<scalar_t>(make_dims(4, 2, 2, 1),
-        atan2(-0.5, 1.0), atan2(-0.25, 0.75), atan2(0.0, 0.5), atan2(-0.75, 0.75), NaN, NaN, NaN, NaN,
-        atan2(-0.5, 1.0), atan2(-0.25, 0.75), atan2(0.0, 0.5), atan2(-0.75, 0.75), NaN, NaN, NaN, NaN));
+        THETA1, NaN, NaN, NaN, NaN,
+        THETA1, NaN, NaN, NaN, NaN));
     check_select_stats(generator, indices_t{}, indices_t{}, indices_t{}, make_indices(0, 1, 2, 3, 4, 5, 6, 7));
 
     check_flatten(generator, make_tensor<scalar_t>(make_dims(4, 32),
-        2.0, 2.0, 1.5, 1.75,
-        2.0, 2.0, 1.0, 0.25,
-        1*sqrt(8.0), 1*sqrt(8.0), 1*sqrt(3.25), 1*sqrt(3.125),
-        atan2(2.0, 2.0), atan2(2.0, 2.0), atan2(1.0, 1.5), atan2(0.25, 1.75),
-
-        1.00, 0.75, 0.50, 0.75,
-        -0.50, -0.25, 0.00, -0.75,
-        1*sqrt(1.25), 1*sqrt(0.625), 1*sqrt(0.25), 1*sqrt(1.125),
-        atan2(-0.5, 1.0), atan2(-0.25, 0.75), atan2(0.0, 0.5), atan2(-0.75, 0.75),
-
+        GX0(1), GY0(1), GG0(1), THETA0, GX1(1), GY1(1), GG1(1), THETA1,
         0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
         0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 
-        6.0, 6.0, 4.5, 5.25,
-        6.0, 6.0, 3.0, 0.75,
-        3*sqrt(8.0), 3*sqrt(8.0), 3*sqrt(3.25), 3*sqrt(3.125),
-        atan2(2.0, 2.0), atan2(2.0, 2.0), atan2(1.0, 1.5), atan2(0.25, 1.75),
-
-        3.00, 2.25, 1.50, 2.25,
-        -1.50, -0.75, 0.00, -2.25,
-        3*sqrt(1.25), 3*sqrt(0.625), 3*sqrt(0.25), 3*sqrt(1.125),
-        atan2(-0.5, 1.0), atan2(-0.25, 0.75), atan2(0.0, 0.5), atan2(-0.75, 0.75),
-
+        GX0(3), GY0(3), GG0(3), THETA0, GX1(3), GY1(3), GG1(3), THETA1,
         0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
         0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         make_indices(

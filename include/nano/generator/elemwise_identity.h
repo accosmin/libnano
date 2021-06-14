@@ -1,6 +1,5 @@
 #pragma once
 
-#include <nano/generator/util.h>
 #include <nano/generator/elemwise.h>
 
 namespace nano
@@ -8,27 +7,17 @@ namespace nano
     ///
     /// \brief
     ///
-    class sclass_identity_t : public base_elemwise_generator_t
+    class NANO_PUBLIC sclass_identity_t : public base_elemwise_generator_t
     {
     public:
 
         static constexpr auto input_rank = 1U;
         static constexpr auto generated_type = generator_type::sclass;
 
-        sclass_identity_t(const memory_dataset_t& dataset) :
-            base_elemwise_generator_t(dataset)
-        {
-        }
+        sclass_identity_t(const memory_dataset_t& dataset);
 
-        feature_t feature(tensor_size_t ifeature) const override
-        {
-            return dataset().feature(mapped_original(ifeature));
-        }
-
-        feature_mapping_t do_fit(indices_cmap_t, execution) override
-        {
-            return select_sclass(dataset(), sclass2binary::off);
-        }
+        feature_t feature(tensor_size_t ifeature) const override;
+        feature_mapping_t do_fit(indices_cmap_t, execution) override;
 
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
         void do_select(dataset_iterator_t<tscalar, input_rank> it, tensor_size_t, sclass_map_t storage) const
@@ -80,27 +69,17 @@ namespace nano
     ///
     /// \brief
     ///
-    class mclass_identity_t : public base_elemwise_generator_t
+    class NANO_PUBLIC mclass_identity_t : public base_elemwise_generator_t
     {
     public:
 
         static constexpr auto input_rank = 2U;
         static constexpr auto generated_type = generator_type::mclass;
 
-        mclass_identity_t(const memory_dataset_t& dataset) :
-            base_elemwise_generator_t(dataset)
-        {
-        }
+        mclass_identity_t(const memory_dataset_t& dataset);
 
-        feature_t feature(tensor_size_t ifeature) const override
-        {
-            return dataset().feature(mapped_original(ifeature));
-        }
-
-        feature_mapping_t do_fit(indices_cmap_t, execution) override
-        {
-            return select_mclass(dataset(), mclass2binary::off);
-        }
+        feature_t feature(tensor_size_t ifeature) const override;
+        feature_mapping_t do_fit(indices_cmap_t, execution) override;
 
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
         void do_select(dataset_iterator_t<tscalar, input_rank> it, tensor_size_t, mclass_map_t storage) const
@@ -151,27 +130,17 @@ namespace nano
     ///
     /// \brief
     ///
-    class scalar_identity_t : public base_elemwise_generator_t
+    class NANO_PUBLIC scalar_identity_t : public base_elemwise_generator_t
     {
     public:
 
         static constexpr auto input_rank = 4U;
         static constexpr auto generated_type = generator_type::scalar;
 
-        scalar_identity_t(const memory_dataset_t& dataset) :
-            base_elemwise_generator_t(dataset)
-        {
-        }
+        scalar_identity_t(const memory_dataset_t& dataset);
 
-        feature_t feature(tensor_size_t ifeature) const override
-        {
-            return dataset().feature(mapped_original(ifeature));
-        }
-
-        feature_mapping_t do_fit(indices_cmap_t, execution) override
-        {
-            return select_scalar(dataset(), struct2scalar::off);
-        }
+        feature_t feature(tensor_size_t ifeature) const override;
+        feature_mapping_t do_fit(indices_cmap_t, execution) override;
 
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
         void do_select(dataset_iterator_t<tscalar, input_rank> it, tensor_size_t, scalar_map_t storage) const
@@ -219,27 +188,17 @@ namespace nano
     ///
     /// \brief
     ///
-    class struct_identity_t : public base_elemwise_generator_t
+    class NANO_PUBLIC struct_identity_t : public base_elemwise_generator_t
     {
     public:
 
         static constexpr auto input_rank = 4U;
         static constexpr auto generated_type = generator_type::structured;
 
-        struct_identity_t(const memory_dataset_t& dataset) :
-            base_elemwise_generator_t(dataset)
-        {
-        }
+        struct_identity_t(const memory_dataset_t& dataset);
 
-        feature_t feature(tensor_size_t ifeature) const override
-        {
-            return dataset().feature(mapped_original(ifeature));
-        }
-
-        feature_mapping_t do_fit(indices_cmap_t, execution) override
-        {
-            return select_struct(dataset());
-        }
+        feature_t feature(tensor_size_t ifeature) const override;
+        feature_mapping_t do_fit(indices_cmap_t, execution) override;
 
         template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
         void do_select(dataset_iterator_t<tscalar, input_rank> it, tensor_size_t, struct_map_t storage) const

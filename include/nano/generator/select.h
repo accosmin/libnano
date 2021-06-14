@@ -4,9 +4,6 @@
 
 namespace nano
 {
-    // (original feature index, feature component, ...)
-    using feature_mapping_t = tensor_mem_t<tensor_size_t, 2>;
-
     ///
     /// \brief utilities to filter the given dataset's (or generator's) features by their type.
     ///

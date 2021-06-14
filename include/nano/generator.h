@@ -29,6 +29,9 @@ namespace nano
     using struct_map_t = tensor_map_t<scalar_t, 4>;
     using struct_cmap_t = tensor_cmap_t<scalar_t, 4>;
 
+    // (original feature index, feature component, ...)
+    using feature_mapping_t = tensor_mem_t<tensor_size_t, 2>;
+
     ///
     /// \brief toggle the generation of binary classification features
     ///     from single-label and multi-label multi-class features.

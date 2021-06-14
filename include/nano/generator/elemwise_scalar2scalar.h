@@ -1,5 +1,6 @@
 #pragma once
 
+#include <nano/generator/select.h>
 #include <nano/generator/elemwise.h>
 
 namespace nano

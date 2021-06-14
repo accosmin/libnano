@@ -1,3 +1,4 @@
+#include <nano/generator/select.h>
 #include <nano/generator/elemwise_gradient.h>
 
 using namespace nano;

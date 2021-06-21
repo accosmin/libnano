@@ -58,7 +58,7 @@ namespace nano
                 }
                 else
                 {
-                    storage(index) = std::numeric_limits<scalar_t>::quiet_NaN();
+                    storage(index) = -1;
                 }
             }
         }

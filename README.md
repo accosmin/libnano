@@ -14,3 +14,5 @@ Numerical optimization routines and machine learning utilities using [Eigen3](ht
 5. [Machine learning module](docs/mlearn.md)
 
 6. [Linear models](docs/linear.md)
+
+7. [Gradient boosting models](docs/gboost.md)

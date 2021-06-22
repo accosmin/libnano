@@ -33,7 +33,8 @@ namespace nano
             [[maybe_unused]] const auto [rows, cols, _] = mapped_dims(ifeature);
 
             const auto colsize = rows * cols;
-            const auto process = [=] (const auto& values, auto&& storage)
+            const auto process = [mode=mode, channel=channel, kernel=kernel, rows=rows, cols=cols]
+                (const auto& values, auto&& storage)
             {
                 gradient3x3(mode, values, channel, kernel, map_tensor(storage.data(), rows, cols));
             };

@@ -65,7 +65,7 @@ namespace nano
         /// \brief set the feature value of a sample for a multi-label categorical feature.
         ///
         template <typename tscalar, typename tvalue>
-        void set(const tensor_map_t<tscalar, 2>& data, tensor_size_t sample, const tvalue& value) const
+        void set(const tensor_map_t<tscalar, 2>& data, [[maybe_unused]] tensor_size_t sample, const tvalue& value) const
         {
             if constexpr (::nano::is_tensor_v<tvalue>)
             {
@@ -93,7 +93,7 @@ namespace nano
         /// \brief set the feature value of a sample for a continuous scalar or structured feature.
         ///
         template <typename tscalar, typename tvalue>
-        void set(const tensor_map_t<tscalar, 4>& data, tensor_size_t sample, const tvalue& value) const
+        void set(const tensor_map_t<tscalar, 4>& data, [[maybe_unused]] tensor_size_t sample, const tvalue& value) const
         {
             if constexpr (std::is_same_v<tvalue, string_t>)
             {

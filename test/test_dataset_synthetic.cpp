@@ -1,6 +1,7 @@
 #include <utest/utest.h>
 #include <nano/core/numeric.h>
-#include <nano/dataset/synth_affine.h>
+#include <nano/dataset/synthetic.h>
+#include <nano/generator/elemwise_identity.h>
 
 using namespace nano;
 
@@ -8,47 +9,52 @@ UTEST_BEGIN_MODULE(test_dataset_synthetic)
 
 UTEST_CASE(affine)
 {
+    const auto targets = tensor_size_t{3};
+    const auto samples = tensor_size_t{100};
+    const auto features = tensor_size_t{4};
+
     auto dataset = synthetic_affine_dataset_t{};
 
     dataset.noise(0);
-    dataset.modulo(2);
-    dataset.samples(100);
-    dataset.idims(make_dims(7, 1, 1));
-    dataset.tdims(make_dims(3, 1, 1));
+    dataset.modulo(31);
+    dataset.samples(samples);
+    dataset.targets(targets);
+    dataset.features(features);
 
     UTEST_REQUIRE_NOTHROW(dataset.load());
 
-    const auto tfeature = dataset.target();
-    UTEST_CHECK(!tfeature.discrete());
-    UTEST_CHECK(!tfeature.optional());
+    auto generator = dataset_generator_t{dataset};
+    generator.add<elemwise_generator_t<sclass_identity_t>>();
+    generator.add<elemwise_generator_t<mclass_identity_t>>();
+    generator.add<elemwise_generator_t<scalar_identity_t>>();
+    generator.add<elemwise_generator_t<struct_identity_t>>();
+    generator.fit(arange(0, samples), execution::par);
 
-    const auto& bias = dataset.bias();
-    UTEST_REQUIRE_EQUAL(bias.size(), 3);
+    UTEST_CHECK_EQUAL(generator.target(), feature_t{"Wx+b+eps"}.scalar(feature_type::float64, make_dims(targets, 1, 1)));
 
-    const auto& weights = dataset.weights();
-    UTEST_REQUIRE_EQUAL(weights.rows(), 7);
-    UTEST_REQUIRE_EQUAL(weights.cols(), 3);
-    for (tensor_size_t row = 0; row < weights.rows(); ++ row)
-    {
-        if ((row % dataset.modulo()) > 0)
-        {
-            UTEST_CHECK_EIGEN_CLOSE(weights.row(row).transpose(), vector_t::Zero(weights.cols()), epsilon1<scalar_t>());
-        }
-    }
+    const auto bias = dataset.bias().vector();
+    UTEST_REQUIRE_EQUAL(bias.size(), targets);
 
-    UTEST_CHECK_EQUAL(dataset.samples(), 100);
+    const auto weights = dataset.weights().matrix();
+    UTEST_REQUIRE_EQUAL(weights.rows(), 14 * features / 4);
+    UTEST_REQUIRE_EQUAL(weights.cols(), targets);
+
+    UTEST_CHECK_EQUAL(dataset.features(), features);
+    UTEST_CHECK_EQUAL(dataset.samples(), samples);
     UTEST_CHECK_EQUAL(dataset.test_samples(), arange(0, 0));
-    UTEST_CHECK_EQUAL(dataset.train_samples(), arange(0, 100));
+    UTEST_CHECK_EQUAL(dataset.train_samples(), arange(0, samples));
 
-    const auto inputs = dataset.inputs(arange(0, 100));
-    const auto targets = dataset.targets(arange(0, 100));
+    tensor2d_t inputs;
+    tensor4d_t output;
+    generator.flatten(arange(0, samples), inputs);
+    generator.targets(arange(0, samples), output);
 
-    UTEST_CHECK_EQUAL(inputs.dims(), nano::make_dims(100, 7, 1, 1));
-    UTEST_CHECK_EQUAL(targets.dims(), nano::make_dims(100, 3, 1, 1));
-
-    for (tensor_size_t s = 0; s < 100; ++ s)
+    for (tensor_size_t sample = 0; sample < samples; ++ sample)
     {
-        UTEST_CHECK_EIGEN_CLOSE(targets.vector(s), weights.transpose() * inputs.vector(s) + bias, epsilon1<scalar_t>());
+        UTEST_CHECK_EIGEN_CLOSE(
+            output.vector(sample),
+            weights.transpose() * inputs.vector(sample) + bias,
+            epsilon1<scalar_t>());
     }
 }
 

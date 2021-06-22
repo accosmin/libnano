@@ -19,9 +19,10 @@ target_sources(nano PRIVATE
     dataset/dataset.cpp
     dataset/feature.cpp
     dataset/imclass.cpp
-    dataset/imclass_mnist.cpp
     dataset/tabular.cpp
+    dataset/synthetic.cpp
     dataset/imclass_cifar.cpp
+    dataset/imclass_mnist.cpp
     lsearch0.cpp
     lsearch0/quadratic.cpp
     lsearch0/linear.cpp

@@ -210,7 +210,7 @@ namespace nano
         ///
         /// \brief set all elements to random values in the [min, max] range.
         ///
-        void random(const tscalar min = -1, const tscalar max = +1)
+        void random(tscalar min = -1, tscalar max = +1)
         {
             random(array(), min, max);
         }
@@ -218,7 +218,7 @@ namespace nano
         ///
         /// \brief set all elements in an arithmetic progression from min to max.
         ///
-        void lin_spaced(const tscalar min, const tscalar max)
+        void lin_spaced(tscalar min, tscalar max)
         {
             array() = tensor_vector_t<tscalar>::LinSpaced(size(), min, max);
         }

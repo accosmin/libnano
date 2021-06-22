@@ -38,63 +38,18 @@ namespace nano
             return make_scalar_feature(ifeature, toperator::name());
         }
 
-        template
-        <
-            typename tscalar1, typename tscalar2,
-            std::enable_if_t<std::is_arithmetic_v<tscalar1>, bool> = true,
-            std::enable_if_t<std::is_arithmetic_v<tscalar2>, bool> = true
-        >
-        void do_select(
-            dataset_pairwise_iterator_t<tscalar1, input_rank1, tscalar2, input_rank2> it,
-            tensor_size_t ifeature, scalar_map_t storage) const
+        auto process(tensor_size_t ifeature) const
         {
             const auto component1 = mapped_component1(ifeature);
             const auto component2 = mapped_component2(ifeature);
-            for (; it; ++ it)
-            {
-                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
-                {
-                    storage(index) = toperator::scalar(values1(component1), values2(component2));
-                }
-                else
-                {
-                    storage(index) = std::numeric_limits<scalar_t>::quiet_NaN();
-                }
-            }
-        }
 
-        template
-        <
-            typename tscalar1, typename tscalar2,
-            std::enable_if_t<std::is_arithmetic_v<tscalar1>, bool> = true,
-            std::enable_if_t<std::is_arithmetic_v<tscalar2>, bool> = true
-        >
-        void do_flatten(
-            dataset_pairwise_iterator_t<tscalar1, input_rank1, tscalar2, input_rank2> it,
-            tensor_size_t ifeature, tensor2d_map_t storage, tensor_size_t& column) const
-        {
-            const auto should_drop = this->should_drop(ifeature);
-            const auto component1 = mapped_component1(ifeature);
-            const auto component2 = mapped_component2(ifeature);
-            for (; it; ++ it)
+            const auto colsize = tensor_size_t{1};
+            const auto process = [=] (const auto& values1, const auto& values2)
             {
-                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
-                {
-                    if (should_drop)
-                    {
-                        storage(index, column) = +0.0;
-                    }
-                    else
-                    {
-                        storage(index, column) = toperator::scalar(values1(component1), values2(component2));
-                    }
-                }
-                else
-                {
-                    storage(index, column) = +0.0;
-                }
-            }
-            ++ column;
+                return toperator::scalar(values1(component1), values2(component2));
+            };
+
+            return std::make_tuple(process, colsize);
         }
 
     private:

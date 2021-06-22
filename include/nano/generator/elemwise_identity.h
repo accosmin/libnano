@@ -19,50 +19,15 @@ namespace nano
         feature_t feature(tensor_size_t ifeature) const override;
         feature_mapping_t do_fit(indices_cmap_t, execution) override;
 
-        template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
-        void do_select(dataset_iterator_t<tscalar, input_rank> it, tensor_size_t, sclass_map_t storage) const
+        auto process(tensor_size_t ifeature) const
         {
-            for (; it; ++ it)
-            {
-                if (const auto [index, given, label] = *it; given)
-                {
-                    storage(index) = static_cast<int32_t>(label);
-                }
-                else
-                {
-                    storage(index) = -1;
-                }
-            }
-        }
-
-        template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
-        void do_flatten(dataset_iterator_t<tscalar, input_rank> it,
-            tensor_size_t ifeature, tensor2d_map_t storage, tensor_size_t& column) const
-        {
-            const auto should_drop = this->should_drop(ifeature);
             const auto colsize = mapped_classes(ifeature);
-            for (; it; ++ it)
+            const auto process = [=] (const auto& label)
             {
-                if (const auto [index, given, label] = *it; given)
-                {
-                    auto segment = storage.array(index).segment(column, colsize);
-                    if (should_drop)
-                    {
-                        segment.setConstant(+0.0);
-                    }
-                    else
-                    {
-                        segment.setConstant(-1.0);
-                        segment(static_cast<tensor_size_t>(label)) = +1.0;
-                    }
-                }
-                else
-                {
-                    auto segment = storage.array(index).segment(column, colsize);
-                    segment.setConstant(+0.0);
-                }
-            }
-            column += colsize;
+                return static_cast<int32_t>(label);
+            };
+
+            return std::make_tuple(process, colsize);
         }
     };
 
@@ -81,49 +46,23 @@ namespace nano
         feature_t feature(tensor_size_t ifeature) const override;
         feature_mapping_t do_fit(indices_cmap_t, execution) override;
 
-        template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
-        void do_select(dataset_iterator_t<tscalar, input_rank> it, tensor_size_t, mclass_map_t storage) const
+        auto process(tensor_size_t ifeature) const
         {
-            for (; it; ++ it)
+            const auto colsize = mapped_classes(ifeature);
+            const auto process = [=] (const auto& hits, auto&& storage)
             {
-                if (const auto [index, given, hits] = *it; given)
-                {
-                    storage.vector(index) = hits.array().template cast<int8_t>();
-                }
-                else
-                {
-                    storage.vector(index).setConstant(-1);
-                }
-            }
+                this->copy(hits, storage);
+            };
+
+            return std::make_tuple(process, colsize);
         }
 
-        template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
-        void do_flatten(dataset_iterator_t<tscalar, input_rank> it,
-            tensor_size_t ifeature, tensor2d_map_t storage, tensor_size_t& column) const
+    private:
+
+        template <typename thits, typename tstorage>
+        static void copy(const thits& hits, tstorage& storage)
         {
-            const auto should_drop = this->should_drop(ifeature);
-            const auto colsize = mapped_classes(ifeature);
-            for (; it; ++ it)
-            {
-                if (const auto [index, given, hits] = *it; given)
-                {
-                    auto segment = storage.array(index).segment(column, colsize);
-                    if (should_drop)
-                    {
-                        segment.setConstant(+0.0);
-                    }
-                    else
-                    {
-                        segment.array() = 2.0 * hits.array().template cast<scalar_t>() - 1.0;
-                    }
-                }
-                else
-                {
-                    auto segment = storage.array(index).segment(column, colsize);
-                    segment.setConstant(+0.0);
-                }
-            }
-            column += colsize;
+            storage = hits.array().template cast<typename tstorage::Scalar>();
         }
     };
 
@@ -142,46 +81,15 @@ namespace nano
         feature_t feature(tensor_size_t ifeature) const override;
         feature_mapping_t do_fit(indices_cmap_t, execution) override;
 
-        template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
-        void do_select(dataset_iterator_t<tscalar, input_rank> it, tensor_size_t, scalar_map_t storage) const
+        auto process(tensor_size_t) const
         {
-            for (; it; ++ it)
+            const auto colsize = tensor_size_t{1};
+            const auto process = [=] (const auto& values)
             {
-                if (const auto [index, given, values] = *it; given)
-                {
-                    storage(index) = static_cast<scalar_t>(values(0));
-                }
-                else
-                {
-                    storage(index) = std::numeric_limits<scalar_t>::quiet_NaN();
-                }
-            }
-        }
+                return static_cast<scalar_t>(values(0));
+            };
 
-        template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
-        void do_flatten(dataset_iterator_t<tscalar, input_rank> it,
-            tensor_size_t ifeature, tensor2d_map_t storage, tensor_size_t& column) const
-        {
-            const auto should_drop = this->should_drop(ifeature);
-            for (; it; ++ it)
-            {
-                if (const auto [index, given, values] = *it; given)
-                {
-                    if (should_drop)
-                    {
-                        storage(index, column) = 0.0;
-                    }
-                    else
-                    {
-                        storage(index, column) = static_cast<scalar_t>(values(0));
-                    }
-                }
-                else
-                {
-                    storage(index, column) = 0.0;
-                }
-            }
-            ++ column;
+            return std::make_tuple(process, colsize);
         }
     };
 
@@ -200,49 +108,15 @@ namespace nano
         feature_t feature(tensor_size_t ifeature) const override;
         feature_mapping_t do_fit(indices_cmap_t, execution) override;
 
-        template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
-        void do_select(dataset_iterator_t<tscalar, input_rank> it, tensor_size_t, struct_map_t storage) const
+        auto process(tensor_size_t ifeature) const
         {
-            for (; it; ++ it)
-            {
-                if (const auto [index, given, values] = *it; given)
-                {
-                    storage.array(index) = values.array().template cast<scalar_t>();
-                }
-                else
-                {
-                    storage.tensor(index).full(std::numeric_limits<scalar_t>::quiet_NaN());
-                }
-            }
-        }
-
-        template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
-        void do_flatten(dataset_iterator_t<tscalar, input_rank> it,
-            tensor_size_t ifeature, tensor2d_map_t storage, tensor_size_t& column) const
-        {
-            const auto should_drop = this->should_drop(ifeature);
             const auto colsize = size(mapped_dims(ifeature));
-            for (; it; ++ it)
+            const auto process = [=] (const auto& values, auto&& storage)
             {
-                if (const auto [index, given, values] = *it; given)
-                {
-                    auto segment = storage.array(index).segment(column, colsize);
-                    if (should_drop)
-                    {
-                        segment.setConstant(+0.0);
-                    }
-                    else
-                    {
-                        segment.array() = values.array().template cast<scalar_t>();
-                    }
-                }
-                else
-                {
-                    auto segment = storage.array(index).segment(column, colsize);
-                    segment.setConstant(+0.0);
-                }
-            }
-            column += colsize;
+                storage = values.array().template cast<scalar_t>();
+            };
+
+            return std::make_tuple(process, colsize);
         }
     };
 }

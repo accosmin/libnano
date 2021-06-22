@@ -25,57 +25,20 @@ namespace nano
         feature_t feature(tensor_size_t ifeature) const override;
         feature_mapping_t do_fit(indices_cmap_t, execution) override;
 
-        template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
-        void do_select(dataset_iterator_t<tscalar, input_rank> it, tensor_size_t ifeature, struct_map_t storage) const
+        auto process(tensor_size_t ifeature) const
         {
             const auto mode = mapped_mode(ifeature);
             const auto channel = mapped_channel(ifeature);
             const auto kernel = make_kernel3x3<scalar_t>(m_type);
             [[maybe_unused]] const auto [rows, cols, _] = mapped_dims(ifeature);
-            for (; it; ++ it)
-            {
-                if (const auto [index, given, values] = *it; given)
-                {
-                    gradient3x3(mode, values, channel, kernel, storage.tensor(index).reshape(rows, cols));
-                }
-                else
-                {
-                    storage.tensor(index).full(std::numeric_limits<scalar_t>::quiet_NaN());
-                }
-            }
-        }
 
-        template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
-        void do_flatten(dataset_iterator_t<tscalar, input_rank> it,
-            tensor_size_t ifeature, tensor2d_map_t storage, tensor_size_t& column) const
-        {
-            const auto should_drop = this->should_drop(ifeature);
-            const auto mode = mapped_mode(ifeature);
-            const auto channel = mapped_channel(ifeature);
-            const auto kernel = make_kernel3x3<scalar_t>(m_type);
-            [[maybe_unused]] const auto [rows, cols, _] = mapped_dims(ifeature);
             const auto colsize = rows * cols;
-            for (; it; ++ it)
+            const auto process = [=] (const auto& values, auto&& storage)
             {
-                if (const auto [index, given, values] = *it; given)
-                {
-                    auto segment = storage.vector(index).segment(column, colsize);
-                    if (should_drop)
-                    {
-                        segment.setConstant(+0.0);
-                    }
-                    else
-                    {
-                        gradient3x3(mode, values, channel, kernel, map_tensor(segment.data(), rows, cols));
-                    }
-                }
-                else
-                {
-                    auto segment = storage.vector(index).segment(column, colsize);
-                    segment.setConstant(+0.0);
-                }
-            }
-            column += rows * cols;
+                gradient3x3(mode, values, channel, kernel, map_tensor(storage.data(), rows, cols));
+            };
+
+            return std::make_tuple(process, colsize);
         }
 
     private:

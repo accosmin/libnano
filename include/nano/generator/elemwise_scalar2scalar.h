@@ -37,48 +37,17 @@ namespace nano
             return make_scalar_feature(ifeature, toperator::name());
         }
 
-        template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
-        void do_select(dataset_iterator_t<tscalar, input_rank> it, tensor_size_t ifeature, scalar_map_t storage) const
+        auto process(tensor_size_t ifeature) const
         {
             const auto component = mapped_component(ifeature);
-            for (; it; ++ it)
-            {
-                if (const auto [index, given, values] = *it; given)
-                {
-                    storage(index) = toperator::scalar(values(component));
-                }
-                else
-                {
-                    storage(index) = std::numeric_limits<scalar_t>::quiet_NaN();
-                }
-            }
-        }
 
-        template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
-        void do_flatten(dataset_iterator_t<tscalar, input_rank> it,
-            tensor_size_t ifeature, tensor2d_map_t storage, tensor_size_t& column) const
-        {
-            const auto should_drop = this->should_drop(ifeature);
-            const auto component = mapped_component(ifeature);
-            for (; it; ++ it)
+            const auto colsize = tensor_size_t{1};
+            const auto process = [=] (const auto& values)
             {
-                if (const auto [index, given, values] = *it; given)
-                {
-                    if (should_drop)
-                    {
-                        storage(index, column) = +0.0;
-                    }
-                    else
-                    {
-                        storage(index, column) = toperator::scalar(values(component));
-                    }
-                }
-                else
-                {
-                    storage(index, column) = +0.0;
-                }
-            }
-            ++ column;
+                return toperator::scalar(values(component));
+            };
+
+            return std::make_tuple(process, colsize);
         }
 
     private:

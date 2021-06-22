@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/generator.h>
+#include <nano/generator/elemwise_base.h>
 
 namespace nano
 {
@@ -11,72 +11,6 @@ namespace nano
     ///         * the original feature and
     ///         * the component index of the original feature.
     ///
-    class NANO_PUBLIC base_elemwise_generator_t : public generator_t
-    {
-    public:
-
-        base_elemwise_generator_t(const memory_dataset_t& dataset) :
-            generator_t(dataset)
-        {
-        }
-
-        void fit(indices_cmap_t samples, execution ex) override
-        {
-            m_feature_mapping = do_fit(samples, ex);
-            allocate(features());
-        }
-
-        tensor_size_t features() const override
-        {
-            return m_feature_mapping.size<0>();
-        }
-
-        tensor_size_t mapped_original(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 0);
-        }
-
-        tensor_size_t mapped_component(tensor_size_t ifeature, bool clamp = true) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            const auto component = m_feature_mapping(ifeature, 1);
-            return clamp ? std::max(component, tensor_size_t{0}) : component;
-        }
-
-        tensor_size_t mapped_classes(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 2);
-        }
-
-        tensor3d_dims_t mapped_dims(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return make_dims(
-                m_feature_mapping(ifeature, 3),
-                m_feature_mapping(ifeature, 4),
-                m_feature_mapping(ifeature, 5));
-        }
-
-        const auto& mapping() const
-        {
-            return m_feature_mapping;
-        }
-
-        virtual feature_mapping_t do_fit(indices_cmap_t samples, execution ex) = 0;
-
-    protected:
-
-        feature_t make_scalar_feature(tensor_size_t ifeature, const char* name) const;
-        feature_t make_sclass_feature(tensor_size_t ifeature, const char* name, strings_t labels) const;
-
-    private:
-
-        // attributes
-        feature_mapping_t   m_feature_mapping;          ///< (feature index, original feature index, ...)
-    };
-
     template
     <
         typename tcomputer,
@@ -107,7 +41,18 @@ namespace nano
                         }
                         else
                         {
-                            this->do_select(it, ifeature, storage);
+                            [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
+                            for (; it; ++ it)
+                            {
+                                if (const auto [index, given, values] = *it; given)
+                                {
+                                    storage(index) = op(values);
+                                }
+                                else
+                                {
+                                    storage(index) = std::numeric_limits<scalar_t>::quiet_NaN();
+                                }
+                            }
                         }
                     });
                 });
@@ -133,7 +78,18 @@ namespace nano
                         }
                         else
                         {
-                            this->do_select(it, ifeature, storage);
+                            [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
+                            for (; it; ++ it)
+                            {
+                                if (const auto [index, given, values] = *it; given)
+                                {
+                                    storage(index) = op(values);
+                                }
+                                else
+                                {
+                                    storage(index) = -1;
+                                }
+                            }
                         }
                     });
                 });
@@ -159,7 +115,18 @@ namespace nano
                         }
                         else
                         {
-                            this->do_select(it, ifeature, storage);
+                            [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
+                            for (; it; ++ it)
+                            {
+                                if (const auto [index, given, values] = *it; given)
+                                {
+                                    op(values, storage.vector(index));
+                                }
+                                else
+                                {
+                                    storage.vector(index).setConstant(-1);
+                                }
+                            }
                         }
                     });
                 });
@@ -185,7 +152,18 @@ namespace nano
                         }
                         else
                         {
-                            this->do_select(it, ifeature, storage);
+                            [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
+                            for (; it; ++ it)
+                            {
+                                if (const auto [index, given, values] = *it; given)
+                                {
+                                    op(values, storage.vector(index));
+                                }
+                                else
+                                {
+                                    storage.tensor(index).full(std::numeric_limits<scalar_t>::quiet_NaN());
+                                }
+                            }
                         }
                     });
                 });
@@ -205,7 +183,61 @@ namespace nano
                 {
                     loop_samples<tcomputer::input_rank>(data, mask, samples, [&] (auto it)
                     {
-                        this->do_flatten(it, ifeature, storage, column);
+                        const auto should_drop = this->should_drop(ifeature);
+                        const auto [op, colsize] = this->process(ifeature);
+
+                        for (; it; ++ it)
+                        {
+                            if (const auto [index, given, values] = *it; given)
+                            {
+                                if constexpr (tcomputer::generated_type == generator_type::scalar)
+                                {
+                                    if (should_drop)
+                                    {
+                                        storage(index, column) = 0.0;
+                                    }
+                                    else
+                                    {
+                                        storage(index, column) = op(values);
+                                    }
+                                }
+                                else
+                                {
+                                    auto segment = storage.vector(index).segment(column, colsize);
+                                    if (should_drop)
+                                    {
+                                        segment.setConstant(+0.0);
+                                    }
+                                    else if constexpr (tcomputer::generated_type == generator_type::sclass)
+                                    {
+                                        segment.setConstant(-1.0);
+                                        segment(op(values)) = +1.0;
+                                    }
+                                    else if constexpr (tcomputer::generated_type == generator_type::mclass)
+                                    {
+                                        op(values, segment);
+                                        segment.array() = 2.0 * segment.array() - 1.0;
+                                    }
+                                    else
+                                    {
+                                        op(values, segment);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if constexpr (tcomputer::generated_type == generator_type::scalar)
+                                {
+                                    storage(index, column) = 0.0;
+                                }
+                                else
+                                {
+                                    auto segment = storage.array(index).segment(column, colsize);
+                                    segment.setConstant(+0.0);
+                                }
+                            }
+                        }
+                        column += colsize;
                     });
                 });
             }

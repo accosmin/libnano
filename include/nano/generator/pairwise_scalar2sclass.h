@@ -38,68 +38,18 @@ namespace nano
             return make_sclass_feature(ifeature, toperator::name(), toperator::label_strings());
         }
 
-        template
-        <
-            typename tscalar1, typename tscalar2,
-            std::enable_if_t<std::is_arithmetic_v<tscalar1>, bool> = true,
-            std::enable_if_t<std::is_arithmetic_v<tscalar2>, bool> = true
-        >
-        void do_select(
-            dataset_pairwise_iterator_t<tscalar1, input_rank1, tscalar2, input_rank2> it,
-            tensor_size_t ifeature, sclass_map_t storage) const
+        auto process(tensor_size_t ifeature) const
         {
             const auto component1 = mapped_component1(ifeature);
             const auto component2 = mapped_component2(ifeature);
-            for (; it; ++ it)
-            {
-                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
-                {
-                    storage(index) = toperator::label(values1(component1), values2(component2));
-                }
-                else
-                {
-                    storage(index) = -1;
-                }
-            }
-        }
 
-        template
-        <
-            typename tscalar1, typename tscalar2,
-            std::enable_if_t<std::is_arithmetic_v<tscalar1>, bool> = true,
-            std::enable_if_t<std::is_arithmetic_v<tscalar2>, bool> = true
-        >
-        void do_flatten(
-            dataset_pairwise_iterator_t<tscalar1, input_rank1, tscalar2, input_rank2> it,
-            tensor_size_t ifeature, tensor2d_map_t storage, tensor_size_t& column) const
-        {
             const auto colsize = toperator::labels();
-            const auto should_drop = this->should_drop(ifeature);
-            const auto component1 = mapped_component1(ifeature);
-            const auto component2 = mapped_component2(ifeature);
-            for (; it; ++ it)
+            const auto process = [=] (const auto& values1, const auto& values2)
             {
-                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
-                {
-                    auto segment = storage.array(index).segment(column, colsize);
-                    if (should_drop)
-                    {
-                        segment.setConstant(0.0);
-                    }
-                    else
-                    {
-                        const auto label = toperator::label(values1(component1), values2(component2));
-                        segment.setConstant(-1.0);
-                        segment(label) = 1.0;
-                    }
-                }
-                else
-                {
-                    auto segment = storage.array(index).segment(column, colsize);
-                    segment.setConstant(0.0);
-                }
-            }
-            column += colsize;
+                return toperator::label(values1(component1), values2(component2));
+            };
+
+            return std::make_tuple(process, colsize);
         }
 
     private:

@@ -22,52 +22,18 @@ namespace nano
         feature_t feature(tensor_size_t ifeature) const override;
         feature_mapping_t do_fit(indices_cmap_t samples, execution) override;
 
-        template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
-        void do_select(dataset_iterator_t<tscalar, input_rank> it, tensor_size_t ifeature, scalar_map_t storage) const
+        auto process(tensor_size_t ifeature) const
         {
             const auto& histogram = m_histograms[static_cast<size_t>(ifeature)];
-
             const auto component = mapped_component(ifeature);
-            for (; it; ++ it)
-            {
-                if (const auto [index, given, values] = *it; given)
-                {
-                    storage(index) = make_value(histogram, values(component));
-                }
-                else
-                {
-                    storage(index) = std::numeric_limits<scalar_t>::quiet_NaN();
-                }
-            }
-        }
 
-        template <typename tscalar, std::enable_if_t<std::is_arithmetic_v<tscalar>, bool> = true>
-        void do_flatten(dataset_iterator_t<tscalar, input_rank> it,
-            tensor_size_t ifeature, tensor2d_map_t storage, tensor_size_t& column) const
-        {
-            const auto& histogram = m_histograms[static_cast<size_t>(ifeature)];
-
-            const auto should_drop = this->should_drop(ifeature);
-            const auto component = mapped_component(ifeature);
-            for (; it; ++ it)
+            const auto colsize = tensor_size_t{1};
+            const auto process = [=] (const auto& values)
             {
-                if (const auto [index, given, values] = *it; given)
-                {
-                    if (should_drop)
-                    {
-                        storage(index, column) = 0.0;
-                    }
-                    else
-                    {
-                        storage(index, column) = make_value(histogram, values(component));
-                    }
-                }
-                else
-                {
-                    storage(index, column) = 0.0;
-                }
-            }
-            ++ column;
+                return make_value(histogram, values(component));
+            };
+
+            return std::make_tuple(process, colsize);
         }
 
     protected:
@@ -93,7 +59,7 @@ namespace nano
     ///
     /// \brief construct histograms using equidistant ratios of the original feature values.
     ///
-    class ratio_histogram_medians_t : public histogram_medians_t
+    class NANO_PUBLIC ratio_histogram_medians_t : public histogram_medians_t
     {
     public:
 
@@ -123,7 +89,7 @@ namespace nano
     ///
     /// \brief construct histograms using equidistant percentiles of the original feature values.
     ///
-    class percentile_histogram_medians_t : public histogram_medians_t
+    class NANO_PUBLIC percentile_histogram_medians_t : public histogram_medians_t
     {
     public:
 

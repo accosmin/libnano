@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/generator.h>
+#include <nano/generator/pairwise_base.h>
 
 namespace nano
 {
@@ -13,101 +13,6 @@ namespace nano
     ///         * original feature2,
     ///         * component index of the original feature2.
     ///
-    class NANO_PUBLIC base_pairwise_generator_t : public generator_t
-    {
-    public:
-
-        base_pairwise_generator_t(const memory_dataset_t& dataset) :
-            generator_t(dataset)
-        {
-        }
-
-        void fit(indices_cmap_t samples, execution ex) override
-        {
-            m_feature_mapping = do_fit(samples, ex);
-            allocate(features());
-        }
-
-        tensor_size_t features() const override
-        {
-            return m_feature_mapping.size<0>();
-        }
-
-        tensor_size_t mapped_original1(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 0);
-        }
-
-        tensor_size_t mapped_original2(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 6);
-        }
-
-        tensor_size_t mapped_component1(tensor_size_t ifeature, bool clamp = true) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            const auto component = m_feature_mapping(ifeature, 1);
-            return clamp ? std::max(component, tensor_size_t{0}) : component;
-        }
-
-        tensor_size_t mapped_component2(tensor_size_t ifeature, bool clamp = true) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            const auto component = m_feature_mapping(ifeature, 7);
-            return clamp ? std::max(component, tensor_size_t{0}) : component;
-        }
-
-        tensor_size_t mapped_classes1(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 2);
-        }
-
-        tensor_size_t mapped_classes2(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return m_feature_mapping(ifeature, 8);
-        }
-
-        tensor3d_dims_t mapped_dims1(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return make_dims(
-                m_feature_mapping(ifeature, 3),
-                m_feature_mapping(ifeature, 4),
-                m_feature_mapping(ifeature, 5));
-        }
-
-        tensor3d_dims_t mapped_dims2(tensor_size_t ifeature) const
-        {
-            assert(ifeature >= 0 && ifeature < features());
-            return make_dims(
-                m_feature_mapping(ifeature, 9),
-                m_feature_mapping(ifeature, 10),
-                m_feature_mapping(ifeature, 11));
-        }
-
-        const auto& mapping() const
-        {
-            return m_feature_mapping;
-        }
-
-        virtual feature_mapping_t do_fit(indices_cmap_t samples, execution ex) = 0;
-
-    protected:
-
-        static feature_mapping_t make_pairwise(const feature_mapping_t& mapping);
-        feature_t make_scalar_feature(tensor_size_t ifeature, const char* name) const;
-        feature_t make_sclass_feature(tensor_size_t ifeature, const char* name, strings_t labels) const;
-
-    private:
-
-        // attributes
-        feature_mapping_t   m_feature_mapping;          ///< (feature index, original feature index, ...)
-    };
-
     template
     <
         typename tcomputer,
@@ -141,7 +46,18 @@ namespace nano
                         }
                         else
                         {
-                            this->do_select(it, ifeature, storage);
+                            [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
+                            for (; it; ++ it)
+                            {
+                                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
+                                {
+                                    storage(index) = op(values1, values2);
+                                }
+                                else
+                                {
+                                    storage(index) = std::numeric_limits<scalar_t>::quiet_NaN();
+                                }
+                            }
                         }
                     });
                 });
@@ -170,7 +86,18 @@ namespace nano
                         }
                         else
                         {
-                            this->do_select(it, ifeature, storage);
+                            [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
+                            for (; it; ++ it)
+                            {
+                                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
+                                {
+                                    storage(index) = op(values1, values2);
+                                }
+                                else
+                                {
+                                    storage(index) = -1;
+                                }
+                            }
                         }
                     });
                 });
@@ -199,7 +126,18 @@ namespace nano
                         }
                         else
                         {
-                            this->do_select(it, ifeature, storage);
+                            [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
+                            for (; it; ++ it)
+                            {
+                                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
+                                {
+                                    op(values1, values2, storage.vector(index));
+                                }
+                                else
+                                {
+                                    storage.vector(index).setConstant(-1);
+                                }
+                            }
                         }
                     });
                 });
@@ -228,7 +166,18 @@ namespace nano
                         }
                         else
                         {
-                            this->do_select(it, ifeature, storage);
+                            [[maybe_unused]] const auto [op, colsize] = this->process(ifeature);
+                            for (; it; ++ it)
+                            {
+                                if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
+                                {
+                                    op(values1, values2, storage.vector(index));
+                                }
+                                else
+                                {
+                                    storage.tensor(index).full(std::numeric_limits<scalar_t>::quiet_NaN());
+                                }
+                            }
                         }
                     });
                 });
@@ -251,7 +200,61 @@ namespace nano
                     loop_samples2<tcomputer::input_rank1, tcomputer::input_rank2>(
                         data1, mask1, data2, mask2, samples, [&] (auto it)
                     {
-                        this->do_flatten(it, ifeature, storage, column);
+                        const auto should_drop = this->should_drop(ifeature);
+                        const auto [op, colsize] = this->process(ifeature);
+
+                        for (; it; ++ it)
+                        {
+                            if (const auto [index, given1, values1, given2, values2] = *it; given1 && given2)
+                            {
+                                if constexpr (tcomputer::generated_type == generator_type::scalar)
+                                {
+                                    if (should_drop)
+                                    {
+                                        storage(index, column) = 0.0;
+                                    }
+                                    else
+                                    {
+                                        storage(index, column) = op(values1, values2);
+                                    }
+                                }
+                                else
+                                {
+                                    auto segment = storage.vector(index).segment(column, colsize);
+                                    if (should_drop)
+                                    {
+                                        segment.setConstant(+0.0);
+                                    }
+                                    else if constexpr (tcomputer::generated_type == generator_type::sclass)
+                                    {
+                                        segment.setConstant(-1.0);
+                                        segment(op(values1, values2)) = +1.0;
+                                    }
+                                    else if constexpr (tcomputer::generated_type == generator_type::mclass)
+                                    {
+                                        op(values1, values2, segment);
+                                        segment.array() = 2.0 * segment.array() - 1.0;
+                                    }
+                                    else
+                                    {
+                                        op(values1, values2, segment);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if constexpr (tcomputer::generated_type == generator_type::scalar)
+                                {
+                                    storage(index, column) = 0.0;
+                                }
+                                else
+                                {
+                                    auto segment = storage.array(index).segment(column, colsize);
+                                    segment.setConstant(+0.0);
+                                }
+                            }
+                        }
+                        column += colsize;
                     });
                 });
             }

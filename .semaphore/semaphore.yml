@@ -10,5 +10,6 @@ blocks:
       jobs:
         - name: build (gcc)
           commands:
+            - pwd
             - bash scripts/setup_ubuntu2004.sh --default --llvm 10
             - CXX=g++ bash scripts/build.sh --build-type Debug --config --build --test --install --build-example

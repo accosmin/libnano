@@ -11,6 +11,7 @@ blocks:
         - name: build (gcc)
           commands:
             - pwd
+            - apt install tree
             - tree
             - bash scripts/setup_ubuntu2004.sh --default --llvm 10
             - CXX=g++ bash scripts/build.sh --build-type Debug --config --build --test --install --build-example

@@ -1,15 +1,11 @@
-# TODO: support for building on Windows
-# TODO: support for code coverage reports for branches
-# TODO: support for building documentation (e.g. doxygen
-
 version: v1.0
-name: Ubuntu20 Based Pipeline
+name: libnano pipeline
 agent:
   machine:
     type: e1-standard-2
     os_image: ubuntu2004
 blocks:
-  - name: Unit tests
+  - name: Ubuntu 20.04
     task:
       prologue:
         commands:
@@ -19,81 +15,87 @@ blocks:
         - name: build (gcc)
           commands:
             - CXX=g++ bash scripts/build.sh --build-type Debug --config --build --test --install --build-example
-
         - name: build (clang)
           commands:
             - CXX=clang++ bash scripts/build.sh --build-type Debug --libcpp --config --build --test --install --build-example
-
         - name: ASAN (gcc)
           commands:
             - CXX=g++ bash scripts/build.sh --build-type Debug --asan --config --build --test
-
         - name: LSAN (gcc)
           commands:
             - CXX=g++ bash scripts/build.sh --build-type Debug --lsan --config --build --test
-
         - name: USAN (gcc)
           commands:
             - CXX=g++ bash scripts/build.sh --build-type Debug --usan --config --build --test
-
         - name: TSAN (gcc)
           commands:
             - CXX=g++ bash scripts/build.sh --build-type Debug --tsan --config --build --test
-
         - name: clang-tidy-cert (clang)
           commands:
             - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-cert
-
         - name: clang-tidy-hicpp (clang)
           commands:
             - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-hicpp
-
         - name: clang-tidy-misc (clang)
           commands:
             - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-misc
-
         - name: clang-tidy-bugprone (clang)
           commands:
             - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-bugprone
-
         - name: clang-tidy-modernize (clang)
           commands:
             - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-modernize
-
         - name: clang-tidy-performance (clang)
           commands:
             - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-performance
-
         - name: clang-tidy-portability (clang-10)
           commands:
             - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-portability
-
         - name: clang-tidy-readability (clang)
           commands:
             - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-readability
-
         - name: clang-tidy-clang-analyzer (clang)
           commands:
             - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-clang-analyzer
-
         - name: clang-tidy-cppcoreguidelines (clang)
           commands:
             - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-cppcoreguidelines
-
         - name: cppcheck
           commands:
             - CXX=g++ bash scripts/build.sh --config --cppcheck
-
         - name: memcheck (gcc)
           commands:
             - CXX=g++ bash scripts/build.sh --build-type RelWithDebInfo --config --build --memcheck
-
-        #- name: helgrind (gcc)
-        #  commands:
-        #    - CXX=g++ bash scripts/build.sh --build-type Debug --config --build --helgrind || true
-
         - name: codecov (gcc)
           commands:
             - sudo -H pip install --upgrade pip
             - sudo -H pip install coverage
             - CXX=g++ GCOV=gcov bash scripts/build.sh --build-type Debug --coverage --config --build --test --codecov
+  - name: OSX XCODE11
+    task:
+      agent:
+        machine:
+          type: a1-standard-4
+          os_image: macos-xcode11
+      prologue:
+        commands:
+          - checkout
+          - bash scripts/setup_osxbrew.sh
+      jobs:
+        - name: build
+          commands:
+            - bash scripts/build.sh --config --build --test --install --build-example
+  - name: OSX XCODE12
+    task:
+      agent:
+        machine:
+          type: a1-standard-4
+          os_image: macos-xcode12
+      prologue:
+        commands:
+          - checkout
+          - bash scripts/setup_osxbrew.sh
+      jobs:
+        - name: build
+          commands:
+            - bash scripts/build.sh --config --build --test --install --build-example

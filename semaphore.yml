@@ -1,0 +1,14 @@
+version: v1.0
+name: Ubuntu20 Based Pipeline
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu2004
+blocks:
+  - name: Unit tests
+    task:
+      jobs:
+        - name: build (gcc)
+          commands:
+            - bash scripts/setup_ubuntu2004.sh --default --llvm 10
+            - CXX=g++ bash scripts/build.sh --build-type Debug --config --build --test --install --build-example

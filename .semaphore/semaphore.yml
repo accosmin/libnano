@@ -32,34 +32,34 @@ blocks:
             - CXX=g++ bash scripts/build.sh --build-type Debug --tsan --config --build --test
         - name: clang-tidy-cert (clang)
           commands:
-            - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-cert
+            - CXX=clang++-10 bash scripts/build.sh --config --build --clang-tidy-suffix -10 --clang-tidy-cert
         - name: clang-tidy-hicpp (clang)
           commands:
-            - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-hicpp
+            - CXX=clang++-10 bash scripts/build.sh --config --build --clang-tidy-suffix -10 --clang-tidy-hicpp
         - name: clang-tidy-misc (clang)
           commands:
-            - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-misc
+            - CXX=clang++-10 bash scripts/build.sh --config --build --clang-tidy-suffix -10 --clang-tidy-misc
         - name: clang-tidy-bugprone (clang)
           commands:
-            - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-bugprone
+            - CXX=clang++-10 bash scripts/build.sh --config --build --clang-tidy-suffix -10 --clang-tidy-bugprone
         - name: clang-tidy-modernize (clang)
           commands:
-            - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-modernize
+            - CXX=clang++-10 bash scripts/build.sh --config --build --clang-tidy-suffix -10 --clang-tidy-modernize
         - name: clang-tidy-performance (clang)
           commands:
-            - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-performance
+            - CXX=clang++-10 bash scripts/build.sh --config --build --clang-tidy-suffix -10 --clang-tidy-performance
         - name: clang-tidy-portability (clang-10)
           commands:
-            - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-portability
+            - CXX=clang++-10 bash scripts/build.sh --config --build --clang-tidy-suffix -10 --clang-tidy-portability
         - name: clang-tidy-readability (clang)
           commands:
-            - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-readability
+            - CXX=clang++-10 bash scripts/build.sh --config --build --clang-tidy-suffix -10 --clang-tidy-readability
         - name: clang-tidy-clang-analyzer (clang)
           commands:
-            - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-clang-analyzer
+            - CXX=clang++-10 bash scripts/build.sh --config --build --clang-tidy-suffix -10 --clang-tidy-clang-analyzer
         - name: clang-tidy-cppcoreguidelines (clang)
           commands:
-            - CXX=clang++-10 bash scripts/build.sh --libcpp --config --build --clang-tidy-suffix -10 --clang-tidy-cppcoreguidelines
+            - CXX=clang++-10 bash scripts/build.sh --config --build --clang-tidy-suffix -10 --clang-tidy-cppcoreguidelines
         - name: cppcheck
           commands:
             - CXX=g++ bash scripts/build.sh --config --cppcheck

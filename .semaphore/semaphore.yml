@@ -48,7 +48,7 @@ blocks:
         - name: clang-tidy-performance (clang)
           commands:
             - CXX=clang++-10 bash scripts/build.sh --config --build --clang-tidy-suffix -10 --clang-tidy-performance
-        - name: clang-tidy-portability (clang-10)
+        - name: clang-tidy-portability (clang)
           commands:
             - CXX=clang++-10 bash scripts/build.sh --config --build --clang-tidy-suffix -10 --clang-tidy-portability
         - name: clang-tidy-readability (clang)

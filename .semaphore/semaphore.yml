@@ -11,6 +11,8 @@ blocks:
         commands:
           - checkout
           - bash scripts/setup_ubuntu2004.sh --default --llvm 10
+      secrets:
+        - name: codecov
       jobs:
         - name: build (gcc)
           commands:

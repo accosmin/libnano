@@ -23,7 +23,7 @@ namespace nano
     public:
 
         template <typename... targs>
-        pairwise_generator_t(const memory_dataset_t& dataset, targs... args) :
+        explicit pairwise_generator_t(const memory_dataset_t& dataset, targs... args) :
             tcomputer(dataset, args...)
         {
         }

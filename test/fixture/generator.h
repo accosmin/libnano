@@ -47,7 +47,7 @@ template <template <typename, size_t> class tstorage, typename tscalar, size_t t
     UTEST_CHECK_NOTHROW(storage = generator.select(samples, feature, buffer));
     switch (generator.feature(feature).type())
     {
-    case feature_type::sclass:  expected_dropped.full(-1); break;
+    case feature_type::sclass:  expected_dropped.full(-1); break; // NOLINT(bugprone-branch-clone)
     case feature_type::mclass:  expected_dropped.full(-1); break;
     default:                    expected_dropped.full(static_cast<tscalar>(NaN)); break;
     }

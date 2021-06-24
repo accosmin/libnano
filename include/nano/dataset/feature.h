@@ -90,7 +90,7 @@ namespace nano
         ///
         /// \brief returns the label associated to the given feature value (if possible).
         ///
-        string_t label(const scalar_t value) const;
+        string_t label(scalar_t value) const;
 
         ///
         /// \brief returns true if the feature is valid (aka defined).
@@ -103,7 +103,7 @@ namespace nano
         ///
         /// \brief returns the associated machine learning task if this feature is the target.
         ///
-        operator task_type() const
+        explicit operator task_type() const
         {
             if (!static_cast<bool>(*this))
             {

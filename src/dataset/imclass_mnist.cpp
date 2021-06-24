@@ -90,9 +90,9 @@ bool base_mnist_dataset_t::tread(const string_t& path, tensor_size_t offset, ten
         return false;
     }
 
-    for (const auto label : labels)
+    for (tensor_size_t i = 0; i < expected; ++ i)
     {
-        const auto ilabel = static_cast<tensor_size_t>(static_cast<unsigned char>(label));
+        const auto ilabel = static_cast<tensor_size_t>(static_cast<unsigned char>(labels(i)));
         if (ilabel < 0 || ilabel >= 10)
         {
             log_error() << m_name << ": invalid label!";

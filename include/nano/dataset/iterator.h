@@ -13,7 +13,7 @@ namespace nano
 
         base_dataset_iterator_t() = default;
 
-        base_dataset_iterator_t(indices_cmap_t samples, tensor_size_t index = 0) :
+        explicit base_dataset_iterator_t(indices_cmap_t samples, tensor_size_t index = 0) :
             m_index(index),
             m_samples(samples)
         {
@@ -42,14 +42,14 @@ namespace nano
             return *this;
         }
 
-        base_dataset_iterator_t operator++(int)
+        base_dataset_iterator_t operator++(int) // NOLINT(cert-dcl21-cpp)
         {
             auto tmp = *this;
             ++(*this);
             return tmp;
         }
 
-        operator bool() const
+        explicit operator bool() const
         {
             return index() < size();
         }

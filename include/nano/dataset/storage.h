@@ -23,7 +23,7 @@ namespace nano
         ///
         /// \brief constructor.
         ///
-        feature_storage_t(const feature_t& feature) :
+        explicit feature_storage_t(const feature_t& feature) :
             m_feature(feature)
         {
         }
@@ -39,7 +39,7 @@ namespace nano
         template <typename tscalar, typename tvalue>
         void set(const tensor_map_t<tscalar, 1>& data, tensor_size_t sample, const tvalue& value) const
         {
-            tensor_size_t label;
+            tensor_size_t label = 0;
             if constexpr (std::is_same_v<tvalue, string_t>)
             {
                 label = check_from_string<tensor_size_t>("single-label", value);

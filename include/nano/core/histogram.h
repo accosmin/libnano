@@ -198,18 +198,18 @@ namespace nano
 
         tensor_size_t bins() const { return m_bin_counts.size(); }
         scalar_t mean(tensor_size_t bin) const { return m_bin_means(bin); }
-        scalar_t count(tensor_size_t bin) const { return m_bin_counts(bin); }
         scalar_t median(tensor_size_t bin) const { return m_bin_medians(bin); }
+        tensor_size_t count(tensor_size_t bin) const { return m_bin_counts(bin); }
 
         template <typename tvalue>
         tensor_size_t bin(tvalue value) const
         {
-            const auto svalue = static_cast<tensor_size_t>(value);
+            const auto svalue = cast_bin(value);
 
-            const auto begin = ::nano::begin(m_thresholds);
-            const auto end = ::nano::end(m_thresholds);
+            const auto *const begin = ::nano::begin(m_thresholds);
+            const auto *const end = ::nano::end(m_thresholds);
 
-            const auto it = std::upper_bound(begin, end, svalue);
+            const auto *const it = std::upper_bound(begin, end, svalue);
             if (it == end)
             {
                 return bins() - 1;
@@ -221,6 +221,17 @@ namespace nano
         }
 
     private:
+
+        template <typename tvalue>
+        static tensor_size_t cast_bin(tvalue value)
+        {
+            return static_cast<tensor_size_t>(value);
+        }
+
+        static tensor_size_t cast_bin(char value)
+        {
+            return static_cast<tensor_size_t>(static_cast<unsigned char>(value));
+        }
 
         template <typename titerator>
         void update(titerator begin, titerator end)

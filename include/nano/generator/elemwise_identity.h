@@ -14,7 +14,7 @@ namespace nano
         static constexpr auto input_rank = 1U;
         static constexpr auto generated_type = generator_type::sclass;
 
-        sclass_identity_t(const memory_dataset_t& dataset);
+        explicit sclass_identity_t(const memory_dataset_t& dataset);
 
         feature_t feature(tensor_size_t ifeature) const override;
         feature_mapping_t do_fit(indices_cmap_t, execution) override;
@@ -41,7 +41,7 @@ namespace nano
         static constexpr auto input_rank = 2U;
         static constexpr auto generated_type = generator_type::mclass;
 
-        mclass_identity_t(const memory_dataset_t& dataset);
+        explicit mclass_identity_t(const memory_dataset_t& dataset);
 
         feature_t feature(tensor_size_t ifeature) const override;
         feature_mapping_t do_fit(indices_cmap_t, execution) override;
@@ -76,7 +76,7 @@ namespace nano
         static constexpr auto input_rank = 4U;
         static constexpr auto generated_type = generator_type::scalar;
 
-        scalar_identity_t(const memory_dataset_t& dataset);
+        explicit scalar_identity_t(const memory_dataset_t& dataset);
 
         feature_t feature(tensor_size_t ifeature) const override;
         feature_mapping_t do_fit(indices_cmap_t, execution) override;
@@ -103,7 +103,7 @@ namespace nano
         static constexpr auto input_rank = 4U;
         static constexpr auto generated_type = generator_type::structured;
 
-        struct_identity_t(const memory_dataset_t& dataset);
+        explicit struct_identity_t(const memory_dataset_t& dataset);
 
         feature_t feature(tensor_size_t ifeature) const override;
         feature_mapping_t do_fit(indices_cmap_t, execution) override;

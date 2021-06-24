@@ -36,7 +36,7 @@ public:
         {
             hits(0) = sample % 2;
             hits(1) = 1 - (sample % 2);
-            hits(2) = (sample % 6) == 0;
+            hits(2) = ((sample % 6) == 0) ? 1 : 0;
             set(sample, 0, hits);
         }
 
@@ -141,11 +141,11 @@ UTEST_CASE(unsupervised)
     UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"f64"}.scalar(feature_type::float64, make_dims(1, 1, 1)));
     UTEST_CHECK_EQUAL(generator.feature(4), feature_t{"u8s"}.scalar(feature_type::uint8, make_dims(2, 1, 2)));
 
-    check_select(generator, 0, dataset.expected_select1());
-    check_select(generator, 1, dataset.expected_select0());
-    check_select(generator, 2, dataset.expected_select2());
-    check_select(generator, 3, dataset.expected_select4());
-    check_select(generator, 4, dataset.expected_select3());
+    check_select(generator, 0, fixture_dataset_t::expected_select1());
+    check_select(generator, 1, fixture_dataset_t::expected_select0());
+    check_select(generator, 2, fixture_dataset_t::expected_select2());
+    check_select(generator, 3, fixture_dataset_t::expected_select4());
+    check_select(generator, 4, fixture_dataset_t::expected_select3());
     check_select_stats(generator, make_indices(0), make_indices(1), make_indices(2, 3), make_indices(4));
 
     check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 11),
@@ -247,10 +247,10 @@ UTEST_CASE(sclassification)
     UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"f64"}.scalar(feature_type::float64, make_dims(1, 1, 1)));
     UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"u8s"}.scalar(feature_type::uint8, make_dims(2, 1, 2)));
 
-    check_select(generator, 0, dataset.expected_select0());
-    check_select(generator, 1, dataset.expected_select2());
-    check_select(generator, 2, dataset.expected_select4());
-    check_select(generator, 3, dataset.expected_select3());
+    check_select(generator, 0, fixture_dataset_t::expected_select0());
+    check_select(generator, 1, fixture_dataset_t::expected_select2());
+    check_select(generator, 2, fixture_dataset_t::expected_select4());
+    check_select(generator, 3, fixture_dataset_t::expected_select3());
     check_select_stats(generator, indices_t{}, make_indices(0), make_indices(1, 2), make_indices(3));
 
     check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 9),
@@ -301,10 +301,10 @@ UTEST_CASE(mclassification)
     UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"f64"}.scalar(feature_type::float64, make_dims(1, 1, 1)));
     UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"u8s"}.scalar(feature_type::uint8, make_dims(2, 1, 2)));
 
-    check_select(generator, 0, dataset.expected_select1());
-    check_select(generator, 1, dataset.expected_select2());
-    check_select(generator, 2, dataset.expected_select4());
-    check_select(generator, 3, dataset.expected_select3());
+    check_select(generator, 0, fixture_dataset_t::expected_select1());
+    check_select(generator, 1, fixture_dataset_t::expected_select2());
+    check_select(generator, 2, fixture_dataset_t::expected_select4());
+    check_select(generator, 3, fixture_dataset_t::expected_select3());
     check_select_stats(generator, make_indices(0), indices_t{}, make_indices(1, 2), make_indices(3));
 
     check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 8),
@@ -356,10 +356,10 @@ UTEST_CASE(regression)
     UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"f64"}.scalar(feature_type::float64, make_dims(1, 1, 1)));
     UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"u8s"}.scalar(feature_type::uint8, make_dims(2, 1, 2)));
 
-    check_select(generator, 0, dataset.expected_select1());
-    check_select(generator, 1, dataset.expected_select0());
-    check_select(generator, 2, dataset.expected_select4());
-    check_select(generator, 3, dataset.expected_select3());
+    check_select(generator, 0, fixture_dataset_t::expected_select1());
+    check_select(generator, 1, fixture_dataset_t::expected_select0());
+    check_select(generator, 2, fixture_dataset_t::expected_select4());
+    check_select(generator, 3, fixture_dataset_t::expected_select3());
     check_select_stats(generator, make_indices(0), make_indices(1), make_indices(2), make_indices(3));
 
     check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 10),
@@ -409,10 +409,10 @@ UTEST_CASE(mvregression)
     UTEST_CHECK_EQUAL(generator.feature(2), feature_t{"f32"}.scalar(feature_type::float32, make_dims(1, 1, 1)));
     UTEST_CHECK_EQUAL(generator.feature(3), feature_t{"f64"}.scalar(feature_type::float64, make_dims(1, 1, 1)));
 
-    check_select(generator, 0, dataset.expected_select1());
-    check_select(generator, 1, dataset.expected_select0());
-    check_select(generator, 2, dataset.expected_select2());
-    check_select(generator, 3, dataset.expected_select4());
+    check_select(generator, 0, fixture_dataset_t::expected_select1());
+    check_select(generator, 1, fixture_dataset_t::expected_select0());
+    check_select(generator, 2, fixture_dataset_t::expected_select2());
+    check_select(generator, 3, fixture_dataset_t::expected_select4());
     check_select_stats(generator, make_indices(0), make_indices(1), make_indices(2, 3), indices_t{});
 
     check_flatten(generator, make_tensor<scalar_t>(make_dims(10, 7),

@@ -45,7 +45,7 @@ public:
     {
     }
 
-    fixture_dataset_t(features_t features, size_t target = string_t::npos) :
+    explicit fixture_dataset_t(features_t features, size_t target = string_t::npos) :
         fixture_dataset_t(fixture_dataset_t::csvs(), std::move(features), target)
     {
     }

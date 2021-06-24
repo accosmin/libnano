@@ -17,7 +17,8 @@ namespace nano
         static constexpr auto input_rank = 4U;
         static constexpr auto generated_type = generator_type::scalar;
 
-        histogram_medians_t(const memory_dataset_t& dataset, struct2scalar s2s = struct2scalar::off);
+        explicit histogram_medians_t(
+            const memory_dataset_t& dataset, struct2scalar s2s = struct2scalar::off);
 
         feature_t feature(tensor_size_t ifeature) const override;
         feature_mapping_t do_fit(indices_cmap_t samples, execution) override;
@@ -63,22 +64,11 @@ namespace nano
     {
     public:
 
-        ratio_histogram_medians_t(
-            const memory_dataset_t& dataset, struct2scalar s2s = struct2scalar::off, tensor_size_t bins = 10) :
-            histogram_medians_t(dataset, s2s),
-            m_bins(bins)
-        {
-        }
+        explicit ratio_histogram_medians_t(
+            const memory_dataset_t& dataset, struct2scalar s2s = struct2scalar::off, tensor_size_t bins = 10);
 
-        string_t suffix() const override
-        {
-            return scat("ratio_hist[", m_bins, "]");
-        }
-
-        histogram_t make_histogram(std::vector<scalar_t>& values) const override
-        {
-            return histogram_t::make_from_ratios(std::begin(values), std::end(values), m_bins);
-        }
+        string_t suffix() const override;
+        histogram_t make_histogram(std::vector<scalar_t>& values) const override;
 
     private:
 
@@ -93,22 +83,11 @@ namespace nano
     {
     public:
 
-        percentile_histogram_medians_t(
-            const memory_dataset_t& dataset, struct2scalar s2s = struct2scalar::off, tensor_size_t bins = 10) :
-            histogram_medians_t(dataset, s2s),
-            m_bins(bins)
-        {
-        }
+        explicit percentile_histogram_medians_t(
+            const memory_dataset_t& dataset, struct2scalar s2s = struct2scalar::off, tensor_size_t bins = 10);
 
-        string_t suffix() const override
-        {
-            return scat("perc_hist[", m_bins, "]");
-        }
-
-        histogram_t make_histogram(std::vector<scalar_t>& values) const override
-        {
-            return histogram_t::make_from_percentiles(std::begin(values), std::end(values), m_bins);
-        }
+        string_t suffix() const override;
+        histogram_t make_histogram(std::vector<scalar_t>& values) const override;
 
     private:
 

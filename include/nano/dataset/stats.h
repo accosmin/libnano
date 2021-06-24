@@ -29,7 +29,7 @@ namespace nano
 
         scalar_stats_t() = default;
 
-        scalar_stats_t(tensor_size_t dims) :
+        explicit scalar_stats_t(tensor_size_t dims) :
             m_min(dims),
             m_max(dims),
             m_mean(dims),
@@ -117,7 +117,7 @@ namespace nano
 
         sclass_stats_t() = default;
 
-        sclass_stats_t(tensor_size_t classes) :
+        explicit sclass_stats_t(tensor_size_t classes) :
             m_class_counts(classes),
             m_class_weights(classes)
         {
@@ -212,7 +212,7 @@ namespace nano
 
         mclass_stats_t() = default;
 
-        mclass_stats_t(tensor_size_t classes) :
+        explicit mclass_stats_t(tensor_size_t classes) :
             m_class_counts(2 * classes),
             m_class_weights(2 * classes)
         {

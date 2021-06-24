@@ -764,11 +764,8 @@ namespace nano
         {
             const auto lhs_finite = std::isfinite(lhs(i));
             const auto rhs_finite = std::isfinite(rhs(i));
-            if (lhs_finite != rhs_finite)
-            {
-                return false;
-            }
-            else if (lhs_finite && !close(static_cast<double>(lhs(i)), static_cast<double>(rhs(i)), epsilon))
+            if ((lhs_finite != rhs_finite) ||
+                (lhs_finite && !close(static_cast<double>(lhs(i)), static_cast<double>(rhs(i)), epsilon)))
             {
                 return false;
             }

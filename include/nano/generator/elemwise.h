@@ -21,7 +21,7 @@ namespace nano
     public:
 
         template <typename... targs>
-        elemwise_generator_t(const memory_dataset_t& dataset, targs... args) :
+        explicit elemwise_generator_t(const memory_dataset_t& dataset, targs... args) :
             tcomputer(dataset, args...)
         {
         }
@@ -209,7 +209,7 @@ namespace nano
                                         segment.setConstant(+0.0);
                                     }
                                     else if constexpr (tcomputer::generated_type == generator_type::sclass)
-                                    {
+                                    {   // NOLINT(bugprone-branch-clone)
                                         segment.setConstant(-1.0);
                                         segment(op(values)) = +1.0;
                                     }

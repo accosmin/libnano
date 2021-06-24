@@ -17,13 +17,13 @@ namespace nano
         static constexpr auto input_rank = 4U;
         static constexpr auto generated_type = generator_type::scalar;
 
-        elemwise_scalar2scalar_t(
+        explicit elemwise_scalar2scalar_t(
             const memory_dataset_t& dataset,
             struct2scalar s2s = struct2scalar::off,
-            const indices_t& original_features = indices_t{}) :
+            indices_t original_features = indices_t{}) :
             base_elemwise_generator_t(dataset),
             m_s2s(s2s),
-            m_original_features(original_features)
+            m_original_features(std::move(original_features))
         {
         }
 

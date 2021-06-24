@@ -16,7 +16,7 @@ static void check_sclass_stats(
     {
         if (expected_samples > 0)
         {
-            expected_weights.array() *= expected_samples / expected_weights.sum();
+            expected_weights.array() *= static_cast<scalar_t>(expected_samples) / expected_weights.sum();
         }
         const auto weights = stats.sample_weights(feature, it);
 
@@ -45,7 +45,7 @@ static void check_mclass_stats(
     {
         if (expected_samples > 0)
         {
-            expected_weights.array() *= expected_samples / expected_weights.sum();
+            expected_weights.array() *= static_cast<scalar_t>(expected_samples) / expected_weights.sum();
         }
         const auto weights = stats.sample_weights(feature, it);
 

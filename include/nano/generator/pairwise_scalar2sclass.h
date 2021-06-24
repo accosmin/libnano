@@ -18,13 +18,13 @@ namespace nano
         static constexpr auto input_rank2 = 4U;
         static constexpr auto generated_type = generator_type::sclass;
 
-        pairwise_scalar2sclass_t(
+        explicit pairwise_scalar2sclass_t(
             const memory_dataset_t& dataset,
             struct2scalar s2s = struct2scalar::off,
-            const indices_t& original_feature_indices = indices_t{}) :
+            indices_t original_feature_indices = indices_t{}) :
             base_pairwise_generator_t(dataset),
             m_s2s(s2s),
-            m_original_feature_indices(original_feature_indices)
+            m_original_feature_indices(std::move(original_feature_indices))
         {
         }
 

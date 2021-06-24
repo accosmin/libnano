@@ -118,7 +118,7 @@ UTEST_CASE(data1D)
         {
             const auto [index, given, value] = *it;
             indices.push_back(static_cast<int>(index));
-            givens.push_back(given);
+            givens.push_back(static_cast<int>(given));
             values.push_back(value);
         }
 
@@ -133,7 +133,7 @@ UTEST_CASE(data1D)
         {
             const auto [index, given, value] = *it;
             indices.push_back(static_cast<int>(index));
-            givens.push_back(given);
+            givens.push_back(static_cast<int>(given));
             values.push_back(value);
         }
 

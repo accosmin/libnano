@@ -127,7 +127,7 @@ void dataset_generator_t::update()
         {
             switch (const auto feature = generator->feature(ifeature); feature.type())
             {
-            case feature_type::sclass:  columns += feature.classes(); break;
+            case feature_type::sclass:  columns += feature.classes(); break; // NOLINT(bugprone-branch-clone)
             case feature_type::mclass:  columns += feature.classes(); break;
             default:                    columns += size(feature.dims()); break;
             }
@@ -284,7 +284,7 @@ tensor3d_dims_t dataset_generator_t::target_dims() const
         {
             switch (feature.type())
             {
-            case feature_type::sclass:  return make_dims(feature.classes(), 1, 1);
+            case feature_type::sclass:  return make_dims(feature.classes(), 1, 1); // NOLINT(bugprone-branch-clone)
             case feature_type::mclass:  return make_dims(feature.classes(), 1, 1);
             default:                    return feature.dims();
             }

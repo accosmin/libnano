@@ -21,7 +21,7 @@ UTEST_CASE(scalar)
 
         for (tensor_size_t sample : {0, 11})
         {
-            const auto value = 14.6f;
+            const auto value = 14.6F;
             const auto expected_value = make_full_tensor<scalar_t>(dims, value);
 
             // check if possible to set with scalar

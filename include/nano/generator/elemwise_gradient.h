@@ -17,10 +17,10 @@ namespace nano
         static constexpr auto input_rank = 4U;
         static constexpr auto generated_type = generator_type::structured;
 
-        elemwise_gradient_t(
+        explicit elemwise_gradient_t(
             const memory_dataset_t& dataset,
             kernel3x3_type = kernel3x3_type::sobel,
-            const indices_t& original_features = indices_t{});
+            indices_t original_features = indices_t{});
 
         feature_t feature(tensor_size_t ifeature) const override;
         feature_mapping_t do_fit(indices_cmap_t, execution) override;

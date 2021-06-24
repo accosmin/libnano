@@ -93,12 +93,24 @@ namespace nano
         ///
         /// \brief constructor.
         ///
-        generator_t(const memory_dataset_t& dataset);
+        explicit generator_t(const memory_dataset_t& dataset);
 
         ///
         /// \brief default destructor.
         ///
         virtual ~generator_t() = default;
+
+        ///
+        /// \brief disable copying.
+        ///
+        generator_t(const generator_t&) = delete;
+        generator_t& operator=(const generator_t&) = delete;
+
+        ///
+        /// \brief enable moving.
+        ///
+        generator_t(generator_t&&) noexcept = default;
+        generator_t& operator=(generator_t&&) noexcept = delete;
 
         ///
         /// \brief compute dataset-specific parameters for the given set of samples (if needed)
@@ -216,7 +228,7 @@ namespace nano
     {
     public:
 
-        dataset_generator_t(const memory_dataset_t& dataset);
+        explicit dataset_generator_t(const memory_dataset_t& dataset);
 
         template <typename tgenerator, typename... tgenerator_args>
         dataset_generator_t& add(tgenerator_args... args)

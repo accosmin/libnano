@@ -271,7 +271,9 @@ function clang_tidy {
 }
 
 function clang_tidy_misc {
-    clang_tidy "misc*,-misc-non-private-member-variables-in-classes"
+    checks="misc*"
+    checks="${checks},-misc-non-private-member-variables-in-classes"
+    clang_tidy ${checks}
 }
 
 function clang_tidy_cert {
@@ -283,6 +285,7 @@ function clang_tidy_hicpp {
     checks="${checks},-hicpp-avoid-c-arrays"
     checks="${checks},-hicpp-no-array-decay"
     checks="${checks},-hicpp-signed-bitwise"
+    checks="${checks},-hicpp-named-parameter"
     clang_tidy ${checks}
 }
 
@@ -313,6 +316,7 @@ function clang_tidy_readability {
     checks="${checks},-readability-isolate-declaration"
     checks="${checks},-readability-else-after-return"
     checks="${checks},-readability-convert-member-functions-to-static"
+    checks="${checks},-readability-function-cognitive-complexity"
     clang_tidy ${checks}
 }
 

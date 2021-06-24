@@ -15,11 +15,10 @@ namespace nano
         typename tscalar,
         std::enable_if_t<std::is_pod_v<tscalar>, bool> = true
     >
-    // NOLINTNEXTLINE(readability-avoid-const-params-in-decls)
-    std::ostream& write(std::ostream& stream, const tscalar scalar)
+    std::ostream& write(std::ostream& stream, tscalar scalar)
     {
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         return stream.write(
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
             reinterpret_cast<const char*>(&scalar),
             static_cast<std::streamsize>(sizeof(tscalar)));
     }
@@ -31,8 +30,8 @@ namespace nano
     >
     std::ostream& write(std::ostream& stream, const tscalar* data, const tcount count)
     {
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         return stream.write(
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
             reinterpret_cast<const char*>(data),
             static_cast<std::streamsize>(sizeof(tscalar)) * static_cast<std::streamsize>(count));
     }
@@ -82,8 +81,8 @@ namespace nano
     >
     std::istream& read(std::istream& stream, tscalar& scalar)
     {
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         return stream.read(
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
             reinterpret_cast<char*>(&scalar),
             static_cast<std::streamsize>(sizeof(tscalar)));
     }
@@ -93,10 +92,10 @@ namespace nano
         typename tscalar, typename tcount,
         std::enable_if_t<std::is_pod_v<tscalar>, bool> = true
     >
-    std::istream& read(std::istream& stream, tscalar* data, const tcount count)
+    std::istream& read(std::istream& stream, tscalar* data, tcount count)
     {
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         return stream.read(
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
             reinterpret_cast<char*>(data),
             static_cast<std::streamsize>(sizeof(tscalar)) * static_cast<std::streamsize>(count));
     }

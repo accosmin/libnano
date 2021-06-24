@@ -37,7 +37,7 @@ public:
         {
             hits(0) = sample % 2;
             hits(1) = 1 - (sample % 2);
-            hits(2) = (sample % 6) == 0;
+            hits(2) = ((sample % 6) == 0) ? 1 : 0;
             set(sample, 0, hits);
         }
 

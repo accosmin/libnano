@@ -11,7 +11,7 @@ histogram_medians_t::histogram_medians_t(const memory_dataset_t& dataset, struct
 
 feature_mapping_t histogram_medians_t::do_fit(indices_cmap_t samples, execution)
 {
-    const auto mapping = select_scalar(dataset(), m_s2s);
+    auto mapping = select_scalar(dataset(), m_s2s);
 
     m_histograms.clear();
 
@@ -48,4 +48,38 @@ feature_t histogram_medians_t::feature(tensor_size_t ifeature) const
 
     const auto& feature = dataset().feature(original);
     return feature_t{scat(suffix(), "(", feature.name(), "[", component, "])")}.scalar(feature_type::float64);
+}
+
+ratio_histogram_medians_t::ratio_histogram_medians_t(
+    const memory_dataset_t& dataset, struct2scalar s2s, tensor_size_t bins) :
+    histogram_medians_t(dataset, s2s),
+    m_bins(bins)
+{
+}
+
+string_t ratio_histogram_medians_t::suffix() const
+{
+    return scat("ratio_hist[", m_bins, "]");
+}
+
+histogram_t ratio_histogram_medians_t::make_histogram(std::vector<scalar_t>& values) const
+{
+    return histogram_t::make_from_ratios(std::begin(values), std::end(values), m_bins);
+}
+
+percentile_histogram_medians_t::percentile_histogram_medians_t(
+    const memory_dataset_t& dataset, struct2scalar s2s, tensor_size_t bins) :
+    histogram_medians_t(dataset, s2s),
+    m_bins(bins)
+{
+}
+
+string_t percentile_histogram_medians_t::suffix() const
+{
+    return scat("perc_hist[", m_bins, "]");
+}
+
+histogram_t percentile_histogram_medians_t::make_histogram(std::vector<scalar_t>& values) const
+{
+    return histogram_t::make_from_percentiles(std::begin(values), std::end(values), m_bins);
 }

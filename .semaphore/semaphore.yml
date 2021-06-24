@@ -67,8 +67,6 @@ blocks:
           commands:
             - CXX=g++ bash scripts/build.sh --build-type RelWithDebInfo --config --build --memcheck
         - name: codecov (gcc)
-          secrets:
-            - name: codecov
           commands:
             - sudo -H pip install --upgrade pip
             - sudo -H pip install coverage

@@ -1,6 +1,5 @@
 #include <fstream>
 #include <nano/logger.h>
-#include <nano/mlearn/class.h>
 #include <nano/dataset/imclass_cifar.h>
 
 using namespace nano;
@@ -22,7 +21,7 @@ void cifar_dataset_t::load()
 {
     auto features = std::vector<feature_t>
     {
-        feature_t("image").scalar(feature_type::uint8, make_dims(32, 32, 3)),
+        feature_t("image").scalar(feature_type::uint8, make_dims(3, 32, 32)),
         m_target
     };
     resize(60000, features, 1U);
@@ -49,38 +48,22 @@ bool cifar_dataset_t::iread(const file_t& file)
     tensor_mem_t<int8_t, 1> label(file.m_label_size);
     tensor_mem_t<uint8_t, 3> image(3, 32, 32);
 
-    auto offset = file.m_offset;
     auto expected = file.m_expected;
-    for ( ; expected > 0; -- expected)
+    for (auto sample = file.m_offset; expected > 0; -- expected, sample ++)
     {
-        auto input = this->input(offset);
-        auto target = this->target(offset ++);
-
-        if (!stream.read(reinterpret_cast<char*>(label.data()), label.size())) // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        if (!stream.read(reinterpret_cast<char*>(label.data()), label.size()))
         {
             return false;
         }
+        set(sample, 1, static_cast<tensor_size_t>(static_cast<unsigned char>(label(file.m_label_index))));
 
-        const auto ilabel = static_cast<tensor_size_t>(static_cast<unsigned char>(label(file.m_label_index)));
-        if (ilabel < 0 || ilabel >= m_labels)
-        {
-            log_error() << m_name << ": invalid label, read " << ilabel << " expected in [0, " << m_labels << ")!";
-            return false;
-        }
-        target.full(neg_target());
-        target(ilabel) = pos_target();
-
-        if (!stream.read(reinterpret_cast<char*>(image.data()), image.size())) // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        if (!stream.read(reinterpret_cast<char*>(image.data()), image.size()))
         {
             return false;
         }
-
-        for (int px = 0; px < 1024; ++ px)
-        {
-            input(px * 3 + 0) = image(px + 0);
-            input(px * 3 + 1) = image(px + 1024);
-            input(px * 3 + 2) = image(px + 2048);
-        }
+        set(sample, 0, image);
     }
 
     return expected == 0;

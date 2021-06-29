@@ -23,8 +23,8 @@ namespace nano
 
     private:
 
-        bool iread(const string_t&, tensor_size_t offset, tensor_size_t expected);
-        bool tread(const string_t&, tensor_size_t offset, tensor_size_t expected);
+        bool iread(const string_t&, tensor_size_t sample, tensor_size_t expected);
+        bool tread(const string_t&, tensor_size_t sample, tensor_size_t expected);
 
         // attributes
         string_t        m_dir;              ///< directory where to load the data from

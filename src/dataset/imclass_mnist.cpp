@@ -1,6 +1,5 @@
 #include <fstream>
 #include <nano/logger.h>
-#include <nano/mlearn/class.h>
 #include <nano/dataset/imclass_mnist.h>
 
 using namespace nano;
@@ -28,7 +27,7 @@ void base_mnist_dataset_t::load()
 
     auto features = std::vector<feature_t>
     {
-        feature_t("image").scalar(feature_type::uint8, make_dims(28, 28, 1)),
+        feature_t("image").scalar(feature_type::uint8, make_dims(1, 28, 28)),
         m_target
     };
     resize(70000, std::move(features), 1U);
@@ -58,29 +57,31 @@ void base_mnist_dataset_t::load()
     dataset_t::testing({make_range(60000, 70000)});
 }
 
-bool base_mnist_dataset_t::iread(const string_t& path, tensor_size_t offset, tensor_size_t expected)
+bool base_mnist_dataset_t::iread(const string_t& path, tensor_size_t sample, tensor_size_t expected)
 {
-    std::ifstream stream(path);
-
     char buffer[16];
+    tensor_mem_t<uint8_t, 3> image(1, 28, 28);
+
+    std::ifstream stream(path);
     if (!stream.read(buffer, 16))
     {
         return false;
     }
 
-    for ( ; expected > 0; -- expected)
+    for ( ; expected > 0; -- expected, ++ sample)
     {
-        auto input = this->input(offset ++);
-        if (!stream.read(reinterpret_cast<char*>(input.data()), input.size())) // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        if (!stream.read(reinterpret_cast<char*>(image.data()), image.size())) // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
         {
             return false;
         }
+        set(sample, 0, image);
     }
 
     return expected == 0;
 }
 
-bool base_mnist_dataset_t::tread(const string_t& path, tensor_size_t offset, tensor_size_t expected)
+bool base_mnist_dataset_t::tread(const string_t& path, tensor_size_t sample, tensor_size_t expected)
 {
     std::ifstream stream(path);
 
@@ -96,18 +97,9 @@ bool base_mnist_dataset_t::tread(const string_t& path, tensor_size_t offset, ten
         return false;
     }
 
-    for (tensor_size_t i = 0; i < expected; ++ i)
+    for (auto i = 0; expected > 0; -- expected, ++ sample, ++ i)
     {
-        const auto ilabel = static_cast<tensor_size_t>(static_cast<unsigned char>(labels(i)));
-        if (ilabel < 0 || ilabel >= 10)
-        {
-            log_error() << m_name << ": invalid label!";
-            return false;
-        }
-
-        auto target = this->target(offset ++);
-        target.full(neg_target());
-        target(ilabel) = pos_target();
+        set(sample, 1, static_cast<tensor_size_t>(static_cast<unsigned char>(labels(i))));
     }
 
     return true;

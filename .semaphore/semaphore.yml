@@ -73,20 +73,6 @@ blocks:
             - sudo -H pip install --upgrade pip
             - sudo -H pip install coverage
             - CXX=g++ GCOV=gcov bash scripts/build.sh --build-type Debug --coverage --config --build --test --codecov
-  - name: OSX Xcode11
-    task:
-      agent:
-        machine:
-          type: a1-standard-4
-          os_image: macos-xcode11
-      prologue:
-        commands:
-          - checkout
-          - bash scripts/setup_osxbrew.sh
-      jobs:
-        - name: build
-          commands:
-            - bash scripts/build.sh --config --build --test --install --build-example
   - name: OSX Xcode12
     task:
       agent:

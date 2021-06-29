@@ -5,9 +5,10 @@
 
 using namespace nano;
 
-base_mnist_dataset_t::base_mnist_dataset_t(string_t dir, string_t name) :
+base_mnist_dataset_t::base_mnist_dataset_t(string_t dir, string_t name, feature_t target) :
     m_dir(std::move(dir)),
-    m_name(std::move(name))
+    m_name(std::move(name)),
+    m_target(std::move(target))
 {
 }
 
@@ -25,7 +26,12 @@ void base_mnist_dataset_t::load()
             tensor_size_t(60000), tensor_size_t(10000))
     };
 
-    resize(make_dims(70000, 28, 28, 1), make_dims(70000, 10, 1, 1));
+    auto features = std::vector<feature_t>
+    {
+        feature_t("image").scalar(feature_type::uint8, make_dims(28, 28, 1)),
+        m_target
+    };
+    resize(70000, std::move(features), 1U);
 
     tensor_size_t sample = 0;
     for (const auto& part : parts)
@@ -107,24 +113,16 @@ bool base_mnist_dataset_t::tread(const string_t& path, tensor_size_t offset, ten
     return true;
 }
 
-mnist_dataset_t::mnist_dataset_t() :
-    base_mnist_dataset_t(scat(std::getenv("HOME"), "/libnano/datasets/mnist"), "MNIST")
+mnist_dataset_t::mnist_dataset_t() : base_mnist_dataset_t(
+    scat(std::getenv("HOME"), "/libnano/datasets/mnist"), "MNIST",
+    feature_t("digit").sclass(strings_t
+    {"digit0", "digit1", "digit2", "digit3", "digit4", "digit5", "digit6", "digit7", "digit8", "digit9"}))
 {
 }
 
-feature_t mnist_dataset_t::target() const
+fashion_mnist_dataset_t::fashion_mnist_dataset_t() : base_mnist_dataset_t(
+    scat(std::getenv("HOME"), "/libnano/datasets/fashion-mnist"), "Fashion-MNIST",
+    feature_t("article").sclass(strings_t
+    {"T-shirt/top", "Trouser", "Pullover", "Dress", "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot"}))
 {
-    return  feature_t("digit").sclass(strings_t
-            {"digit0", "digit1", "digit2", "digit3", "digit4", "digit5", "digit6", "digit7", "digit8", "digit9"});
-}
-
-fashion_mnist_dataset_t::fashion_mnist_dataset_t() :
-    base_mnist_dataset_t(scat(std::getenv("HOME"), "/libnano/datasets/fashion-mnist"), "Fashion-MNIST")
-{
-}
-
-feature_t fashion_mnist_dataset_t::target() const
-{
-    return  feature_t("article").sclass(strings_t
-            {"T-shirt/top", "Trouser", "Pullover", "Dress", "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot"});
 }

@@ -3,7 +3,7 @@
 
 using namespace nano;
 
-histogram_medians_t::histogram_medians_t(const memory_dataset_t& dataset, struct2scalar s2s) :
+histogram_medians_t::histogram_medians_t(const dataset_t& dataset, struct2scalar s2s) :
     base_elemwise_generator_t(dataset),
     m_s2s(s2s)
 {
@@ -51,7 +51,7 @@ feature_t histogram_medians_t::feature(tensor_size_t ifeature) const
 }
 
 ratio_histogram_medians_t::ratio_histogram_medians_t(
-    const memory_dataset_t& dataset, struct2scalar s2s, tensor_size_t bins) :
+    const dataset_t& dataset, struct2scalar s2s, tensor_size_t bins) :
     histogram_medians_t(dataset, s2s),
     m_bins(bins)
 {
@@ -68,7 +68,7 @@ histogram_t ratio_histogram_medians_t::make_histogram(std::vector<scalar_t>& val
 }
 
 percentile_histogram_medians_t::percentile_histogram_medians_t(
-    const memory_dataset_t& dataset, struct2scalar s2s, tensor_size_t bins) :
+    const dataset_t& dataset, struct2scalar s2s, tensor_size_t bins) :
     histogram_medians_t(dataset, s2s),
     m_bins(bins)
 {

@@ -18,7 +18,7 @@ namespace nano
         static constexpr auto generated_type = generator_type::structured;
 
         explicit elemwise_gradient_t(
-            const memory_dataset_t& dataset,
+            const dataset_t& dataset,
             kernel3x3_type = kernel3x3_type::sobel,
             indices_t original_features = indices_t{});
 

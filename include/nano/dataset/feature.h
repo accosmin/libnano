@@ -22,7 +22,7 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        feature_t() = default;
+        feature_t();
 
         ///
         /// \brief constructor
@@ -49,48 +49,10 @@ namespace nano
         feature_t& mclass(size_t count);
 
         ///
-        /// \brief set the feature optional.
-        ///
-        feature_t& optional(bool optional);
-
-        ///
         /// \brief try to add the given label if possible.
         /// NB: this is useful when the labels are discovered while loading some dataset.
         ///
         size_t set_label(const string_t& label);
-
-        ///
-        /// \brief returns true if the feature is discrete.
-        ///
-        bool discrete() const;
-
-        ///
-        /// \brief returns the value to store when the feature value is missing.
-        ///
-        static scalar_t placeholder_value();
-
-        ///
-        /// \brief returns true if the given scalar value is valid,
-        ///     otherwise it indicates a missing feature value for some sample.
-        ///
-        static bool missing(scalar_t value)
-        {
-            return !std::isfinite(value);
-        }
-
-        ///
-        /// \brief returns true if the given label index  is valid,
-        ///     otherwise it indicates a missing feature value for some sample.
-        ///
-        static bool missing(tensor_size_t label)
-        {
-            return label < 0;
-        }
-
-        ///
-        /// \brief returns the label associated to the given feature value (if possible).
-        ///
-        string_t label(scalar_t value) const;
 
         ///
         /// \brief returns true if the feature is valid (aka defined).
@@ -103,33 +65,12 @@ namespace nano
         ///
         /// \brief returns the associated machine learning task if this feature is the target.
         ///
-        explicit operator task_type() const
-        {
-            if (!static_cast<bool>(*this))
-            {
-                return task_type::unsupervised;
-            }
-            else
-            {
-                switch (m_type)
-                {
-                case feature_type::sclass:
-                    return task_type::sclassification;
-
-                case feature_type::mclass:
-                    return task_type::mclassification;
-
-                default:
-                    return task_type::regression;
-                }
-            }
-        }
+        explicit operator task_type() const;
 
         ///
         /// \brief access functions
         ///
         auto type() const { return m_type; }
-        auto optional() const { return m_optional; }
         const auto& dims() const { return m_dims; }
         const auto& name() const { return m_name; }
         const auto& labels() const { return m_labels; }
@@ -138,7 +79,6 @@ namespace nano
     private:
 
         // attributes
-        bool            m_optional{false};      ///<
         feature_type    m_type{feature_type::float32};  ///<
         tensor3d_dims_t m_dims{1, 1, 1};        ///< dimensions (if continuous)
         string_t        m_name;                 ///<
@@ -170,7 +110,7 @@ namespace nano
         ///
         /// \brief default constructor
         ///
-        feature_info_t() = default;
+        feature_info_t();
 
         ///
         /// \brief constructor

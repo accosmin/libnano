@@ -18,7 +18,7 @@ namespace nano
         static constexpr auto generated_type = generator_type::scalar;
 
         explicit histogram_medians_t(
-            const memory_dataset_t& dataset, struct2scalar s2s = struct2scalar::off);
+            const dataset_t& dataset, struct2scalar s2s = struct2scalar::off);
 
         feature_t feature(tensor_size_t ifeature) const override;
         feature_mapping_t do_fit(indices_cmap_t samples, execution) override;
@@ -65,7 +65,7 @@ namespace nano
     public:
 
         explicit ratio_histogram_medians_t(
-            const memory_dataset_t& dataset, struct2scalar s2s = struct2scalar::off, tensor_size_t bins = 10);
+            const dataset_t& dataset, struct2scalar s2s = struct2scalar::off, tensor_size_t bins = 10);
 
         string_t suffix() const override;
         histogram_t make_histogram(std::vector<scalar_t>& values) const override;
@@ -84,7 +84,7 @@ namespace nano
     public:
 
         explicit percentile_histogram_medians_t(
-            const memory_dataset_t& dataset, struct2scalar s2s = struct2scalar::off, tensor_size_t bins = 10);
+            const dataset_t& dataset, struct2scalar s2s = struct2scalar::off, tensor_size_t bins = 10);
 
         string_t suffix() const override;
         histogram_t make_histogram(std::vector<scalar_t>& values) const override;

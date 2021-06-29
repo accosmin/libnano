@@ -16,9 +16,8 @@ target_sources(nano PRIVATE
     generator/elemwise_identity.cpp
     generator/elemwise_histogram.cpp
     generator/pairwise.cpp
-    dataset/dataset.cpp
+    dataset.cpp
     dataset/feature.cpp
-    dataset/imclass.cpp
     dataset/tabular.cpp
     dataset/synthetic.cpp
     dataset/imclass_cifar.cpp
@@ -34,8 +33,8 @@ target_sources(nano PRIVATE
     lsearchk/morethuente.cpp
     lsearchk/cgdescent.cpp
     lsearchk/fletcher.cpp
-    linear/function.cpp
-    linear/model.cpp
+    #linear/function.cpp
+    #linear/model.cpp
     solver.cpp
     solver/lbfgs.cpp
     solver/cgd.cpp
@@ -44,23 +43,23 @@ target_sources(nano PRIVATE
     function.cpp
     cmdline.cpp
     loss.cpp
-    model.cpp
-    model/grid_search.cpp
-    dataset.cpp
-    mlearn/kfold.cpp
-    mlearn/train.cpp
-    mlearn/cluster.cpp
-    mlearn/stacking.cpp
-    gboost/model.cpp
-    gboost/function.cpp
-    gboost/wlearner.cpp
-    gboost/wlearner_dstep.cpp
-    gboost/wlearner_dtree.cpp
-    gboost/wlearner_hinge.cpp
-    gboost/wlearner_stump.cpp
-    gboost/wlearner_table.cpp
-    gboost/wlearner_affine.cpp
-    gboost/wlearner_feature1.cpp)
+    #model.cpp
+    #model/grid_search.cpp
+    #mlearn/kfold.cpp
+    #mlearn/train.cpp
+    #mlearn/cluster.cpp
+    #mlearn/stacking.cpp
+    #gboost/model.cpp
+    #gboost/function.cpp
+    #gboost/wlearner.cpp
+    #gboost/wlearner_dstep.cpp
+    #gboost/wlearner_dtree.cpp
+    #gboost/wlearner_hinge.cpp
+    #gboost/wlearner_stump.cpp
+    #gboost/wlearner_table.cpp
+    #gboost/wlearner_affine.cpp
+    #gboost/wlearner_feature1.cpp
+)
 
 add_library(NANO::nano ALIAS nano)
 target_compile_configure(nano)

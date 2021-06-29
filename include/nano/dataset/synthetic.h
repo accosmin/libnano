@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/dataset/dataset.h>
+#include <nano/dataset.h>
 
 namespace nano
 {
@@ -11,12 +11,12 @@ namespace nano
     /// NB: uniformly-distributed noise is added to targets if noise() > 0.
     /// NB: every (sample index + feature index) % modulo() feature value is missing.
     ///
-    class NANO_PUBLIC synthetic_affine_dataset_t : public memory_dataset_t
+    class NANO_PUBLIC synthetic_affine_dataset_t : public dataset_t
     {
     public:
 
-        using memory_dataset_t::features;
-        using memory_dataset_t::samples;
+        using dataset_t::features;
+        using dataset_t::samples;
 
         ///
         /// \brief default constructor

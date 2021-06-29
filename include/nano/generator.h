@@ -1,7 +1,7 @@
 #pragma once
 
+#include <nano/dataset.h>
 #include <nano/dataset/stats.h>
-#include <nano/dataset/dataset.h>
 
 namespace nano
 {
@@ -93,7 +93,7 @@ namespace nano
         ///
         /// \brief constructor.
         ///
-        explicit generator_t(const memory_dataset_t& dataset);
+        explicit generator_t(const dataset_t& dataset);
 
         ///
         /// \brief default destructor.
@@ -216,7 +216,7 @@ namespace nano
         using feature_rands_t = std::vector<rng_t>;
 
         // attributes
-        const memory_dataset_t&    m_dataset;   ///<
+        const dataset_t&    m_dataset;          ///<
         feature_infos_t     m_feature_infos;    ///<
         feature_rands_t     m_feature_rands;    ///<
     };
@@ -228,7 +228,7 @@ namespace nano
     {
     public:
 
-        explicit dataset_generator_t(const memory_dataset_t& dataset);
+        explicit dataset_generator_t(const dataset_t& dataset);
 
         template <typename tgenerator, typename... tgenerator_args>
         dataset_generator_t& add(tgenerator_args... args)
@@ -299,7 +299,7 @@ namespace nano
         using generator_mapping_t = tensor_mem_t<tensor_size_t, 2>;
 
         // attributes
-        const memory_dataset_t& m_dataset;              ///<
+        const dataset_t&        m_dataset;              ///<
         rgenerators_t           m_generators;           ///<
         column_mapping_t        m_column_mapping;       ///<
         feature_mapping_t       m_feature_mapping;      ///<

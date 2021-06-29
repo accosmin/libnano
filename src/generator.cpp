@@ -46,7 +46,7 @@ static auto resize_and_map(tensor_mem_t<tscalar, trank>& buffer, tindices... dim
     return map_tensor(buffer.data(), dims...);
 }
 
-generator_t::generator_t(const memory_dataset_t& dataset) :
+generator_t::generator_t(const dataset_t& dataset) :
     m_dataset(dataset)
 {
 }
@@ -113,7 +113,7 @@ indices_t generator_t::shuffled(indices_cmap_t samples, tensor_size_t feature) c
     return shuffled_samples;
 }
 
-dataset_generator_t::dataset_generator_t(const memory_dataset_t& dataset) :
+dataset_generator_t::dataset_generator_t(const dataset_t& dataset) :
     m_dataset(dataset)
 {
 }

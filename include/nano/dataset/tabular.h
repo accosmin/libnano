@@ -1,7 +1,7 @@
 #pragma once
 
+#include <nano/dataset.h>
 #include <nano/dataset/csv.h>
-#include <nano/dataset/memfixed.h>
 
 namespace nano
 {
@@ -13,45 +13,28 @@ namespace nano
     ///     - the inputs can be both categorical and continuous
     ///     - missing feature values are supported
     ///
-    class NANO_PUBLIC tabular_dataset_t : public memfixed_dataset_t<scalar_t>
+    class NANO_PUBLIC tabular_dataset_t : public dataset_t
     {
     public:
 
-        using memfixed_dataset_t::target;
-        using memfixed_dataset_t::features;
+        ///
+        /// \brief constructor, set the CSV files to load and the input features.
+        ///
+        tabular_dataset_t(csvs_t, features_t);
 
         ///
-        /// \brief default constructor
+        /// \brief constructor, set the CSV files to load and the input and the target features.
         ///
-        tabular_dataset_t() = default;
-
-        ///
-        /// \brief constructor, set the CSV files to load and describe their input and target features.
-        ///
-        tabular_dataset_t(csvs_t, features_t, size_t target = string_t::npos);
+        tabular_dataset_t(csvs_t, features_t, size_t target);
 
         ///
         /// \brief @see dataset_t
         ///
         void load() override;
 
-        ///
-        /// \brief @see dataset_t
-        ///
-        feature_t feature(tensor_size_t index) const override;
-
-        ///
-        /// \brief @see dataset_t
-        ///
-        feature_t target() const override;
-
-    protected:
-
-        void store(tensor_size_t row, size_t col, scalar_t value);
-        void store(tensor_size_t row, size_t col, tensor_size_t category);
-        bool parse(const csv_t&, const string_t&, tensor_size_t, tensor_size_t);
-
     private:
+
+        bool parse(const csv_t&, const string_t&, tensor_size_t, tensor_size_t);
 
         // attributes
         csvs_t      m_csvs;                     ///< describes the CSV files

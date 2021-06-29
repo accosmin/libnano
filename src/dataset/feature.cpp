@@ -2,6 +2,8 @@
 
 using namespace nano;
 
+feature_t::feature_t() = default;
+
 feature_t::feature_t(string_t name) :
     m_name(std::move(name))
 {
@@ -47,12 +49,6 @@ feature_t& feature_t::mclass(size_t count)
     return *this;
 }
 
-feature_t& feature_t::optional(bool optional)
-{
-    m_optional = optional;
-    return *this;
-}
-
 size_t feature_t::set_label(const string_t& label)
 {
     if (label.empty())
@@ -83,25 +79,20 @@ size_t feature_t::set_label(const string_t& label)
     }
 }
 
-bool feature_t::discrete() const
+feature_t::operator task_type() const
 {
-    return !m_labels.empty();
-}
-
-scalar_t feature_t::placeholder_value()
-{
-    return std::numeric_limits<scalar_t>::quiet_NaN();
-}
-
-string_t feature_t::label(scalar_t value) const
-{
-    if (!discrete())
+    if (!static_cast<bool>(*this))
     {
-        throw std::invalid_argument("labels are only available for discrete features");
+        return task_type::unsupervised;
     }
     else
     {
-        return missing(value) ? string_t() : m_labels.at(static_cast<size_t>(value));
+        switch (m_type)
+        {
+        case feature_type::sclass:      return task_type::sclassification;
+        case feature_type::mclass:      return task_type::mclassification;
+        default:                        return task_type::regression;
+        }
     }
 }
 
@@ -110,8 +101,7 @@ bool ::nano::operator==(const feature_t& f1, const feature_t& f2)
     return  f1.type() == f2.type() &&
             f1.name() == f2.name() &&
             f1.dims() == f2.dims() &&
-            f1.labels() == f2.labels() &&
-            f1.optional() == f2.optional();
+            f1.labels() == f2.labels();
 }
 
 bool ::nano::operator!=(const feature_t& f1, const feature_t& f2)
@@ -119,8 +109,7 @@ bool ::nano::operator!=(const feature_t& f1, const feature_t& f2)
     return  f1.type() != f2.type() ||
             f1.name() != f2.name() ||
             f1.dims() != f2.dims() ||
-            f1.labels() != f2.labels() ||
-            f1.optional() != f2.optional();
+            f1.labels() != f2.labels();
 }
 
 std::ostream& ::nano::operator<<(std::ostream& stream, const feature_t& feature)
@@ -134,8 +123,10 @@ std::ostream& ::nano::operator<<(std::ostream& stream, const feature_t& feature)
             stream << ",";
         }
     }
-    return stream << "]," << (feature.optional() ? "optional" : "mandatory");
+    return stream << "]";
 }
+
+feature_info_t::feature_info_t() = default;
 
 feature_info_t::feature_info_t(tensor_size_t feature, tensor_size_t count, scalar_t importance) :
     m_feature(feature),

@@ -19,7 +19,7 @@ namespace nano
         static constexpr auto generated_type = generator_type::sclass;
 
         explicit pairwise_scalar2sclass_t(
-            const memory_dataset_t& dataset,
+            const dataset_t& dataset,
             struct2scalar s2s = struct2scalar::off,
             indices_t original_feature_indices = indices_t{}) :
             base_pairwise_generator_t(dataset),

@@ -21,7 +21,7 @@ namespace nano
     public:
 
         template <typename... targs>
-        explicit elemwise_generator_t(const memory_dataset_t& dataset, targs... args) :
+        explicit elemwise_generator_t(const dataset_t& dataset, targs... args) :
             tcomputer(dataset, args...)
         {
         }

@@ -1,5 +1,5 @@
 #include <utest/utest.h>
-#include <nano/dataset/dataset.h>
+#include <nano/dataset.h>
 
 using namespace nano;
 

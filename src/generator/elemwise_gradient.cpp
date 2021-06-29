@@ -4,7 +4,7 @@
 using namespace nano;
 
 elemwise_gradient_t::elemwise_gradient_t(
-    const memory_dataset_t& dataset, kernel3x3_type type, indices_t original_features) :
+    const dataset_t& dataset, kernel3x3_type type, indices_t original_features) :
     base_elemwise_generator_t(dataset),
     m_type(type),
     m_original_features(std::move(original_features))

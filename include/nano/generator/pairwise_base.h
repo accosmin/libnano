@@ -17,7 +17,7 @@ namespace nano
     {
     public:
 
-        explicit base_pairwise_generator_t(const memory_dataset_t& dataset) :
+        explicit base_pairwise_generator_t(const dataset_t& dataset) :
             generator_t(dataset)
         {
         }

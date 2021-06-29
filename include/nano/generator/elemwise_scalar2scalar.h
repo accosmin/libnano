@@ -18,7 +18,7 @@ namespace nano
         static constexpr auto generated_type = generator_type::scalar;
 
         explicit elemwise_scalar2scalar_t(
-            const memory_dataset_t& dataset,
+            const dataset_t& dataset,
             struct2scalar s2s = struct2scalar::off,
             indices_t original_features = indices_t{}) :
             base_elemwise_generator_t(dataset),

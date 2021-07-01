@@ -25,12 +25,12 @@ void base_mnist_dataset_t::load()
             tensor_size_t(60000), tensor_size_t(10000))
     };
 
-    auto features = std::vector<feature_t>
+    const auto features = std::vector<feature_t>
     {
         feature_t("image").scalar(feature_type::uint8, make_dims(1, 28, 28)),
         m_target
     };
-    resize(70000, std::move(features), 1U);
+    resize(70000, features, 1U);
 
     tensor_size_t sample = 0;
     for (const auto& part : parts)

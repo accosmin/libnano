@@ -1,45 +1,7 @@
-#include <utest/utest.h>
+#include "fixture/dataset.h"
 #include <nano/dataset.h>
 
 using namespace nano;
-
-template <typename tscalar, size_t trank>
-static auto check_inputs(const memory_dataset_t& dataset, tensor_size_t index,
-    const feature_t& gt_feature, const tensor_mem_t<tscalar, trank>& gt_data, const mask_cmap_t& gt_mask)
-{
-    dataset.visit_inputs(index, [&] (const auto& feature, const auto& data, const auto& mask)
-    {
-        UTEST_CHECK_EQUAL(feature, gt_feature);
-        if constexpr (std::is_same<decltype(data), const tensor_cmap_t<tscalar, trank>&>::value)
-        {
-            UTEST_CHECK_TENSOR_EQUAL(data, gt_data);
-            UTEST_CHECK_TENSOR_EQUAL(mask, gt_mask);
-        }
-        else
-        {
-            UTEST_REQUIRE(false);
-        }
-    });
-}
-
-template <typename tscalar, size_t trank>
-static auto check_target(const memory_dataset_t& dataset,
-    const feature_t& gt_feature, const tensor_mem_t<tscalar, trank>& gt_data, const mask_cmap_t& gt_mask)
-{
-    dataset.visit_target([&] (const auto& feature, const auto& data, const auto& mask)
-    {
-        UTEST_CHECK_EQUAL(feature, gt_feature);
-        if constexpr (std::is_same<decltype(data), const tensor_cmap_t<tscalar, trank>&>::value)
-        {
-            UTEST_CHECK_TENSOR_EQUAL(data, gt_data);
-            UTEST_CHECK_TENSOR_EQUAL(mask, gt_mask);
-        }
-        else
-        {
-            UTEST_REQUIRE(false);
-        }
-    });
-}
 
 static auto make_features()
 {
@@ -64,7 +26,7 @@ static auto make_features()
     };
 }
 
-class fixture_dataset_t final : public memory_dataset_t
+class fixture_dataset_t final : public dataset_t
 {
 public:
 

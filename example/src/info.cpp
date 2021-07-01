@@ -4,10 +4,9 @@
 #include <nano/solver.h>
 #include <nano/version.h>
 #include <nano/cmdline.h>
+#include <nano/dataset.h>
 #include <nano/lsearch0.h>
 #include <nano/lsearchk.h>
-#include <nano/dataset/imclass.h>
-#include <nano/dataset/tabular.h>
 
 using namespace nano;
 
@@ -35,8 +34,7 @@ static int unsafe_main(int argc, const char* argv[])
     cmdline.add("", "lsearchk",         "regex to select line-search strategies", ".+");
     cmdline.add("", "solver",           "regex to select numerical optimization methods", ".+");
     cmdline.add("", "loss",             "regex to select loss functions", ".+");
-    cmdline.add("", "imclass",          "regex to select image classification datasets", ".+");
-    cmdline.add("", "tabular",          "regex to select tabular datasets", ".+");
+    cmdline.add("", "dataset",          "regex to select machine learning datasets", ".+");
     cmdline.add("", "version",          "library version");
     cmdline.add("", "git-hash",         "git commit hash");
 
@@ -46,8 +44,7 @@ static int unsafe_main(int argc, const char* argv[])
     const auto has_lsearchk = cmdline.has("lsearchk");
     const auto has_solver = cmdline.has("solver");
     const auto has_loss = cmdline.has("loss");
-    const auto has_imclass = cmdline.has("imclass");
-    const auto has_tabular = cmdline.has("tabular");
+    const auto has_dataset = cmdline.has("dataset");
     const auto has_version = cmdline.has("version");
     const auto has_git_hash = cmdline.has("git-hash");
 
@@ -61,8 +58,7 @@ static int unsafe_main(int argc, const char* argv[])
         !has_lsearchk &&
         !has_solver &&
         !has_loss &&
-        !has_imclass &&
-        !has_tabular &&
+        !has_dataset &&
         !has_version &&
         !has_git_hash)
     {
@@ -87,13 +83,9 @@ static int unsafe_main(int argc, const char* argv[])
     {
         print("loss", loss_t::all(), cmdline.get<string_t>("loss"));
     }
-    if (has_imclass)
+    if (has_dataset)
     {
-        print("image classification dataset", imclass_dataset_t::all(), cmdline.get<string_t>("imclass"));
-    }
-    if (has_tabular)
-    {
-        print("tabular dataset", tabular_dataset_t::all(), cmdline.get<string_t>("tabular"));
+        print("dataset", dataset_t::all(), cmdline.get<string_t>("dataset"));
     }
     if (has_version)
     {

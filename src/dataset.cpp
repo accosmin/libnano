@@ -5,6 +5,41 @@
 
 using namespace nano;
 
+indices_t dataset_t::train_samples() const
+{
+    return filter(samples() - m_testing.vector().sum(), 0);
+}
+
+indices_t dataset_t::test_samples() const
+{
+    return filter(m_testing.vector().sum(), 1);
+}
+
+void dataset_t::no_testing()
+{
+    m_testing.zero();
+}
+
+void dataset_t::testing(tensor_range_t sample_range)
+{
+    assert(sample_range.begin() >= 0 && sample_range.end() <= m_testing.size());
+    m_testing.vector().segment(sample_range.begin(), sample_range.size()).setConstant(1);
+}
+
+indices_t dataset_t::filter(tensor_size_t count, tensor_size_t condition) const
+{
+    indices_t indices(count);
+    for (tensor_size_t sample = 0, samples = this->samples(), index = 0; sample < samples; ++ sample)
+    {
+        if (m_testing(sample) == condition)
+        {
+            assert(index < indices.size());
+            indices(index ++) = sample;
+        }
+    }
+    return indices;
+}
+
 void dataset_t::resize(tensor_size_t samples, const features_t& features)
 {
     this->resize(samples, features, string_t::npos);
@@ -58,7 +93,9 @@ void dataset_t::resize(tensor_size_t samples, const features_t& features, size_t
         m_storage_range(static_cast<tensor_size_t>(i), 1) = end;
     }
 
-    m_samples = samples;
+    m_testing.resize(samples);
+    m_testing.zero();
+
     m_features = features;
     m_target = (target < features.size()) ? static_cast<tensor_size_t>(target) : m_storage_range.size();
 

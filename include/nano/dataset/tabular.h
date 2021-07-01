@@ -34,7 +34,7 @@ namespace nano
 
     private:
 
-        bool parse(const csv_t&, const string_t&, tensor_size_t, tensor_size_t);
+        void parse(const csv_t&, const string_t&, tensor_size_t, tensor_size_t);
 
         // attributes
         csvs_t      m_csvs;                     ///< describes the CSV files

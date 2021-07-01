@@ -36,7 +36,7 @@ static auto make_features()
     };
 }
 
-class fixture_dataset_t final : public memory_dataset_t
+class fixture_dataset_t final : public dataset_t
 {
 public:
 

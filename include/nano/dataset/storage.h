@@ -42,7 +42,7 @@ namespace nano
             tensor_size_t label = 0;
             if constexpr (std::is_same_v<tvalue, string_t>)
             {
-                label = check_from_string<tensor_size_t>("single-label", value);
+                label = static_cast<tensor_size_t>(m_feature.set_label(value));
             }
             else if constexpr (std::is_arithmetic_v<tvalue>)
             {

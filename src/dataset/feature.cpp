@@ -49,7 +49,7 @@ feature_t& feature_t::mclass(size_t count)
     return *this;
 }
 
-size_t feature_t::set_label(const string_t& label)
+size_t feature_t::set_label(const string_t& label) const
 {
     if (label.empty())
     {

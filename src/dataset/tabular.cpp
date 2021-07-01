@@ -28,17 +28,17 @@ void tabular_dataset_t::load()
     {
         critical(
             feature.type() == feature_type::mclass,
-            "tabular dataset: multi-label features are not supported, (", feature, ")!");
+            "tabular dataset: multi-label features are not supported (", feature, ")!");
 
         critical(
             ::nano::size(feature.dims()) > 1,
-            "tabular dataset: structured features are not supported, (", feature, ")!");
+            "tabular dataset: structured features are not supported (", feature, ")!");
     }
 
     critical(
         m_target != string_t::npos &&
         m_target >= m_features.size(),
-        "tabular dataset: the target feature (", m_target,
+        "tabular dataset: the target feature index (", m_target,
         ") is not valid, expecting in the [0, ", m_features.size(), ") range!");
 
     // allocate storage
@@ -65,12 +65,11 @@ void tabular_dataset_t::load()
         log_info() << "tabular dataset: reading " << csv.m_path << "...";
 
         const auto old_sample = sample;
-        critical(
-            !csv.parse([&] (const string_t& line, tensor_size_t line_index)
-            {
-                return this->parse(csv, line, line_index, sample ++);
-            }),
-            "failed to read file!");
+        csv.parse([&] (const string_t& line, tensor_size_t line_index)
+        {
+            this->parse(csv, line, line_index, sample ++);
+            return true;
+        });
 
         const auto samples_read = sample - old_sample;
         critical(
@@ -89,26 +88,22 @@ void tabular_dataset_t::load()
         "tabular dataset: read ", sample, " samples, expecting ", samples, "!");
 }
 
-bool tabular_dataset_t::parse(const csv_t& csv, const string_t& line, tensor_size_t line_index, tensor_size_t sample)
+void tabular_dataset_t::parse(const csv_t& csv, const string_t& line, tensor_size_t line_index, tensor_size_t sample)
 {
-    if (sample >= samples())
-    {
-        log_error() << "tabular dataset: too many samples, expecting " << samples() << "!";
-        return false;
-    }
+    critical(
+        sample >= samples(),
+        "tabular dataset: too many samples, expecting ", samples(),  "!");
 
     for (auto tokenizer = tokenizer_t{line, csv.m_delim.c_str()}; tokenizer; ++ tokenizer)
     {
-        if (tokenizer.count() > m_features.size())
-        {
-            log_error() << "tabular dataset: invalid line " << csv.m_path << ":" << line_index
-                << ", expecting " << m_features.size() << " tokens!";
-            return false;
-        }
+        critical(
+            tokenizer.count() > m_features.size(),
+            "tabular dataset: invalid line [", line, "]@", csv.m_path, ":", line_index,
+            ", got ", tokenizer.count(), " tokens, expecting ", m_features.size(), "!");
 
         const auto f = tokenizer.count() - 1;
         const auto token = tokenizer.get();
-        auto& feature = m_features[f];
+        const auto& feature = m_features[f];
 
         if (token != csv.m_placeholder)
         {
@@ -118,12 +113,10 @@ bool tabular_dataset_t::parse(const csv_t& csv, const string_t& line, tensor_siz
             }
             catch (std::exception& e)
             {
-                log_error() << "tabular dataset: invalid line " << csv.m_path << ":" << line_index
-                    << ", invalid token [" << token << "] for feature [" << feature.name() << "]!";
-                return false;
+                critical0(
+                    "tabular dataset: invalid line [", line, "]@", csv.m_path, ":", line_index,
+                    ", invalid token [", token, "] for feature (", feature, ")!");
             }
         }
     }
-
-    return true;
 }

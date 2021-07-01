@@ -52,7 +52,7 @@ namespace nano
         /// \brief try to add the given label if possible.
         /// NB: this is useful when the labels are discovered while loading some dataset.
         ///
-        size_t set_label(const string_t& label);
+        size_t set_label(const string_t& label) const;
 
         ///
         /// \brief returns true if the feature is valid (aka defined).
@@ -79,10 +79,10 @@ namespace nano
     private:
 
         // attributes
-        feature_type    m_type{feature_type::float32};  ///<
-        tensor3d_dims_t m_dims{1, 1, 1};        ///< dimensions (if continuous)
-        string_t        m_name;                 ///<
-        strings_t       m_labels;               ///< possible labels (if the feature is discrete/categorical)
+        feature_type        m_type{feature_type::float32};  ///<
+        tensor3d_dims_t     m_dims{1, 1, 1};        ///< dimensions (if continuous)
+        string_t            m_name;                 ///<
+        mutable strings_t   m_labels;               ///< possible labels (if the feature is discrete/categorical)
     };
 
     ///

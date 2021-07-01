@@ -1,27 +1,26 @@
 #include <fstream>
-#include <utest/utest.h>
+#include "fixture/dataset.h"
 #include <nano/dataset/tabular.h>
 
 using namespace nano;
 
 static auto feature_cont()
 {
-    return feature_t{"cont"};
+    return feature_t{"cont"}.scalar(feature_type::float64);
 }
 
-static auto feature_cont_opt()
+static auto feature_cate(bool with_labels = false)
 {
-    return feature_t{"cont_opt"}.optional(true);
-}
-
-static auto feature_cate()
-{
-    return feature_t{"cate"}.sclass(strings_t{"cate0", "cate1", "cate2"});
-}
-
-static auto feature_cate_opt()
-{
-    return feature_t{"cate_opt"}.sclass(strings_t{"cate_opt0", "cate_opt1"}).optional(true);
+    auto feature = feature_t{"cate"};
+    if (with_labels)
+    {
+        feature.sclass(strings_t{"cate0", "cate1", "cate2"});
+    }
+    else
+    {
+        feature.sclass(3);
+    }
+    return feature;
 }
 
 class fixture_dataset_t final : public tabular_dataset_t
@@ -45,13 +44,14 @@ public:
     {
     }
 
-    explicit fixture_dataset_t(features_t features, size_t target = string_t::npos) :
-        fixture_dataset_t(fixture_dataset_t::csvs(), std::move(features), target)
+    explicit fixture_dataset_t(features_t features, size_t target = string_t::npos, bool too_many_labels = false) :
+        fixture_dataset_t(fixture_dataset_t::csvs(), std::move(features), target, too_many_labels)
     {
     }
 
-    fixture_dataset_t(csvs_t csvs, features_t features, size_t target = string_t::npos) :
-        tabular_dataset_t(std::move(csvs), std::move(features), target)
+    fixture_dataset_t(csvs_t csvs, features_t features, size_t target = string_t::npos, bool too_many_labels = false) :
+        tabular_dataset_t(std::move(csvs), std::move(features), target),
+        m_too_many_labels(too_many_labels)
     {
         std::remove(data_path());
         std::remove(test_path());
@@ -71,62 +71,59 @@ public:
         std::remove(test_path());
     }
 
-    static void write_data(const char* path)
+    void write_data(const char* path) const
     {
         std::ofstream os(path);
         write(os, 1, 20, false);
         UTEST_REQUIRE(os);
     }
 
-    static void write_test(const char* path)
+    void write_test(const char* path) const
     {
         std::ofstream os(path);
         write(os, 21, 10, true);
         UTEST_REQUIRE(os);
     }
 
-    static void check(const scalar_t value, int row, const int col)
-    {
-        ++ row;
-        switch (col)
-        {
-        case 0:     check(value, row); break;
-        case 1:     check(value, (row % 2 == 0) ? feature_t::placeholder_value() : (3.0 - 0.2 * row)); break;
-        case 2:     check(value, row % 3); break;
-        case 3:     check(value, (row % 4 == 0) ? feature_t::placeholder_value() : (row % 2)); break;
-        default:    UTEST_REQUIRE(false);
-        }
-    }
-
-    static void check(const scalar_t value, const scalar_t ground)
-    {
-        UTEST_CHECK_EQUAL(std::isfinite(value), std::isfinite(ground));
-
-        if (std::isfinite(value))
-        {
-            UTEST_CHECK_CLOSE(value, ground, 1e-8);
-        }
-    }
-
-    static void write(std::ostream& os, const int begin, const int size, const bool header)
+    void write(std::ostream& os, int begin, int size, bool header) const
     {
         if (header)
         {
-            os << "cont,cont_opt,cate,cate_opt\n";
+            os << "cont,cate\n";
         }
 
         for (auto index = begin; index < begin + size; ++ index)
         {
-            os << index << ",";
             (index % 2 == 0) ? (os << "?,") : (os << (3.0 - 0.2 * index) << ",");
-            os << "cate" << (index % 3) << ",";
-            (index % 4 == 0) ? (os << "?,") : (os << "cate_opt" << (index % 2) << ",");
+            (index % 5 == 4) ? (os << "?,") : (os << "cate" << ((index - 1) % (m_too_many_labels ? 4 : 3)) << ",");
             os << "\n";
 
             if (index % 7 == 0) { os << "\n"; }
             if (index % 9 == 0) { os << "@ this line should be skipped\n"; }
         }
     }
+
+    static auto mask_cate() { return make_tensor<uint8_t>(make_dims(4), 0xEF, 0x7B, 0xDE, 0xF4); }
+    static auto mask_cont() { return make_tensor<uint8_t>(make_dims(4), 0xAA, 0xAA, 0xAA, 0xA8); }
+
+    static auto values_cate()
+    {
+        return make_tensor<uint8_t>(make_dims(30),
+            0, 1, 2, 0, 1, 2, 0, 1, 0, 0, 1, 2, 0, 0, 2,
+            0, 1, 2, 0, 1, 2, 0, 1, 0, 0, 1, 2, 0, 0, 2);
+    }
+
+    static auto values_cont()
+    {
+        return make_tensor<scalar_t>(make_dims(30, 1, 1, 1),
+            +2.8, +0.0, +2.4, +0.0, +2.0, +0.0, +1.6, +0.0, +1.2, +0.0, +0.8, +0.0, +0.4, +0.0, +0.0,
+            +0.0, -0.4, +0.0, -0.8, +0.0, -1.2, +0.0, -1.6, +0.0, -2.0, +0.0, -2.4, +0.0, -2.8, +0.0);
+    }
+
+private:
+
+    // attributes
+    bool    m_too_many_labels{false}; ///< toggle whether to write an invalid number of labels for categorical features
 };
 
 UTEST_BEGIN_MODULE(test_dataset_tabular)
@@ -135,200 +132,135 @@ UTEST_CASE(empty)
 {
     auto dataset = fixture_dataset_t{};
 
-    UTEST_CHECK(!dataset.target());
+    UTEST_CHECK_EQUAL(dataset.samples(), 0);
     UTEST_CHECK_EQUAL(dataset.features(), 0);
-    UTEST_CHECK_THROW(dataset.feature(0), std::out_of_range);
+    UTEST_CHECK_TENSOR_EQUAL(dataset.test_samples(), indices_t{});
+    UTEST_CHECK_TENSOR_EQUAL(dataset.train_samples(), indices_t{});
+    UTEST_CHECK_EQUAL(dataset.type(), task_type::unsupervised);
 }
 
-UTEST_CASE(config_no_target)
+UTEST_CASE(no_target_no_load)
 {
-    auto dataset = fixture_dataset_t{{feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}};
+    auto dataset = fixture_dataset_t{{feature_cont(), feature_cate()}};
 
-    UTEST_CHECK(!dataset.target());
+    UTEST_CHECK_EQUAL(dataset.samples(), 0);
     UTEST_CHECK_EQUAL(dataset.features(), 0);
-    UTEST_CHECK_EQUAL(dataset.feature(0), feature_cont());
-    UTEST_CHECK_EQUAL(dataset.feature(1), feature_cont_opt());
-    UTEST_CHECK_EQUAL(dataset.feature(2), feature_cate());
-    UTEST_CHECK_EQUAL(dataset.feature(3), feature_cate_opt());
+    UTEST_CHECK_EQUAL(dataset.type(), task_type::unsupervised);
+    UTEST_CHECK_TENSOR_EQUAL(dataset.test_samples(), indices_t{});
+    UTEST_CHECK_TENSOR_EQUAL(dataset.train_samples(), indices_t{});
 }
 
-UTEST_CASE(config_with_target)
+UTEST_CASE(with_target_no_load)
 {
-    auto dataset = fixture_dataset_t{{feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 0};
+    auto dataset = fixture_dataset_t{{feature_cont(), feature_cate()}, 0U};
 
+    UTEST_CHECK_EQUAL(dataset.samples(), 0);
     UTEST_CHECK_EQUAL(dataset.features(), 0);
-    UTEST_CHECK_EQUAL(dataset.feature(0), feature_cont_opt());
-    UTEST_CHECK_EQUAL(dataset.feature(1), feature_cate());
-    UTEST_CHECK_EQUAL(dataset.feature(2), feature_cate_opt());
-    UTEST_CHECK_EQUAL(dataset.target(), feature_cont());
+    UTEST_CHECK_EQUAL(dataset.type(), task_type::unsupervised);
+    UTEST_CHECK_TENSOR_EQUAL(dataset.test_samples(), indices_t{});
+    UTEST_CHECK_TENSOR_EQUAL(dataset.train_samples(), indices_t{});
 }
 
-UTEST_CASE(noload_no_data)
+UTEST_CASE(cannot_load_no_data)
 {
     const auto csvs = csvs_t{};
-    auto dataset = fixture_dataset_t{csvs, {feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 0};
+    auto dataset = fixture_dataset_t{csvs, {feature_cont(), feature_cate()}, 0U};
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
 }
 
-UTEST_CASE(noload_no_features)
+UTEST_CASE(cannot_load_no_features)
 {
     auto dataset = fixture_dataset_t{};
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
 }
 
-UTEST_CASE(noload_few_features)
+UTEST_CASE(cannot_load_invalid_target)
 {
-    auto dataset = fixture_dataset_t{{feature_cont(), feature_cont_opt(), feature_cate()}, 0};
+    auto dataset = fixture_dataset_t{{feature_cont(), feature_cate()}, 2U};
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
 }
 
-UTEST_CASE(noload_wrong_features0)
+UTEST_CASE(cannot_load_unsupported_mclass)
 {
-    auto dataset = fixture_dataset_t{{feature_cont_opt(), feature_cont(), feature_cate(), feature_cate_opt()}, 1};
+    const auto feature_mclass = feature_t{"feature"}.mclass(3);
+    auto dataset = fixture_dataset_t{{feature_cont(), feature_cate(), feature_mclass}};
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
 }
 
-UTEST_CASE(noload_wrong_features1)
+UTEST_CASE(cannot_load_unsupported_struct)
 {
-    auto dataset = fixture_dataset_t{{feature_cont(), feature_cont_opt(), feature_cate_opt(), feature_cate()}, 0};
+    const auto feature_struct = feature_t{"feature"}.scalar(feature_type::uint8, make_dims(3, 32, 32));
+    auto dataset = fixture_dataset_t{{feature_cont(), feature_cate(), feature_struct}};
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
 }
 
-UTEST_CASE(noload_wrong_expected0)
+UTEST_CASE(cannot_load_wrong_expected_csv_length0)
 {
     const auto csvs = fixture_dataset_t::csvs(21, 10);
-    auto dataset = fixture_dataset_t{csvs, {feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 0};
+    auto dataset = fixture_dataset_t{csvs, {feature_cont(), feature_cate()}};
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
 }
 
-UTEST_CASE(noload_wrong_expected0)
+UTEST_CASE(cannot_load_wrong_expected_csv_length1)
 {
     const auto csvs = fixture_dataset_t::csvs(20, 9);
-    auto dataset = fixture_dataset_t{csvs, {feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 0};
+    auto dataset = fixture_dataset_t{csvs, {feature_cont(), feature_cate()}};
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
 }
 
-UTEST_CASE(noload_invalid_target0)
+UTEST_CASE(cannot_load_too_many_labels)
 {
-    auto dataset = fixture_dataset_t{{feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 4};
-    UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
-}
-
-UTEST_CASE(noload_invalid_target1)
-{
-    auto dataset = fixture_dataset_t{{feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 1};
-    UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
-}
-
-UTEST_CASE(noload_invalid_target2)
-{
-    auto dataset = fixture_dataset_t{{feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 3};
+    auto dataset = fixture_dataset_t{{feature_cont(), feature_cate()}, string_t::npos, true};
     UTEST_REQUIRE_THROW(dataset.load(), std::runtime_error);
 }
 
 UTEST_CASE(load_no_target)
 {
-    auto dataset = fixture_dataset_t{{feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}};
+    auto dataset = fixture_dataset_t{{feature_cont(), feature_cate()}};
 
     UTEST_REQUIRE_NOTHROW(dataset.load());
-    UTEST_CHECK_EQUAL(dataset.features(), 4);
+    UTEST_CHECK_EQUAL(dataset.samples(), 30);
+    UTEST_CHECK_EQUAL(dataset.features(), 2);
     UTEST_CHECK_EQUAL(dataset.feature(0), feature_cont());
-    UTEST_CHECK_EQUAL(dataset.feature(1), feature_cont_opt());
-    UTEST_CHECK_EQUAL(dataset.feature(2), feature_cate());
-    UTEST_CHECK_EQUAL(dataset.feature(3), feature_cate_opt());
-    UTEST_CHECK(!dataset.target());
+    UTEST_CHECK_EQUAL(dataset.feature(1), feature_cate(true));
+    UTEST_CHECK_TENSOR_EQUAL(dataset.test_samples(), arange(20, 30));
+    UTEST_CHECK_TENSOR_EQUAL(dataset.train_samples(), arange(0, 20));
     UTEST_CHECK_EQUAL(dataset.type(), task_type::unsupervised);
 
-    UTEST_CHECK_EQUAL(dataset.idims(), make_dims(4, 1, 1));
-    UTEST_CHECK_EQUAL(dataset.tdims(), make_dims(0, 1, 1));
-
-    UTEST_CHECK_EQUAL(dataset.samples(), 30);
-    UTEST_CHECK_EQUAL(dataset.train_samples(), ::nano::arange(0, 20));
-    UTEST_CHECK_EQUAL(dataset.test_samples(), ::nano::arange(20, 30));
-
-    const auto inputs = dataset.inputs(::nano::arange(10, 30));
-    const auto targets = dataset.targets(::nano::arange(10, 30));
-
-    UTEST_CHECK_EQUAL(inputs.dims(), make_dims(20, 4, 1, 1));
-    UTEST_CHECK_EQUAL(targets.dims(), make_dims(20, 0, 1, 1));
-
-    for (auto index = 0; index < 20; ++ index)
-    {
-        fixture_dataset_t::check(inputs(index, 0, 0, 0), index + 10, 0);
-        fixture_dataset_t::check(inputs(index, 1, 0, 0), index + 10, 1);
-        fixture_dataset_t::check(inputs(index, 2, 0, 0), index + 10, 2);
-        fixture_dataset_t::check(inputs(index, 3, 0, 0), index + 10, 3);
-    }
+    check_inputs(dataset, 0, feature_cont(), fixture_dataset_t::values_cont(), fixture_dataset_t::mask_cont());
+    check_inputs(dataset, 1, feature_cate(true), fixture_dataset_t::values_cate(), fixture_dataset_t::mask_cate());
 }
 
-UTEST_CASE(load_with_cont_target)
+UTEST_CASE(load_cate_target)
 {
-    auto dataset = fixture_dataset_t{{feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 0};
+    auto dataset = fixture_dataset_t{{feature_cont(), feature_cate()}, 1U};
 
     UTEST_REQUIRE_NOTHROW(dataset.load());
-    UTEST_CHECK_EQUAL(dataset.features(), 3);
-    UTEST_CHECK_EQUAL(dataset.feature(0), feature_cont_opt());
-    UTEST_CHECK_EQUAL(dataset.feature(1), feature_cate());
-    UTEST_CHECK_EQUAL(dataset.feature(2), feature_cate_opt());
-    UTEST_CHECK_EQUAL(dataset.target(), feature_cont());
-    UTEST_CHECK_EQUAL(dataset.type(), task_type::regression);
-
-    UTEST_CHECK_EQUAL(dataset.idims(), make_dims(3, 1, 1));
-    UTEST_CHECK_EQUAL(dataset.tdims(), make_dims(1, 1, 1));
-
     UTEST_CHECK_EQUAL(dataset.samples(), 30);
-    UTEST_CHECK_EQUAL(dataset.train_samples(), ::nano::arange(0, 20));
-    UTEST_CHECK_EQUAL(dataset.test_samples(), ::nano::arange(20, 30));
-
-    const auto inputs = dataset.inputs(::nano::arange(10, 30));
-    const auto targets = dataset.targets(::nano::arange(10, 30));
-
-    UTEST_CHECK_EQUAL(inputs.dims(), make_dims(20, 3, 1, 1));
-    UTEST_CHECK_EQUAL(targets.dims(), make_dims(20, 1, 1, 1));
-
-    for (auto index = 0; index < 20; ++ index)
-    {
-        fixture_dataset_t::check(targets(index, 0, 0, 0), index + 10, 0);
-        fixture_dataset_t::check(inputs(index, 0, 0, 0), index + 10, 1);
-        fixture_dataset_t::check(inputs(index, 1, 0, 0), index + 10, 2);
-        fixture_dataset_t::check(inputs(index, 2, 0, 0), index + 10, 3);
-    }
-}
-
-UTEST_CASE(load_with_cate_target)
-{
-    auto dataset = fixture_dataset_t{{feature_cont(), feature_cont_opt(), feature_cate(), feature_cate_opt()}, 2};
-
-    UTEST_REQUIRE_NOTHROW(dataset.load());
-    UTEST_CHECK_EQUAL(dataset.features(), 3);
+    UTEST_CHECK_EQUAL(dataset.features(), 1);
     UTEST_CHECK_EQUAL(dataset.feature(0), feature_cont());
-    UTEST_CHECK_EQUAL(dataset.feature(1), feature_cont_opt());
-    UTEST_CHECK_EQUAL(dataset.feature(2), feature_cate_opt());
-    UTEST_CHECK_EQUAL(dataset.target(), feature_cate());
+    UTEST_CHECK_TENSOR_EQUAL(dataset.test_samples(), arange(20, 30));
+    UTEST_CHECK_TENSOR_EQUAL(dataset.train_samples(), arange(0, 20));
     UTEST_CHECK_EQUAL(dataset.type(), task_type::sclassification);
 
-    UTEST_CHECK_EQUAL(dataset.idims(), make_dims(3, 1, 1));
-    UTEST_CHECK_EQUAL(dataset.tdims(), make_dims(3, 1, 1));
+    check_inputs(dataset, 0, feature_cont(), fixture_dataset_t::values_cont(), fixture_dataset_t::mask_cont());
+    check_target(dataset, feature_cate(true), fixture_dataset_t::values_cate(), fixture_dataset_t::mask_cate());
+}
 
+UTEST_CASE(load_cont_target)
+{
+    auto dataset = fixture_dataset_t{{feature_cont(), feature_cate()}, 0U};
+
+    UTEST_REQUIRE_NOTHROW(dataset.load());
     UTEST_CHECK_EQUAL(dataset.samples(), 30);
-    UTEST_CHECK_EQUAL(dataset.train_samples(), ::nano::arange(0, 20));
-    UTEST_CHECK_EQUAL(dataset.test_samples(), ::nano::arange(20, 30));
+    UTEST_CHECK_EQUAL(dataset.features(), 1);
+    UTEST_CHECK_EQUAL(dataset.feature(0), feature_cate(true));
+    UTEST_CHECK_TENSOR_EQUAL(dataset.test_samples(), arange(20, 30));
+    UTEST_CHECK_TENSOR_EQUAL(dataset.train_samples(), arange(0, 20));
+    UTEST_CHECK_EQUAL(dataset.type(), task_type::regression);
 
-    const auto inputs = dataset.inputs(::nano::arange(10, 30));
-    const auto targets = dataset.targets(::nano::arange(10, 30));
-
-    UTEST_CHECK_EQUAL(inputs.dims(), make_dims(20, 3, 1, 1));
-    UTEST_CHECK_EQUAL(targets.dims(), make_dims(20, 3, 1, 1));
-
-    for (auto index = 0; index < 20; ++ index)
-    {
-        fixture_dataset_t::check(inputs(index, 0, 0, 0), index + 10, 0);
-        fixture_dataset_t::check(inputs(index, 1, 0, 0), index + 10, 1);
-        tensor_size_t category = 0;
-        targets.vector(index).maxCoeff(&category);
-        fixture_dataset_t::check(static_cast<scalar_t>(category), index + 10, 2);
-        fixture_dataset_t::check(inputs(index, 2, 0, 0), index + 10, 3);
-    }
+    check_target(dataset, feature_cont(), fixture_dataset_t::values_cont(), fixture_dataset_t::mask_cont());
+    check_inputs(dataset, 0, feature_cate(true), fixture_dataset_t::values_cate(), fixture_dataset_t::mask_cate());
 }
 
 UTEST_END_MODULE()

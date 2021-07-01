@@ -69,52 +69,32 @@ namespace nano
         ///
         tensor_size_t samples() const
         {
-            return m_samples;
+            return m_testing.size();
         }
 
         ///
         /// \brief returns the samples that can be used for training.
         ///
-        indices_t train_samples() const
-        {
-            return make_train_samples();
-        }
+        indices_t train_samples() const;
 
         ///
         /// \brief returns the samples that should only be used for testing.
         ///
         /// NB: assumes a fixed set of test samples.
         ///
-        indices_t test_samples() const
-        {
-            return make_test_samples();
-        }
+        indices_t test_samples() const;
 
         ///
         /// \brief set all the samples for training.
         ///
-        void no_testing()
-        {
-            m_testing.resize(samples());
-            m_testing.zero();
-        }
+        void no_testing();
 
         ///
         /// \brief set the given range of samples for testing.
         ///
         /// NB: this accumulates the previous range of samples set for testing.
         ///
-        void testing(tensor_range_t range)
-        {
-            if (m_testing.size() != samples())
-            {
-                m_testing.resize(samples());
-                m_testing.zero();
-            }
-
-            assert(range.begin() >= 0 && range.end() <= m_testing.size());
-            m_testing.vector().segment(range.begin(), range.size()).setConstant(1);
-        }
+        void testing(tensor_range_t sample_range);
 
         ///
         /// \brief returns the total number of features.
@@ -128,14 +108,16 @@ namespace nano
         ///
         /// \brief returns the feature at the given index.
         ///
-        const feature_t& feature(tensor_size_t feature) const
+        const feature_t& feature(tensor_size_t ifeature) const
         {
-            assert(feature >= 0 && feature < features());
-            return m_features[static_cast<size_t>(feature >= m_target ? feature + 1 : feature)];
+            assert(ifeature >= 0 && ifeature < features());
+            return m_features[static_cast<size_t>(ifeature >= m_target ? ifeature + 1 : ifeature)];
         }
 
         ///
-        /// \brief op(feature, tensor, mask)
+        /// \brief call and return the result of the given operator on the target feature.
+        ///
+        /// NB: the signature of the operator is: op(feature_t, tensor_cmap_t<> data, mask_cmap_t).
         ///
         template <typename toperator>
         auto visit_target(const toperator& op) const
@@ -145,13 +127,15 @@ namespace nano
         }
 
         ///
-        /// \brief
+        /// \brief call and return the result of the given operator on the given feature index.
+        ///
+        /// NB: the signature of the operator is: op(feature_t, tensor_cmap_t<> data, mask_cmap_t).
         ///
         template <typename toperator>
-        auto visit_inputs(tensor_size_t feature, const toperator& op) const
+        auto visit_inputs(tensor_size_t ifeature, const toperator& op) const
         {
-            assert(feature >= 0 && feature < features());
-            return visit(feature >= m_target ? feature + 1 : feature, op);
+            assert(ifeature >= 0 && ifeature < features());
+            return visit(ifeature >= m_target ? ifeature + 1 : ifeature, op);
         }
 
     protected:
@@ -176,12 +160,12 @@ namespace nano
         /// \brief safely write a feature value for the given sample.
         ///
         template <typename tvalue>
-        void set(tensor_size_t sample, tensor_size_t index, const tvalue& value)
+        void set(tensor_size_t sample, tensor_size_t ifeature, const tvalue& value)
         {
-            assert(sample >= 0 && sample < m_samples);
-            assert(index >= 0 && index < m_storage_range.size<0>());
+            assert(sample >= 0 && sample < samples());
+            assert(ifeature >= 0 && ifeature < m_storage_range.size<0>());
 
-            this->visit(index, [&] (const feature_t& feature, const auto& data, const auto& mask)
+            this->visit(ifeature, [&] (const feature_t& feature, const auto& data, const auto& mask)
             {
                 const auto setter = feature_storage_t{feature};
                 setter.set(data, sample, value);
@@ -208,34 +192,6 @@ namespace nano
             return this->mask(feature >= m_target ? feature + 1 : feature);
         }
 
-        indices_t make_train_samples() const
-        {
-            const auto samples = this->samples();
-            const auto has_testing = m_testing.size() == samples;
-            return has_testing ? filter(samples - m_testing.vector().sum(), samples, 0) : arange(0, samples);
-        }
-
-        indices_t make_test_samples() const
-        {
-            const auto samples = this->samples();
-            const auto has_testing = m_testing.size() == samples;
-            return has_testing ? filter(m_testing.vector().sum(), samples, 1) : indices_t{};
-        }
-
-        indices_t filter(tensor_size_t count, tensor_size_t samples, tensor_size_t condition) const
-        {
-            indices_t indices(count);
-            for (tensor_size_t sample = 0, index = 0; sample < samples; ++ sample)
-            {
-                if (m_testing(sample) == condition)
-                {
-                    assert(index < indices.size());
-                    indices(index ++) = sample;
-                }
-            }
-            return indices;
-        }
-
         mask_map_t mask(tensor_size_t index)
         {
             return m_storage_mask.tensor(index);
@@ -247,13 +203,14 @@ namespace nano
         }
 
         template <typename toperator>
-        auto visit(tensor_size_t index, const toperator& op)
+        auto visit(tensor_size_t ifeature, const toperator& op)
         {
-            const auto& feature = m_features[static_cast<size_t>(index)];
+            const auto& feature = m_features[static_cast<size_t>(ifeature)];
 
-            const auto mask = this->mask(index);
+            const auto samples = this->samples();
+            const auto mask = this->mask(ifeature);
             const auto [d0, d1, d2] = feature.dims();
-            const auto range = make_range(m_storage_range(index, 0), m_storage_range(index, 1));
+            const auto range = make_range(m_storage_range(ifeature, 0), m_storage_range(ifeature, 1));
 
             static const auto maxu08 = tensor_size_t(1) << 8;
             static const auto maxu16 = tensor_size_t(1) << 16;
@@ -266,30 +223,31 @@ namespace nano
                     op(feature, m_storage_u16.slice(range).reshape(-1), mask) : (feature.classes() <= maxu32) ?
                     op(feature, m_storage_u32.slice(range).reshape(-1), mask) :
                     op(feature, m_storage_u64.slice(range).reshape(-1), mask);
-            case feature_type::mclass:  return op(feature, m_storage_u08.slice(range).reshape(m_samples, -1), mask);
-            case feature_type::float32: return op(feature, m_storage_f32.slice(range).reshape(m_samples, d0, d1, d2), mask);
-            case feature_type::float64: return op(feature, m_storage_f64.slice(range).reshape(m_samples, d0, d1, d2), mask);
-            case feature_type::int8:    return op(feature, m_storage_i08.slice(range).reshape(m_samples, d0, d1, d2), mask);
-            case feature_type::int16:   return op(feature, m_storage_i16.slice(range).reshape(m_samples, d0, d1, d2), mask);
-            case feature_type::int32:   return op(feature, m_storage_i32.slice(range).reshape(m_samples, d0, d1, d2), mask);
-            case feature_type::int64:   return op(feature, m_storage_i64.slice(range).reshape(m_samples, d0, d1, d2), mask);
-            case feature_type::uint8:   return op(feature, m_storage_u08.slice(range).reshape(m_samples, d0, d1, d2), mask);
-            case feature_type::uint16:  return op(feature, m_storage_u16.slice(range).reshape(m_samples, d0, d1, d2), mask);
-            case feature_type::uint32:  return op(feature, m_storage_u32.slice(range).reshape(m_samples, d0, d1, d2), mask);
-            case feature_type::uint64:  return op(feature, m_storage_u64.slice(range).reshape(m_samples, d0, d1, d2), mask);
+            case feature_type::mclass:  return op(feature, m_storage_u08.slice(range).reshape(samples, -1), mask);
+            case feature_type::float32: return op(feature, m_storage_f32.slice(range).reshape(samples, d0, d1, d2), mask);
+            case feature_type::float64: return op(feature, m_storage_f64.slice(range).reshape(samples, d0, d1, d2), mask);
+            case feature_type::int8:    return op(feature, m_storage_i08.slice(range).reshape(samples, d0, d1, d2), mask);
+            case feature_type::int16:   return op(feature, m_storage_i16.slice(range).reshape(samples, d0, d1, d2), mask);
+            case feature_type::int32:   return op(feature, m_storage_i32.slice(range).reshape(samples, d0, d1, d2), mask);
+            case feature_type::int64:   return op(feature, m_storage_i64.slice(range).reshape(samples, d0, d1, d2), mask);
+            case feature_type::uint8:   return op(feature, m_storage_u08.slice(range).reshape(samples, d0, d1, d2), mask);
+            case feature_type::uint16:  return op(feature, m_storage_u16.slice(range).reshape(samples, d0, d1, d2), mask);
+            case feature_type::uint32:  return op(feature, m_storage_u32.slice(range).reshape(samples, d0, d1, d2), mask);
+            case feature_type::uint64:  return op(feature, m_storage_u64.slice(range).reshape(samples, d0, d1, d2), mask);
             default:                    critical0("in-memory dataset: unhandled feature type (", feature.type(), ")!");
             }
             return op(feature, m_storage_u08.slice(range).reshape(-1), mask);
         }
 
         template <typename toperator>
-        auto visit(tensor_size_t index, const toperator& op) const
+        auto visit(tensor_size_t ifeature, const toperator& op) const
         {
-            const auto& feature = m_features[static_cast<size_t>(index)];
+            const auto& feature = m_features[static_cast<size_t>(ifeature)];
 
-            const auto mask = this->mask(index);
+            const auto samples = this->samples();
+            const auto mask = this->mask(ifeature);
             const auto [d0, d1, d2] = feature.dims();
-            const auto range = make_range(m_storage_range(index, 0), m_storage_range(index, 1));
+            const auto range = make_range(m_storage_range(ifeature, 0), m_storage_range(ifeature, 1));
 
             static const auto maxu08 = tensor_size_t(1) << 8;
             static const auto maxu16 = tensor_size_t(1) << 16;
@@ -302,21 +260,23 @@ namespace nano
                     op(feature, m_storage_u16.slice(range).reshape(-1), mask) : (feature.classes() <= maxu32) ?
                     op(feature, m_storage_u32.slice(range).reshape(-1), mask) :
                     op(feature, m_storage_u64.slice(range).reshape(-1), mask);
-            case feature_type::mclass:  return op(feature, m_storage_u08.slice(range).reshape(m_samples, -1), mask);
-            case feature_type::float32: return op(feature, m_storage_f32.slice(range).reshape(m_samples, d0, d1, d2), mask);
-            case feature_type::float64: return op(feature, m_storage_f64.slice(range).reshape(m_samples, d0, d1, d2), mask);
-            case feature_type::int8:    return op(feature, m_storage_i08.slice(range).reshape(m_samples, d0, d1, d2), mask);
-            case feature_type::int16:   return op(feature, m_storage_i16.slice(range).reshape(m_samples, d0, d1, d2), mask);
-            case feature_type::int32:   return op(feature, m_storage_i32.slice(range).reshape(m_samples, d0, d1, d2), mask);
-            case feature_type::int64:   return op(feature, m_storage_i64.slice(range).reshape(m_samples, d0, d1, d2), mask);
-            case feature_type::uint8:   return op(feature, m_storage_u08.slice(range).reshape(m_samples, d0, d1, d2), mask);
-            case feature_type::uint16:  return op(feature, m_storage_u16.slice(range).reshape(m_samples, d0, d1, d2), mask);
-            case feature_type::uint32:  return op(feature, m_storage_u32.slice(range).reshape(m_samples, d0, d1, d2), mask);
-            case feature_type::uint64:  return op(feature, m_storage_u64.slice(range).reshape(m_samples, d0, d1, d2), mask);
+            case feature_type::mclass:  return op(feature, m_storage_u08.slice(range).reshape(samples, -1), mask);
+            case feature_type::float32: return op(feature, m_storage_f32.slice(range).reshape(samples, d0, d1, d2), mask);
+            case feature_type::float64: return op(feature, m_storage_f64.slice(range).reshape(samples, d0, d1, d2), mask);
+            case feature_type::int8:    return op(feature, m_storage_i08.slice(range).reshape(samples, d0, d1, d2), mask);
+            case feature_type::int16:   return op(feature, m_storage_i16.slice(range).reshape(samples, d0, d1, d2), mask);
+            case feature_type::int32:   return op(feature, m_storage_i32.slice(range).reshape(samples, d0, d1, d2), mask);
+            case feature_type::int64:   return op(feature, m_storage_i64.slice(range).reshape(samples, d0, d1, d2), mask);
+            case feature_type::uint8:   return op(feature, m_storage_u08.slice(range).reshape(samples, d0, d1, d2), mask);
+            case feature_type::uint16:  return op(feature, m_storage_u16.slice(range).reshape(samples, d0, d1, d2), mask);
+            case feature_type::uint32:  return op(feature, m_storage_u32.slice(range).reshape(samples, d0, d1, d2), mask);
+            case feature_type::uint64:  return op(feature, m_storage_u64.slice(range).reshape(samples, d0, d1, d2), mask);
             default:                    critical0("in-memory dataset: unhandled feature type (", feature.type(), ")!");
             }
             return op(feature, m_storage_u08.slice(range).reshape(-1), mask);
         }
+
+        indices_t filter(tensor_size_t count, tensor_size_t condition) const;
 
         template <typename tscalar>
         using storage_t = tensor_mem_t<tscalar, 2>;
@@ -326,9 +286,8 @@ namespace nano
 
         // attributes
         indices_t               m_testing;      ///< (#samples,) - mark sample for testing, if != 0
-        features_t              m_features;     ///<
-        tensor_size_t           m_target{0};    ///<
-        tensor_size_t           m_samples{0};   ///<
+        features_t              m_features;     ///< input and target features
+        tensor_size_t           m_target{0};    ///< index of the target feature if it exists, otherwise string_t::npos
         storage_t<float>        m_storage_f32;  ///<
         storage_t<double>       m_storage_f64;  ///<
         storage_t<int8_t>       m_storage_i08;  ///<

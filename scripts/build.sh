@@ -156,7 +156,7 @@ function coveralls {
 }
 
 function build_valgrind {
-    version=3.16.0
+    version=3.17.0
     installed_version=$(/tmp/valgrind/bin/valgrind --version)
 
     if [ "${installed_version}" != "valgrind-${version}" ]; then
@@ -266,6 +266,10 @@ function clang_tidy {
     fi
 }
 
+function clang_tidy_concurrency {
+    clang_tidy "concurrency*"
+}
+
 function clang_tidy_misc {
     checks="misc*"
     checks="${checks},-misc-non-private-member-variables-in-classes"
@@ -336,6 +340,7 @@ function clang_tidy_all {
     clang_tidy_hicpp
     clang_tidy_bugprone
     clang_tidy_modernize
+    #clang_tidy_concurrency
     clang_tidy_performance
     clang_tidy_portability
     clang_tidy_readability
@@ -400,6 +405,7 @@ options:
     --clang-tidy-hicpp
     --clang-tidy-bugprone
     --clang-tidy-modernize
+    --clang-tidy-concurrency
     --clang-tidy-performance
     --clang-tidy-portability
     --clang-tidy-readability
@@ -452,6 +458,7 @@ while [ "$1" != "" ]; do
         --clang-tidy-hicpp)             clang_tidy_hicpp || exit 1;;
         --clang-tidy-bugprone)          clang_tidy_bugprone || exit 1;;
         --clang-tidy-modernize)         clang_tidy_modernize || exit 1;;
+        --clang-tidy-concurrency)       clang_tidy_concurrency || exit 1;;
         --clang-tidy-performance)       clang_tidy_performance || exit 1;;
         --clang-tidy-portability)       clang_tidy_portability || exit 1;;
         --clang-tidy-readability)       clang_tidy_readability || exit 1;;

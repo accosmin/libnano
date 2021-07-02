@@ -27,14 +27,15 @@ namespace nano
 
         auto process(tensor_size_t ifeature) const
         {
+            const auto dims = mapped_dims(ifeature);
             const auto mode = mapped_mode(ifeature);
             const auto channel = mapped_channel(ifeature);
             const auto kernel = make_kernel3x3<scalar_t>(m_type);
-            [[maybe_unused]] const auto [rows, cols, _] = mapped_dims(ifeature);
 
+            const auto rows = std::get<0>(dims);
+            const auto cols = std::get<1>(dims);
             const auto colsize = rows * cols;
-            const auto process = [mode=mode, channel=channel, kernel=kernel, rows=rows, cols=cols]
-                (const auto& values, auto&& storage)
+            const auto process = [=] (const auto& values, auto&& storage)
             {
                 gradient3x3(mode, values, channel, kernel, map_tensor(storage.data(), rows, cols));
             };

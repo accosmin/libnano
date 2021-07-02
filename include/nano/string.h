@@ -63,7 +63,7 @@ namespace nano
                 for (const auto& elem : enum_string<tvalue>())
                 {
                     if (elem.first == value)
-                    {
+                    {   // cppcheck-suppress useStlAlgorithm
                         stream << elem.second;
                         return;
                     }
@@ -140,7 +140,7 @@ namespace nano
             for (const auto& option : options)
             {
                 if (option.second == str)
-                {
+                {   // cppcheck-suppress useStlAlgorithm
                     return option.first;
                 }
             }

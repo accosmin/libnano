@@ -44,7 +44,7 @@ void cmdline_t::add(const string_t& short_name, const string_t& name, const stri
         throw std::runtime_error("cmdline: duplicated option [" + name + "]");
     }
 
-    if (!short_name.empty() && find(short_name) != m_options.end())
+    if (find(short_name) != m_options.end())
     {
         throw std::runtime_error("cmdline: duplicated short option [" + short_name + "]");
     }

@@ -526,7 +526,7 @@ UTEST_CASE(tensor4d_begin_end)
     int16_t index = 0;
     for (auto& value : tensor)
     {
-        value = index ++;
+        value = index ++; // cppcheck-suppress useStlAlgorithm
     }
 
     for (tensor_size_t i = 0; i < tensor.size(); ++ i)

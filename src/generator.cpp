@@ -120,22 +120,22 @@ dataset_generator_t::dataset_generator_t(const dataset_t& dataset) :
 
 void dataset_generator_t::update()
 {
-    tensor_size_t columns = 0, features = 0, generators = 0;
+    tensor_size_t total_columns = 0, features = 0, generators = 0;
     for (const auto& generator : m_generators)
     {
         for (tensor_size_t ifeature = 0; ifeature < generator->features(); ++ ifeature, ++ features)
         {
             switch (const auto feature = generator->feature(ifeature); feature.type())
             {
-            case feature_type::sclass:  columns += feature.classes(); break; // NOLINT(bugprone-branch-clone)
-            case feature_type::mclass:  columns += feature.classes(); break;
-            default:                    columns += size(feature.dims()); break;
+            case feature_type::sclass:  total_columns += feature.classes(); break; // NOLINT(bugprone-branch-clone)
+            case feature_type::mclass:  total_columns += feature.classes(); break;
+            default:                    total_columns += size(feature.dims()); break;
             }
         }
         ++ generators;
     }
 
-    m_column_mapping.resize(columns, 3);
+    m_column_mapping.resize(total_columns, 3);
     m_feature_mapping.resize(features, 5);
     m_generator_mapping.resize(generators, 1);
 

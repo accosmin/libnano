@@ -130,11 +130,7 @@ function cppcheck {
         --template='{file}:{line},{severity},{id},{message}' \
         --suppress=unknownMacro \
         --suppress=shadowFunction \
-        --suppress=unmatchedSuppression || return 1
-}
-
-function install_json {
-    bash ${basedir}/scripts/install_json.sh || return 1
+        --suppress=unmatchedSuppression
 }
 
 function codecov {

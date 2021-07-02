@@ -13,7 +13,7 @@ namespace nano
     };
 
     template <>
-    enum_map_t<nano::enum_type> enum_string<nano::enum_type>()
+    enum_map_t<nano::enum_type> enum_string<nano::enum_type>() // cppcheck-suppress unusedFunction
     {
         return
         {

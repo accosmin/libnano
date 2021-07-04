@@ -32,12 +32,12 @@ namespace nano
             const auto channel = mapped_channel(ifeature);
             const auto kernel = make_kernel3x3<scalar_t>(m_type);
 
-            const auto rows = std::get<0>(dims);
-            const auto cols = std::get<1>(dims);
+            const auto rows = std::get<1>(dims);
+            const auto cols = std::get<2>(dims);
             const auto colsize = rows * cols;
             const auto process = [=] (const auto& values, auto&& storage)
             {
-                gradient3x3(mode, values, channel, kernel, map_tensor(storage.data(), rows, cols));
+                gradient3x3(mode, values.tensor(channel), kernel, map_tensor(storage.data(), rows, cols));
             };
 
             return std::make_tuple(process, colsize);

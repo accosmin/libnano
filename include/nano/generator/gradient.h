@@ -74,7 +74,7 @@ namespace nano
     }
 
     ///
-    /// \brief .
+    /// \brief computation mode for gradients.
     ///
     enum class gradient3x3_mode
     {
@@ -91,7 +91,7 @@ namespace nano
     template <typename tscalar_input, typename tscalar_output>
     void gradient3x3(
         gradient3x3_mode mode,
-        tensor_cmap_t<tscalar_input, 3> input, tensor_size_t channel, const std::array<tscalar_output, 3> kernel,
+        tensor_cmap_t<tscalar_input, 2> input, const std::array<tscalar_output, 3> kernel,
         tensor_map_t<tscalar_output, 2> output)
     {
         const auto rows = output.template size<0>();
@@ -99,20 +99,19 @@ namespace nano
 
         assert(input.template size<0>() == rows + 2);
         assert(input.template size<1>() == cols + 2);
-        assert(input.template size<2>() > channel && channel >= 0);
 
         const auto make_gx = [&] (tensor_size_t row, tensor_size_t col)
         {
-            return  kernel[0] * (input(row + 0, col + 2, channel) - input(row + 0, col, channel)) +
-                    kernel[1] * (input(row + 1, col + 2, channel) - input(row + 1, col, channel)) +
-                    kernel[2] * (input(row + 2, col + 2, channel) - input(row + 2, col, channel));
+            return  kernel[0] * (input(row + 0, col + 2) - input(row + 0, col)) +
+                    kernel[1] * (input(row + 1, col + 2) - input(row + 1, col)) +
+                    kernel[2] * (input(row + 2, col + 2) - input(row + 2, col));
         };
 
         const auto make_gy = [&] (tensor_size_t row, tensor_size_t col)
         {
-            return  kernel[0] * (input(row + 2, col + 0, channel) - input(row, col + 0, channel)) +
-                    kernel[1] * (input(row + 2, col + 1, channel) - input(row, col + 1, channel)) +
-                    kernel[2] * (input(row + 2, col + 2, channel) - input(row, col + 2, channel));
+            return  kernel[0] * (input(row + 2, col + 0) - input(row, col + 0)) +
+                    kernel[1] * (input(row + 2, col + 1) - input(row, col + 1)) +
+                    kernel[2] * (input(row + 2, col + 2) - input(row, col + 2));
         };
 
         switch (mode)

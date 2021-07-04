@@ -18,9 +18,9 @@ feature_mapping_t elemwise_gradient_t::do_fit(indices_cmap_t, execution)
     tensor_size_t count = 0;
     for (tensor_size_t i = 0; i < mapping.size<0>(); ++ i)
     {
-        if (mapping(i, 3) >= 3 && mapping(i, 4) >= 3)
+        if (mapping(i, 4) >= 3 && mapping(i, 5) >= 3)
         {
-            const auto channels = mapping(i, 5);
+            const auto channels = mapping(i, 3);
             count += channels * 4; // NB: input channels * gradient features!
         }
     }
@@ -28,16 +28,16 @@ feature_mapping_t elemwise_gradient_t::do_fit(indices_cmap_t, execution)
     auto feature_mapping = feature_mapping_t{count, 8};
     for (tensor_size_t i = 0, k = 0; i < mapping.size<0>(); ++ i)
     {
-        if (mapping(i, 3) >= 3 && mapping(i, 4) >= 3)
+        if (mapping(i, 4) >= 3 && mapping(i, 5) >= 3)
         {
-            for (tensor_size_t channel = 0, channels = mapping(i, 5); channel < channels; ++ channel)
+            for (tensor_size_t channel = 0, channels = mapping(i, 3); channel < channels; ++ channel)
             {
                 for (tensor_size_t type = 0; type < 4; ++ type)
                 {
                     feature_mapping.vector(k).segment(0, 6) = mapping.vector(i).segment(0, 6);
-                    feature_mapping(k, 3) -= 2; // rows after filtering with a 3x3 kernel
-                    feature_mapping(k, 4) -= 2; // columns after filtering with a 3x3 kernel
-                    feature_mapping(k, 5) = 1;  // one channel filtered at a time
+                    feature_mapping(k, 3) = 1;  // one channel filtered at a time
+                    feature_mapping(k, 4) -= 2; // rows after filtering with a 3x3 kernel
+                    feature_mapping(k, 5) -= 2; // columns after filtering with a 3x3 kernel
                     feature_mapping(k, 6) = channel;
                     feature_mapping(k ++, 7) = type;
                 }

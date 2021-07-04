@@ -29,14 +29,14 @@ using namespace nano;
 #define THETA0 atan2(+2.0, 2.0), atan2(+2.00, 2.00), atan2(1.0, 1.5), atan2(+0.25, 1.75)
 #define THETA1 atan2(-0.5, 1.0), atan2(-0.25, 0.75), atan2(0.0, 0.5), atan2(-0.75, 0.75)
 
-static auto make_features()
+static auto make_features(tensor_size_t channels = 2, tensor_size_t rows = 4, tensor_size_t cols = 4)
 {
     return features_t
     {
         feature_t{"mclass3"}.mclass(strings_t{"m0", "m1", "m2"}),
         feature_t{"sclass2"}.sclass(strings_t{"s0", "s1"}),
         feature_t{"f32"}.scalar(feature_type::float32),
-        feature_t{"u8s"}.scalar(feature_type::uint8, make_dims(2, 4, 4)),
+        feature_t{"u8s"}.scalar(feature_type::uint8, make_dims(channels, rows, cols)),
         feature_t{"f64"}.scalar(feature_type::float64),
     };
 }
@@ -45,9 +45,11 @@ class fixture_dataset_t final : public dataset_t
 {
 public:
 
-    fixture_dataset_t(tensor_size_t samples, size_t target) :
+    fixture_dataset_t(
+        tensor_size_t samples, size_t target,
+        tensor_size_t channels = 2, tensor_size_t rows = 4, tensor_size_t cols = 4) :
         m_samples(samples),
-        m_features(make_features()),
+        m_features(make_features(channels, rows, cols)),
         m_target(target)
     {
     }
@@ -58,11 +60,14 @@ public:
 
         for (tensor_size_t sample = 0; sample < m_samples; sample += 2)
         {
-            auto values = make_tensor<uint8_t>(
-                INPUT_DATA
-            );
-            values.array() *= (sample + 1);
-            set(sample, 3, values);
+            if (m_features[3U].dims() == make_dims(2, 4, 4))
+            {
+                auto values = make_tensor<uint8_t>(
+                    INPUT_DATA
+                );
+                values.array() *= (sample + 1);
+                set(sample, 3, values);
+            }
         }
     }
 
@@ -73,12 +78,22 @@ private:
     size_t          m_target;
 };
 
-static auto make_dataset(tensor_size_t samples, size_t target)
+static auto make_dataset(
+    tensor_size_t samples, size_t target,
+    tensor_size_t channels = 2, tensor_size_t rows = 4, tensor_size_t cols = 4)
 {
-    auto dataset = fixture_dataset_t{samples, target};
+    auto dataset = fixture_dataset_t{samples, target, channels, rows, cols};
     UTEST_CHECK_NOTHROW(dataset.load());
     UTEST_CHECK_EQUAL(dataset.samples(), samples);
     return dataset;
+}
+
+static auto make_generator(const dataset_t& dataset)
+{
+    auto generator = dataset_generator_t{dataset};
+    generator.add<elemwise_generator_t<elemwise_gradient_t>>();
+    generator.fit(arange(0, dataset.samples()), execution::par);
+    return generator;
 }
 
 UTEST_BEGIN_MODULE(test_generator_elemwise_gradient)
@@ -166,10 +181,7 @@ UTEST_CASE(gradient)
 UTEST_CASE(unsupervised_gradient)
 {
     const auto dataset = make_dataset(4, string_t::npos);
-
-    auto generator = dataset_generator_t{dataset};
-    generator.add<elemwise_generator_t<elemwise_gradient_t>>();
-    generator.fit(arange(0, 4), execution::par);
+    const auto generator = make_generator(dataset);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 8);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"sobel::gx(u8s[channel::0])"}.scalar(feature_type::float64, make_dims(1, 2, 2)));
@@ -218,6 +230,30 @@ UTEST_CASE(unsupervised_gradient)
         make_indices(
             0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3,
             4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7));
+}
+
+UTEST_CASE(unsupervised_too_small_rows)
+{
+    const auto dataset = make_dataset(4, string_t::npos, 2, 2, 4);
+    const auto generator = make_generator(dataset);
+
+    UTEST_CHECK_EQUAL(generator.features(), 0);
+}
+
+UTEST_CASE(unsupervised_too_small_cols)
+{
+    const auto dataset = make_dataset(4, string_t::npos, 2, 4, 2);
+    const auto generator = make_generator(dataset);
+
+    UTEST_CHECK_EQUAL(generator.features(), 0);
+}
+
+UTEST_CASE(unsupervised_too_small_rows_and_cols)
+{
+    const auto dataset = make_dataset(4, string_t::npos, 2, 2, 2);
+    const auto generator = make_generator(dataset);
+
+    UTEST_CHECK_EQUAL(generator.features(), 0);
 }
 
 UTEST_END_MODULE()

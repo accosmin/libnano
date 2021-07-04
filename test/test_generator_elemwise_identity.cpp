@@ -112,6 +112,17 @@ static auto make_dataset(tensor_size_t samples, size_t target)
     return dataset;
 }
 
+static auto make_generator(const dataset_t& dataset)
+{
+    auto generator = dataset_generator_t{dataset};
+    UTEST_CHECK_NOTHROW(generator.add<elemwise_generator_t<sclass_identity_t>>());
+    UTEST_CHECK_NOTHROW(generator.add<elemwise_generator_t<mclass_identity_t>>());
+    UTEST_CHECK_NOTHROW(generator.add<elemwise_generator_t<scalar_identity_t>>());
+    UTEST_CHECK_NOTHROW(generator.add<elemwise_generator_t<struct_identity_t>>());
+    UTEST_CHECK_NOTHROW(generator.fit(arange(0, dataset.samples()), execution::par));
+    return generator;
+}
+
 UTEST_BEGIN_MODULE(test_generator_elemwise_identity)
 
 UTEST_CASE(empty)
@@ -126,13 +137,7 @@ UTEST_CASE(empty)
 UTEST_CASE(unsupervised)
 {
     const auto dataset = make_dataset(10, string_t::npos);
-
-    auto generator = dataset_generator_t{dataset};
-    generator.add<elemwise_generator_t<sclass_identity_t>>();
-    generator.add<elemwise_generator_t<mclass_identity_t>>();
-    generator.add<elemwise_generator_t<scalar_identity_t>>();
-    generator.add<elemwise_generator_t<struct_identity_t>>();
-    generator.fit(arange(0, 10), execution::par);
+    const auto generator = make_generator(dataset);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 5);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"sclass2"}.sclass(strings_t{"s0", "s1"}));
@@ -233,13 +238,7 @@ UTEST_CASE(unsupervised)
 UTEST_CASE(sclassification)
 {
     const auto dataset = make_dataset(10, 1U);
-
-    auto generator = dataset_generator_t{dataset};
-    generator.add<elemwise_generator_t<sclass_identity_t>>();
-    generator.add<elemwise_generator_t<mclass_identity_t>>();
-    generator.add<elemwise_generator_t<scalar_identity_t>>();
-    generator.add<elemwise_generator_t<struct_identity_t>>();
-    generator.fit(arange(0, 10), execution::par);
+    const auto generator = make_generator(dataset);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 4);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"mclass3"}.mclass(strings_t{"m0", "m1", "m2"}));
@@ -287,13 +286,7 @@ UTEST_CASE(sclassification)
 UTEST_CASE(mclassification)
 {
     const auto dataset = make_dataset(10, 0U);
-
-    auto generator = dataset_generator_t{dataset};
-    generator.add<elemwise_generator_t<sclass_identity_t>>();
-    generator.add<elemwise_generator_t<mclass_identity_t>>();
-    generator.add<elemwise_generator_t<scalar_identity_t>>();
-    generator.add<elemwise_generator_t<struct_identity_t>>();
-    generator.fit(arange(0, 10), execution::par);
+    const auto generator = make_generator(dataset);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 4);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"sclass2"}.sclass(strings_t{"s0", "s1"}));
@@ -342,13 +335,7 @@ UTEST_CASE(mclassification)
 UTEST_CASE(regression)
 {
     const auto dataset = make_dataset(10, 2U);
-
-    auto generator = dataset_generator_t{dataset};
-    generator.add<elemwise_generator_t<sclass_identity_t>>();
-    generator.add<elemwise_generator_t<mclass_identity_t>>();
-    generator.add<elemwise_generator_t<scalar_identity_t>>();
-    generator.add<elemwise_generator_t<struct_identity_t>>();
-    generator.fit(arange(0, 10), execution::par);
+    const auto generator = make_generator(dataset);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 4);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"sclass2"}.sclass(strings_t{"s0", "s1"}));
@@ -395,13 +382,7 @@ UTEST_CASE(regression)
 UTEST_CASE(mvregression)
 {
     const auto dataset = make_dataset(10, 3U);
-
-    auto generator = dataset_generator_t{dataset};
-    generator.add<elemwise_generator_t<sclass_identity_t>>();
-    generator.add<elemwise_generator_t<mclass_identity_t>>();
-    generator.add<elemwise_generator_t<scalar_identity_t>>();
-    generator.add<elemwise_generator_t<struct_identity_t>>();
-    generator.fit(arange(0, 10), execution::par);
+    const auto generator = make_generator(dataset);
 
     UTEST_REQUIRE_EQUAL(generator.features(), 4);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"sclass2"}.sclass(strings_t{"s0", "s1"}));

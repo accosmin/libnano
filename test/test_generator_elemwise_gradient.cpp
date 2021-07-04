@@ -91,8 +91,8 @@ static auto make_dataset(
 static auto make_generator(const dataset_t& dataset)
 {
     auto generator = dataset_generator_t{dataset};
-    generator.add<elemwise_generator_t<elemwise_gradient_t>>();
-    generator.fit(arange(0, dataset.samples()), execution::par);
+    UTEST_CHECK_NOTHROW(generator.add<elemwise_generator_t<elemwise_gradient_t>>());
+    UTEST_CHECK_NOTHROW(generator.fit(arange(0, dataset.samples()), execution::par));
     return generator;
 }
 

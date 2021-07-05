@@ -3,6 +3,7 @@ make_app(bench_tpool NANO::nano)
 #make_app(bench_gboost NANO::nano)
 #make_app(bench_linear NANO::nano)
 make_app(bench_solver NANO::nano)
+make_app(bench_dataset NANO::nano)
 make_app(bench_function NANO::nano)
 
 find_package(OpenMP QUIET)

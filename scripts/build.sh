@@ -17,6 +17,10 @@ threads=$((cores+1))
 export PATH="${PATH}:${installdir}"
 export CXXFLAGS="${CXXFLAGS} -Werror"
 
+function lto {
+    export CXXFLAGS="${CXXFLAGS} -flto"
+}
+
 function asan {
     export CXXFLAGS="${CXXFLAGS} -fsanitize=address -fno-omit-frame-pointer"
 }
@@ -355,18 +359,20 @@ usage: $0 [OPTIONS]
 options:
     -h,--help
         print usage
+    --lto
+        setup compiler and linker flags to enable link-time optimization
     --asan
-        setup compiler and linker flags to use the address sanitizer
+        setup compiler and linker flags to enable the address sanitizer
     --lsan
-        setup compiler and linker flags to use the leak sanitizer
+        setup compiler and linker flags to enable the leak sanitizer
     --usan
-        setup compiler and linker flags to use the undefined behaviour sanitizer
+        setup compiler and linker flags to enable the undefined behaviour sanitizer
     --tsan
-        setup compiler and linker flags to use the thread sanitizer
+        setup compiler and linker flags to enable the thread sanitizer
     --msan
-        setup compiler and linker flags to use the memory sanitizer
+        setup compiler and linker flags to enable the memory sanitizer
     --gold
-        setup compiler and linker flags to use the gold linker
+        setup compiler and linker flags to enable the gold linker
     --native
         setup compiler flags to optimize for the native platform
     --libcpp
@@ -430,6 +436,7 @@ fi
 while [ "$1" != "" ]; do
     case $1 in
         -h | --help)                    usage;;
+        --lto)                          lto;;
         --asan)                         asan;;
         --lsan)                         lsan;;
         --usan)                         usan;;

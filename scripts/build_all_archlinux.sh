@@ -7,7 +7,7 @@ trap 'echo "\"${last_command}\" command failed with exit code $?."' EXIT
 # NB: cppcheck doesn't compile with gcc11 or clang12 (missing include)!
 CXX=g++-10 bash scripts/build.sh --suffix cppcheck --config --cppcheck
 
-CXX=g++ GCOV=gcov bash scripts/build.sh --suffix coverage --build-type Debug \
+CXX=g++ GCOV=gcov bash scripts/build.sh --suffix coverage --build-type RelWithDebInfo \
     --generator Ninja --coverage --config --build --test --codecov
 
 CXX=g++ bash scripts/build.sh --suffix gcc-debug --build-type Debug \

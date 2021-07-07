@@ -72,7 +72,7 @@ blocks:
           commands:
             - sudo -H pip install --upgrade pip
             - sudo -H pip install coverage
-            - CXX=g++ GCOV=gcov bash scripts/build.sh --build-type Debug --coverage --config --build --test --codecov
+            - CXX=g++ GCOV=gcov bash scripts/build.sh --build-type RelWithDebInfo --coverage --config --build --test --codecov
   - name: OSX Xcode12
     task:
       agent:

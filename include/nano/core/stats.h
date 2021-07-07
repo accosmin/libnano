@@ -1,37 +1,12 @@
 #pragma once
 
-#include <cmath>
-#include <limits>
 #include <vector>
-#include <cassert>
 #include <numeric>
 #include <ostream>
-#include <algorithm>
+#include <nano/core/percentile.h>
 
 namespace nano
 {
-    ///
-    /// \brief returns the percentile value.
-    ///
-    template <typename titerator>
-    auto percentile(titerator begin, titerator end, int percentage)
-    {
-        assert(percentage > 0 && percentage < 100);
-        auto middle = begin;
-        std::advance(middle, std::distance(begin, end) * percentage / 100);
-        std::nth_element(begin, middle, end);
-        return *middle;
-    }
-
-    ///
-    /// \brief returns the median value.
-    ///
-    template <typename titerator>
-    auto median(titerator begin, titerator end)
-    {
-        return percentile(begin, end, 50);
-    }
-
     ///
     /// \brief collects numerical values and computes statistics like:
     ///     - average, standard deviation

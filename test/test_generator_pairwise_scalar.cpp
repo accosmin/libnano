@@ -96,8 +96,8 @@ UTEST_CASE(unsupervised_product_scalar)
     const auto dataset = make_dataset(10, string_t::npos);
 
     auto generator = dataset_generator_t{dataset};
-    generator.add<pairwise_generator_t<pairwise_scalar2scalar_t<product_t>>>(struct2scalar::off);
-    generator.fit(arange(0, 10), execution::par);
+    UTEST_CHECK_NOTHROW(generator.add<pairwise_generator_t<pairwise_scalar2scalar_t<product_t>>>(struct2scalar::off));
+    UTEST_CHECK_NOTHROW(generator.fit(arange(0, 10), execution::par));
 
     UTEST_REQUIRE_EQUAL(generator.features(), 3);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"product(f32[0],f32[0])"}.scalar(feature_type::float64));
@@ -128,8 +128,8 @@ UTEST_CASE(unsupervised_product_sclass)
     const auto dataset = make_dataset(10, string_t::npos);
 
     auto generator = dataset_generator_t{dataset};
-    generator.add<pairwise_generator_t<pairwise_scalar2sclass_t<product_sign_class_t>>>(struct2scalar::off);
-    generator.fit(arange(0, 10), execution::par);
+    UTEST_CHECK_NOTHROW(generator.add<pairwise_generator_t<pairwise_scalar2sclass_t<product_sign_class_t>>>(struct2scalar::off));
+    UTEST_CHECK_NOTHROW(generator.fit(arange(0, 10), execution::par));
 
     UTEST_REQUIRE_EQUAL(generator.features(), 3);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"product_sign_class(f32[0],f32[0])"}.sclass({"neg", "pos"}));
@@ -160,8 +160,8 @@ UTEST_CASE(unsupervised_product_mixed)
     const auto dataset = make_dataset(10, string_t::npos);
 
     auto generator = dataset_generator_t{dataset};
-    generator.add<pairwise_generator_t<pairwise_scalar2scalar_t<product_t>>>(struct2scalar::on);
-    generator.fit(arange(0, 10), execution::par);
+    UTEST_CHECK_NOTHROW(generator.add<pairwise_generator_t<pairwise_scalar2scalar_t<product_t>>>(struct2scalar::on));
+    UTEST_CHECK_NOTHROW(generator.fit(arange(0, 10), execution::par));
 
     UTEST_REQUIRE_EQUAL(generator.features(), 21);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"product(f32[0],f32[0])"}.scalar(feature_type::float64));

@@ -27,9 +27,9 @@ UTEST_CASE(tensor)
     UTEST_CHECK_CLOSE(tensor.mean(), 5.0, 1e-16);
     UTEST_CHECK_CLOSE(tensor.variance(), 4.0, 1e-16);
     UTEST_CHECK_CLOSE(tensor.stdev(), std::sqrt(4.0/7.0), 1e-16);
-    UTEST_CHECK_CLOSE(median(begin(tensor), end(tensor)), 5.0, 1e-16);
-    UTEST_CHECK_CLOSE(percentile(begin(tensor), end(tensor), 10), 2.0, 1e-16);
-    UTEST_CHECK_CLOSE(percentile(begin(tensor), end(tensor), 90), 9.0, 1e-16);
+    UTEST_CHECK_CLOSE(median(begin(tensor), end(tensor)), 4.5, 1e-16);
+    UTEST_CHECK_CLOSE(percentile(begin(tensor), end(tensor), 10), 3.0, 1e-16);
+    UTEST_CHECK_CLOSE(percentile(begin(tensor), end(tensor), 90), 8.0, 1e-16);
 }
 
 UTEST_CASE(fixed)
@@ -44,9 +44,9 @@ UTEST_CASE(fixed)
     UTEST_CHECK_CLOSE(stats.sum2(), 232.0, 1e-16);
     UTEST_CHECK_CLOSE(stats.var(), 4.0, 1e-16);
     UTEST_CHECK_CLOSE(stats.stdev(), 2.0, 1e-16);
-    UTEST_CHECK_CLOSE(stats.median(), 5.0, 1e-16);
-    UTEST_CHECK_CLOSE(stats.percentile(10), 2.0, 1e-16);
-    UTEST_CHECK_CLOSE(stats.percentile(90), 9.0, 1e-16);
+    UTEST_CHECK_CLOSE(stats.median(), 4.5, 1e-16);
+    UTEST_CHECK_CLOSE(stats.percentile(10), 3.0, 1e-16);
+    UTEST_CHECK_CLOSE(stats.percentile(90), 8.0, 1e-16);
 }
 
 UTEST_CASE(merge)
@@ -68,9 +68,9 @@ UTEST_CASE(merge)
     UTEST_CHECK_CLOSE(stats.sum2(), 232.0, 1e-16);
     UTEST_CHECK_CLOSE(stats.var(), 4.0, 1e-16);
     UTEST_CHECK_CLOSE(stats.stdev(), 2.0, 1e-16);
-    UTEST_CHECK_CLOSE(stats.median(), 5.0, 1e-16);
-    UTEST_CHECK_CLOSE(stats.percentile(10), 2.0, 1e-16);
-    UTEST_CHECK_CLOSE(stats.percentile(90), 9.0, 1e-16);
+    UTEST_CHECK_CLOSE(stats.median(), 4.5, 1e-16);
+    UTEST_CHECK_CLOSE(stats.percentile(10), 3.0, 1e-16);
+    UTEST_CHECK_CLOSE(stats.percentile(90), 8.0, 1e-16);
 }
 
 UTEST_CASE(random)

@@ -74,8 +74,8 @@ UTEST_CASE(unsupervised_ratios)
     const auto dataset = make_dataset(30, string_t::npos);
 
     auto generator = dataset_generator_t{dataset};
-    generator.add<elemwise_generator_t<ratio_histogram_medians_t>>(struct2scalar::off, bins);
-    generator.fit(arange(0, 30), execution::par);
+    UTEST_CHECK_NOTHROW(generator.add<elemwise_generator_t<ratio_histogram_medians_t>>(struct2scalar::off, bins));
+    UTEST_CHECK_NOTHROW(generator.fit(arange(0, 30), execution::par));
 
     UTEST_REQUIRE_EQUAL(generator.features(), 2);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"ratio_hist[10](f32[0])"}.scalar(feature_type::float64));
@@ -104,8 +104,8 @@ UTEST_CASE(unsupervised_percentiles)
     const auto dataset = make_dataset(30, string_t::npos);
 
     auto generator = dataset_generator_t{dataset};
-    generator.add<elemwise_generator_t<percentile_histogram_medians_t>>(struct2scalar::on, bins);
-    generator.fit(arange(0, 30), execution::par);
+    UTEST_CHECK_NOTHROW(generator.add<elemwise_generator_t<percentile_histogram_medians_t>>(struct2scalar::on, bins));
+    UTEST_CHECK_NOTHROW(generator.fit(arange(0, 30), execution::par));
 
     UTEST_REQUIRE_EQUAL(generator.features(), 6);
     UTEST_CHECK_EQUAL(generator.feature(0), feature_t{"perc_hist[5](f32[0])"}.scalar(feature_type::float64));

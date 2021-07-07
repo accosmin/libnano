@@ -1,7 +1,7 @@
 #pragma once
 
 #include <nano/tensor.h>
-#include <nano/core/percentile.h>
+#include <nano/core/stats.h>
 
 namespace nano
 {

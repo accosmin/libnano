@@ -10,7 +10,6 @@ make_test(test_parameter NANO::nano)
 make_test(test_core_stats NANO::nano)
 make_test(test_core_chrono NANO::nano)
 make_test(test_core_histogram NANO::nano)
-make_test(test_core_percentile NANO::nano)
 
 make_test(test_tensor_index NANO::nano)
 make_test(test_tensor_stream NANO::nano)

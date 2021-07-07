@@ -10,6 +10,7 @@ target_sources(nano PRIVATE
     table.cpp
     logger.cpp
     stream.cpp
+    core/chrono.cpp
     generator.cpp
     generator/elemwise.cpp
     generator/elemwise_gradient.cpp

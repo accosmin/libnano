@@ -3,6 +3,7 @@
 #include <chrono>
 #include <string>
 #include <cstdio>
+#include <nano/arch.h>
 #include <nano/core/stats.h>
 #include <nano/core/numeric.h>
 
@@ -17,6 +18,11 @@ namespace nano
     using timepoint_t = std::chrono::high_resolution_clock::time_point;
 
     ///
+    /// \brief return a human readable string representation of a duration in milliseconds.
+    ///
+    NANO_PUBLIC std::string elapsed(int milliseconds);
+
+    ///
     /// \brief utility to measure duration.
     ///
     class timer_t
@@ -25,37 +31,57 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        timer_t() : m_start(now()) {}
+        timer_t() : m_start(now())
+        {
+        }
 
         ///
-        /// \brief reset the current time point
+        /// \brief reset the current time point.
         ///
-        void reset() { m_start = now(); }
+        void reset()
+        {
+            m_start = now();
+        }
 
         ///
-        /// \brief retrieve the elapsed time as a string
+        /// \brief retrieve the elapsed time as a string.
         ///
-        std::string elapsed() const { return elapsed(static_cast<int>(this->milliseconds().count())); }
+        std::string elapsed() const
+        {
+            return ::nano::elapsed(static_cast<int>(this->milliseconds().count()));
+        }
 
         ///
-        /// \brief retrieve the elapsed time in seconds
+        /// \brief retrieve the elapsed time in seconds.
         ///
-        seconds_t seconds() const { return duration<seconds_t>(); }
+        seconds_t seconds() const
+        {
+            return duration<seconds_t>();
+        }
 
         ///
-        /// \brief retrieve the elapsed time in milliseconds
+        /// \brief retrieve the elapsed time in milliseconds.
         ///
-        milliseconds_t milliseconds() const { return duration<milliseconds_t>(); }
+        milliseconds_t milliseconds() const
+        {
+            return duration<milliseconds_t>();
+        }
 
         ///
-        /// \brief retrieve the elapsed time in microseconds
+        /// \brief retrieve the elapsed time in microseconds.
         ///
-        microseconds_t microseconds() const { return duration<microseconds_t>(); }
+        microseconds_t microseconds() const
+        {
+            return duration<microseconds_t>();
+        }
 
         ///
-        /// \brief retrieve the elapsed time in nanoseconds
+        /// \brief retrieve the elapsed time in nanoseconds.
         ///
-        nanoseconds_t nanoseconds() const { return duration<nanoseconds_t>(); }
+        nanoseconds_t nanoseconds() const
+        {
+            return duration<nanoseconds_t>();
+        }
 
     private:
 
@@ -64,51 +90,10 @@ namespace nano
             return std::chrono::high_resolution_clock::now();
         }
 
-        static void append(std::string& str, const char* format, const int value)
-        {
-            char buffer[32];
-            snprintf(buffer, sizeof(buffer), format, value); // NOLINT(hicpp-vararg,cppcoreguidelines-pro-type-vararg)
-            str.append(buffer);
-        }
-
         template <typename tduration>
         tduration duration() const
         {
             return std::chrono::duration_cast<tduration>(now() - m_start);
-        }
-
-        static std::string elapsed(int milliseconds)
-        {
-            static constexpr int size_second = 1000;
-            static constexpr int size_minute = 60 * size_second;
-            static constexpr int size_hour = 60 * size_minute;
-            static constexpr int size_day = 24 * size_hour;
-
-            const auto days = milliseconds / size_day; milliseconds -= days * size_day;
-            const auto hours = milliseconds / size_hour; milliseconds -= hours * size_hour;
-            const auto minutes = milliseconds / size_minute; milliseconds -= minutes * size_minute;
-            const auto seconds = milliseconds / size_second; milliseconds -= seconds * size_second;
-
-            std::string str;
-            if (days > 0)
-            {
-                append(str, "%id:", days);
-            }
-            if (days > 0 || hours > 0)
-            {
-                append(str, "%.2ih:", hours);
-            }
-            if (days > 0 || hours > 0 || minutes > 0)
-            {
-                append(str, "%.2im:", minutes);
-            }
-            if (days > 0 || hours > 0 || minutes > 0 || seconds > 0)
-            {
-                append(str, "%.2is:", seconds);
-            }
-            append(str, "%.3ims", milliseconds);
-
-            return str;
         }
 
         // attributes
@@ -119,35 +104,35 @@ namespace nano
     /// \brief robustly measure a function call (in the given time units).
     ///
     template <typename tunits, typename toperator>
-    tunits measure(const toperator& op, const size_t trials,
-        const size_t min_trial_iterations = 1,
-        const microseconds_t min_trial_duration = microseconds_t(1000))
+    tunits measure(const toperator& op, int64_t trials, int64_t min_trial_iterations = 1,
+        microseconds_t min_trial_duration = microseconds_t(1000))
     {
-        const auto run_opx = [&] (const size_t times)
+        const auto run_opx = [&] (int64_t times)
         {
             const timer_t timer;
-            for (size_t i = 0; i < times; ++ i)
+            for (int64_t i = 0; i < times; ++ i)
             {
                 op();
             }
             return timer.microseconds();
         };
 
-        const auto run_trial = [&] (const size_t times)
+        const auto run_trial = [&] (int64_t times)
         {
             return picoseconds_t(nano::idiv(run_opx(times).count() * 1000 * 1000, times));
         };
 
         // calibrate the number of function calls to achieve the minimum time resolution
-        size_t trial_iterations = std::max(size_t(1), min_trial_iterations);
-        for (microseconds_t usecs(0); usecs < min_trial_duration; trial_iterations *= 2)
+        auto trial_iterations = std::max(int64_t(1), min_trial_iterations);
+        const auto max_trials = std::numeric_limits<int64_t>::max() / 4;
+        for (microseconds_t usecs(0); usecs < min_trial_duration && trial_iterations < max_trials; trial_iterations *= 2)
         {
             usecs = run_opx(trial_iterations);
         }
 
         // measure multiple times for robustness
         picoseconds_t duration = run_trial(trial_iterations);
-        for (size_t t = 1; t < trials; ++ t)
+        for (int64_t t = 1; t < trials; ++ t)
         {
             duration = std::min(duration, run_trial(trial_iterations));
         }

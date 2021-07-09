@@ -2,9 +2,9 @@
 
 #include <cmath>
 #include <variant>
-#include <nano/logger.h>
 #include <nano/scalar.h>
 #include <nano/string.h>
+#include <nano/core/logger.h>
 
 namespace nano
 {

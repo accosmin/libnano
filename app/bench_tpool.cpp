@@ -1,10 +1,10 @@
 #include <iomanip>
 #include <nano/tpool.h>
 #include <nano/table.h>
-#include <nano/logger.h>
 #include <nano/tensor.h>
 #include <nano/cmdline.h>
 #include <nano/core/chrono.h>
+#include <nano/core/logger.h>
 
 #if defined(_OPENMP)
 #include <omp.h>

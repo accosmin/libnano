@@ -1,5 +1,5 @@
 #include <fstream>
-#include <nano/logger.h>
+#include <nano/core/logger.h>
 #include <nano/dataset/imclass_mnist.h>
 
 using namespace nano;

@@ -1,6 +1,5 @@
-#include <nano/logger.h>
 #include <nano/tokenizer.h>
-#include <nano/mlearn/class.h>
+#include <nano/core/logger.h>
 #include <nano/dataset/tabular.h>
 
 using namespace nano;

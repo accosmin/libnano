@@ -4,9 +4,9 @@
 #include <istream>
 #include <ostream>
 #include <type_traits>
-#include <nano/logger.h>
 #include <nano/string.h>
 #include <nano/version.h>
+#include <nano/core/logger.h>
 
 namespace nano
 {

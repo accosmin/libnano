@@ -1,7 +1,7 @@
 #include <ctime>
 #include <string>
 #include <iomanip>
-#include <nano/logger.h>
+#include <nano/core/logger.h>
 
 using namespace nano;
 

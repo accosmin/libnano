@@ -1,7 +1,7 @@
 #include <nano/table.h>
-#include <nano/logger.h>
 #include <nano/cmdline.h>
 #include <nano/core/chrono.h>
+#include <nano/core/logger.h>
 #include <nano/linear/model.h>
 #include <nano/linear/function.h>
 #include <nano/dataset/imclass.h>

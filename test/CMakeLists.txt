@@ -1,6 +1,5 @@
 make_test(test_tpool NANO::nano)
 make_test(test_table NANO::nano)
-make_test(test_logger NANO::nano)
 make_test(test_string NANO::nano)
 make_test(test_stream NANO::nano)
 make_test(test_factory NANO::nano)
@@ -9,6 +8,7 @@ make_test(test_parameter NANO::nano)
 
 make_test(test_core_stats NANO::nano)
 make_test(test_core_chrono NANO::nano)
+make_test(test_core_logger NANO::nano)
 make_test(test_core_numeric NANO::nano)
 make_test(test_core_histogram NANO::nano)
 

@@ -1,5 +1,5 @@
 #include <fstream>
-#include <nano/logger.h>
+#include <nano/core/logger.h>
 #include <nano/dataset/imclass_cifar.h>
 
 using namespace nano;

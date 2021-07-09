@@ -8,9 +8,9 @@ add_library(nano)
 
 target_sources(nano PRIVATE
     table.cpp
-    logger.cpp
     stream.cpp
     core/chrono.cpp
+    core/logger.cpp
     core/histogram.cpp
     generator.cpp
     generator/elemwise.cpp

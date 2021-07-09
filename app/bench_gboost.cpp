@@ -1,9 +1,9 @@
 #include <iomanip>
 #include <nano/table.h>
-#include <nano/logger.h>
 #include <nano/cmdline.h>
 #include <nano/tokenizer.h>
 #include <nano/core/chrono.h>
+#include <nano/core/logger.h>
 #include <nano/mlearn/enums.h>
 #include <nano/gboost/model.h>
 #include <nano/model/grid_search.h>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nano/logger.h>
+#include <nano/core/logger.h>
 #include <nano/dataset/feature.h>
 #include <nano/dataset/iterator.h>
 

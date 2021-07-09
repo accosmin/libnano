@@ -1,11 +1,11 @@
 #include <iomanip>
 #include <nano/table.h>
 #include <nano/tpool.h>
-#include <nano/logger.h>
 #include <nano/solver.h>
 #include <nano/cmdline.h>
 #include <nano/core/stats.h>
 #include <nano/core/chrono.h>
+#include <nano/core/logger.h>
 #include <nano/core/numeric.h>
 
 using namespace nano;

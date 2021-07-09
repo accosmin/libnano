@@ -1,12 +1,12 @@
 #include <nano/loss.h>
 #include <nano/table.h>
-#include <nano/logger.h>
 #include <nano/solver.h>
 #include <nano/version.h>
 #include <nano/cmdline.h>
 #include <nano/dataset.h>
 #include <nano/lsearch0.h>
 #include <nano/lsearchk.h>
+#include <nano/core/logger.h>
 
 using namespace nano;
 

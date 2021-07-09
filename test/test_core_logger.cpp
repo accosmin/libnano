@@ -115,7 +115,7 @@ UTEST_CASE(main)
 
     const auto op_unknown = [] (int, const char* [])
     {
-        throw 42;
+        throw 42; // NOLINT(hicpp-exception-baseclass)
         return EXIT_SUCCESS;
     };
 

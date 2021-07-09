@@ -35,7 +35,7 @@ namespace nano
         typename tscalar,
         std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true
     >
-    inline auto make_udist(const tscalar min, const tscalar max)
+    inline auto make_udist(tscalar min, tscalar max)
     {
         assert(min <= max);
         return udist_t<tscalar>(min, max);
@@ -49,7 +49,7 @@ namespace nano
         typename tscalar, typename trng,
         std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true
     >
-    tscalar urand(const tscalar min, const tscalar max, trng&& rng)
+    tscalar urand(tscalar min, tscalar max, trng&& rng)
     {
         auto udist = make_udist<tscalar>(min, max);
         return udist(rng);
@@ -63,29 +63,12 @@ namespace nano
         typename tscalar, typename titerator, typename trng,
         std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true
     >
-    void urand(const tscalar min, const tscalar max, titerator begin, const titerator end, trng&& rng)
+    void urand(tscalar min, tscalar max, titerator begin, const titerator end, trng&& rng)
     {
         auto udist = make_udist<tscalar>(min, max);
         for ( ; begin != end; ++ begin)
         {
             *begin = udist(rng);
-        }
-    }
-
-    ///
-    /// \brief add to the [begin, range) range of elements random values uniformaly distributed in the [min, max] range.
-    ///
-    template
-    <
-        typename tscalar, typename titerator, typename trng,
-        std::enable_if_t<std::is_arithmetic_v<std::remove_reference_t<tscalar>>, bool> = true
-    >
-    void add_urand(const tscalar min, const tscalar max, titerator begin, const titerator end, trng&& rng)
-    {
-        auto udist = make_udist<tscalar>(min, max);
-        for ( ; begin != end; ++ begin)
-        {
-            *begin += udist(rng);
         }
     }
 }

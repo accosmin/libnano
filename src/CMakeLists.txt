@@ -11,6 +11,7 @@ target_sources(nano PRIVATE
     logger.cpp
     stream.cpp
     core/chrono.cpp
+    core/histogram.cpp
     generator.cpp
     generator/elemwise.cpp
     generator/elemwise_gradient.cpp

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <nano/arch.h>
 #include <nano/tensor.h>
 #include <nano/core/stats.h>
 
@@ -8,30 +9,12 @@ namespace nano
     ///
     /// \brief construct equidistant percentiles (in the range [0, 100]).
     ///
-    inline tensor_mem_t<scalar_t, 1> make_equidistant_percentiles(tensor_size_t bins)
-    {
-        assert(bins > 1);
-
-        const auto delta = 100.0 / static_cast<scalar_t>(bins);
-
-        tensor_mem_t<scalar_t, 1> percentiles(bins - 1);
-        percentiles.lin_spaced(delta, 100.0 - delta);
-        return percentiles;
-    }
+    NANO_PUBLIC tensor_mem_t<scalar_t, 1> make_equidistant_percentiles(tensor_size_t bins);
 
     ///
     /// \brief construct equidistant ratios (in the range [0, 1]).
     ///
-    inline tensor_mem_t<scalar_t, 1> make_equidistant_ratios(tensor_size_t bins)
-    {
-        assert(bins > 1);
-
-        const auto delta = 1.0 / static_cast<scalar_t>(bins);
-
-        tensor_mem_t<scalar_t, 1> ratios(bins - 1);
-        ratios.lin_spaced(delta, 1.0 - delta);
-        return ratios;
-    }
+    NANO_PUBLIC tensor_mem_t<scalar_t, 1> make_equidistant_ratios(tensor_size_t bins);
 
     ///
     /// \brief histogram utility for scalar values.
@@ -117,13 +100,8 @@ namespace nano
             assert(ratios(0) > 0.0);
             assert(ratios(ratios.size() - 1) < 1.0);
 
-            auto min = static_cast<scalar_t>(*begin);
-            auto max = static_cast<scalar_t>(*--end); ++ end;
-            if (max < min + std::numeric_limits<scalar_t>::epsilon())
-            {
-                min -= std::numeric_limits<scalar_t>::epsilon();
-                max += std::numeric_limits<scalar_t>::epsilon();
-            }
+            const auto min = static_cast<scalar_t>(*begin);
+            const auto max = static_cast<scalar_t>(*--end); ++ end;
             const auto delta = (max - min);
 
             tensor_mem_t<scalar_t, 1> thresholds(ratios.size());

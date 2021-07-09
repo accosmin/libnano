@@ -6,7 +6,7 @@
 namespace nano
 {
     ///
-    /// \brief square: x^2
+    /// \brief square: x^2.
     ///
     template
     <
@@ -19,7 +19,7 @@ namespace nano
     }
 
     ///
-    /// \brief cube: x^3
+    /// \brief cube: x^3.
     ///
     template
     <
@@ -32,7 +32,7 @@ namespace nano
     }
 
     ///
-    /// \brief quartic: x^4
+    /// \brief quartic: x^4.
     ///
     template
     <
@@ -86,7 +86,7 @@ namespace nano
     }
 
     ///
-    /// \brief round to the closest power of 10
+    /// \brief round to the closest power of 10.
     ///
     template
     <
@@ -95,11 +95,11 @@ namespace nano
     >
     inline auto roundpow10(tscalar v)
     {
-        return std::pow(tscalar(10), std::floor(std::log10(v)));
+        return std::pow(tscalar(10), std::round(std::log10(v)));
     }
 
     ///
-    /// \brief precision level [0=very precise, 1=quite precise, 2=precise, 3=loose] for different scalars
+    /// \brief precision level [0=very precise, 1=quite precise, 2=precise, 3=loose] for different scalars.
     ///
     template
     <

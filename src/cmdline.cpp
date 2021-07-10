@@ -1,7 +1,7 @@
 #include <cassert>
 #include <fstream>
 #include <nano/cmdline.h>
-#include <nano/tokenizer.h>
+#include <nano/core/tokenizer.h>
 
 using namespace nano;
 

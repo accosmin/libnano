@@ -1,7 +1,6 @@
 #include <iomanip>
 #include <utest/utest.h>
 #include <nano/string.h>
-#include <nano/tokenizer.h>
 
 namespace nano
 {
@@ -82,48 +81,6 @@ UTEST_CASE(resize)
     UTEST_CHECK_EQUAL(nano::align("text", 10, nano::alignment::right, '='),  "======text");
     UTEST_CHECK_EQUAL(nano::align("text", 10, nano::alignment::left, '='),   "text======");
     UTEST_CHECK_EQUAL(nano::align("text", 10, nano::alignment::center, '='), "===text===");
-}
-
-UTEST_CASE(split_str)
-{
-    const auto str = nano::string_t{"= -token1 token2 something "};
-    for (auto tokenizer = nano::tokenizer_t{str, " =-"}; tokenizer; ++ tokenizer)
-    {
-        switch (tokenizer.count())
-        {
-        case 1:     UTEST_CHECK_EQUAL(tokenizer.get(), "token1"); break;
-        case 2:     UTEST_CHECK_EQUAL(tokenizer.get(), "token2"); break;
-        case 3:     UTEST_CHECK_EQUAL(tokenizer.get(), "something"); break;
-        default:    UTEST_CHECK(false);
-        }
-    }
-}
-
-UTEST_CASE(split_char)
-{
-    const auto str = nano::string_t{"= -token1 token2 something "};
-    for (auto tokenizer = nano::tokenizer_t{str, "-"}; tokenizer; ++ tokenizer)
-    {
-        switch (tokenizer.count())
-        {
-        case 1:     UTEST_CHECK_EQUAL(tokenizer.get(), "= "); break;
-        case 2:     UTEST_CHECK_EQUAL(tokenizer.get(), "token1 token2 something "); break;
-        default:    UTEST_CHECK(false);
-        }
-    }
-}
-
-UTEST_CASE(split_none)
-{
-    const auto str = nano::string_t{"= -token1 token2 something "};
-    for (auto tokenizer = nano::tokenizer_t{str, "@"}; tokenizer; ++ tokenizer)
-    {
-        switch (tokenizer.count())
-        {
-        case 1:     UTEST_CHECK_EQUAL(tokenizer.get(), "= -token1 token2 something "); break;
-        default:    UTEST_CHECK(false);
-        }
-    }
 }
 
 UTEST_CASE(ends_with)

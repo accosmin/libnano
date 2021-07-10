@@ -11,6 +11,7 @@ make_test(test_core_chrono NANO::nano)
 make_test(test_core_logger NANO::nano)
 make_test(test_core_numeric NANO::nano)
 make_test(test_core_histogram NANO::nano)
+make_test(test_core_tokenizer NANO::nano)
 
 make_test(test_tensor_index NANO::nano)
 make_test(test_tensor_stream NANO::nano)

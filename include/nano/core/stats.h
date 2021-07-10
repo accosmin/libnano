@@ -111,7 +111,7 @@ namespace nano
         /// \brief update statistics with the given [begin, end) range
         ///
         template <typename titerator, typename = typename std::iterator_traits<titerator>::value_type>
-        stats_t(titerator begin, const titerator end)
+        stats_t(titerator begin, const titerator end) // NOLINT(readability-non-const-parameter)
         {
             for ( ; begin != end; ++ begin)
             {

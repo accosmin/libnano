@@ -339,17 +339,17 @@ function clang_tidy_cppcoreguidelines {
 }
 
 function clang_tidy_all {
-    clang_tidy_misc
-    clang_tidy_cert
-    clang_tidy_hicpp
-    clang_tidy_bugprone
-    clang_tidy_modernize
-    #clang_tidy_concurrency
-    clang_tidy_performance
-    clang_tidy_portability
-    clang_tidy_readability
-    clang_tidy_clang_analyzer
-    clang_tidy_cppcoreguidelines
+    clang_tidy_misc || return 1
+    clang_tidy_cert || return 1
+    clang_tidy_hicpp || return 1
+    clang_tidy_bugprone || return 1
+    clang_tidy_modernize || return 1
+    #clang_tidy_concurrency || return 1
+    clang_tidy_performance || return 1
+    clang_tidy_portability || return 1
+    clang_tidy_readability || return 1
+    clang_tidy_clang_analyzer || return 1
+    clang_tidy_cppcoreguidelines || return 1
 }
 
 function usage {

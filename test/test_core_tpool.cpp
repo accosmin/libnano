@@ -1,8 +1,7 @@
 #include <numeric>
 #include <algorithm>
-#include <nano/arch.h>
-#include <nano/tpool.h>
 #include <utest/utest.h>
+#include <nano/core/tpool.h>
 #include <nano/core/random.h>
 #include <nano/core/numeric.h>
 
@@ -61,13 +60,15 @@ namespace
     }
 }
 
-UTEST_BEGIN_MODULE(test_tpool)
+UTEST_BEGIN_MODULE(test_core_tpool)
 
 UTEST_CASE(empty)
 {
     auto& pool = tpool_t::instance();
 
     UTEST_CHECK_EQUAL(pool.size(), std::thread::hardware_concurrency());
+    UTEST_CHECK_EQUAL(pool.threads().size(), std::thread::hardware_concurrency());
+
     UTEST_CHECK_EQUAL(tpool_t::size(), std::thread::hardware_concurrency());
 }
 

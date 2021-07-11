@@ -7,10 +7,11 @@ endif()
 add_library(nano)
 
 target_sources(nano PRIVATE
-    table.cpp
     stream.cpp
+    core/table.cpp
     core/chrono.cpp
     core/logger.cpp
+    core/cmdline.cpp
     core/histogram.cpp
     generator.cpp
     generator/elemwise.cpp
@@ -43,7 +44,6 @@ target_sources(nano PRIVATE
     solver/quasi.cpp
     solver/gd.cpp
     function.cpp
-    cmdline.cpp
     loss.cpp
     #model.cpp
     #model/grid_search.cpp

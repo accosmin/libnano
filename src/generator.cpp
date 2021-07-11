@@ -1,5 +1,5 @@
-#include <nano/tpool.h>
 #include <nano/generator.h>
+#include <nano/core/tpool.h>
 #include <nano/dataset/iterator.h>
 
 using namespace nano;

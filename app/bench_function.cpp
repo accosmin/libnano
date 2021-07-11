@@ -1,10 +1,10 @@
 #include <iomanip>
-#include <nano/table.h>
-#include <nano/cmdline.h>
 #include <nano/function.h>
+#include <nano/core/table.h>
 #include <nano/core/stats.h>
 #include <nano/core/chrono.h>
 #include <nano/core/logger.h>
+#include <nano/core/cmdline.h>
 
 using namespace nano;
 

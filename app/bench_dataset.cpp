@@ -1,7 +1,7 @@
-#include <nano/cmdline.h>
 #include <nano/dataset.h>
 #include <nano/core/chrono.h>
 #include <nano/core/logger.h>
+#include <nano/core/cmdline.h>
 #include <nano/generator/elemwise_gradient.h>
 #include <nano/generator/elemwise_identity.h>
 #include <nano/generator/elemwise_histogram.h>

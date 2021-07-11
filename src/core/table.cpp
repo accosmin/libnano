@@ -1,4 +1,4 @@
-#include <nano/table.h>
+#include <nano/core/table.h>
 
 using namespace nano;
 

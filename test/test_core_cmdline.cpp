@@ -1,8 +1,8 @@
 #include <fstream>
 #include <utest/utest.h>
-#include <nano/cmdline.h>
+#include <nano/core/cmdline.h>
 
-UTEST_BEGIN_MODULE(test_cmdline)
+UTEST_BEGIN_MODULE(test_core_cmdline)
 
 UTEST_CASE(empty)
 {

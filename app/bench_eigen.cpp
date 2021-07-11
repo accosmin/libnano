@@ -1,8 +1,8 @@
-#include <nano/table.h>
 #include <nano/tensor.h>
-#include <nano/cmdline.h>
+#include <nano/core/table.h>
 #include <nano/core/chrono.h>
 #include <nano/core/logger.h>
+#include <nano/core/cmdline.h>
 
 namespace
 {

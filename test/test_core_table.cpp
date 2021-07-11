@@ -1,5 +1,5 @@
-#include <nano/table.h>
 #include <utest/utest.h>
+#include <nano/core/table.h>
 
 using namespace nano;
 
@@ -25,7 +25,7 @@ std::ostream& operator<<(std::ostream& os, const std::vector<tscalar>& values)
     return os << "}";
 }
 
-UTEST_BEGIN_MODULE(test_table)
+UTEST_BEGIN_MODULE(test_core_table)
 
 UTEST_CASE(make_less)
 {

@@ -20,8 +20,8 @@ UTEST_CASE(empty)
 UTEST_CASE(usage)
 {
     nano::cmdline_t cmdline("unit testing");
-    cmdline.add("v", "version", "version number", "0.3");
-    cmdline.add("", "iterations", "number of iterations");
+    UTEST_CHECK_NOTHROW(cmdline.add("v", "version", "version number", "0.3"));
+    UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations"));
 
     std::stringstream os;
     cmdline.usage(os);
@@ -37,9 +37,9 @@ UTEST_CASE(usage)
 UTEST_CASE(parse_chars)
 {
     nano::cmdline_t cmdline("unit testing");
-    cmdline.add("v", "version", "version", "0.3");
-    cmdline.add("", "trials", "number of trials");
-    cmdline.add("", "iterations", "number of iterations");
+    UTEST_CHECK_NOTHROW(cmdline.add("v", "version", "version", "0.3"));
+    UTEST_CHECK_NOTHROW(cmdline.add("", "trials", "number of trials"));
+    UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations"));
 
     const int argc = 3;
     const char* argv[] = { "", "-v", "0.3.0" };
@@ -61,8 +61,8 @@ UTEST_CASE(parse_chars)
 UTEST_CASE(parse_string)
 {
     nano::cmdline_t cmdline("unit testing");
-    cmdline.add("v", "version", "version", "0.3");
-    cmdline.add("", "iterations", "number of iterations", 127);
+    UTEST_CHECK_NOTHROW(cmdline.add("v", "version", "version", "0.3"));
+    UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", 127));
 
     UTEST_CHECK_NOTHROW(cmdline.process("-v --iterations 7"));
 
@@ -79,8 +79,8 @@ UTEST_CASE(parse_string)
 UTEST_CASE(error_invalid_arg1)
 {
     nano::cmdline_t cmdline("unit testing");
-    cmdline.add("v", "version", "version");
-    cmdline.add("", "iterations", "number of iterations", "127");
+    UTEST_CHECK_NOTHROW(cmdline.add("v", "version", "version"));
+    UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", "127"));
 
     const int argc = 4;
     const char* argv[] = { "", "v", "--version", "7" };
@@ -91,8 +91,8 @@ UTEST_CASE(error_invalid_arg1)
 UTEST_CASE(error_invalid_arg2)
 {
     nano::cmdline_t cmdline("unit testing");
-    cmdline.add("v", "version", "version");
-    cmdline.add("", "iterations", "number of iterations", "127");
+    UTEST_CHECK_NOTHROW(cmdline.add("v", "version", "version"));
+    UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", "127"));
 
     const int argc = 4;
     const char* argv[] = { "", "--version", "7", "-", "--version", "13" };
@@ -103,8 +103,8 @@ UTEST_CASE(error_invalid_arg2)
 UTEST_CASE(error_invalid_arg3)
 {
     nano::cmdline_t cmdline("unit testing");
-    cmdline.add("v", "version", "version");
-    cmdline.add("", "iterations", "number of iterations", "127");
+    UTEST_CHECK_NOTHROW(cmdline.add("v", "version", "version"));
+    UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", "127"));
 
     const int argc = 4;
     const char* argv[] = { "", "--version", "11", "--" };
@@ -115,8 +115,8 @@ UTEST_CASE(error_invalid_arg3)
 UTEST_CASE(error_unknown_arg)
 {
     nano::cmdline_t cmdline("unit testing");
-    cmdline.add("v", "version", "version");
-    cmdline.add("", "iterations", "number of iterations", "127");
+    UTEST_CHECK_NOTHROW(cmdline.add("v", "version", "version"));
+    UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", "127"));
 
     const int argc = 4;
     const char* argv[] = { "", "-v", "--what", "7" };
@@ -127,8 +127,8 @@ UTEST_CASE(error_unknown_arg)
 UTEST_CASE(parse_config_file)
 {
     nano::cmdline_t cmdline("unit testing");
-    cmdline.add("v", "version", "version", "0.3");
-    cmdline.add("", "iterations", "number of iterations", "127");
+    UTEST_CHECK_NOTHROW(cmdline.add("v", "version", "version", "0.3"));
+    UTEST_CHECK_NOTHROW(cmdline.add("", "iterations", "number of iterations", "127"));
 
     const std::string path = "config";
     {

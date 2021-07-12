@@ -38,6 +38,7 @@ UTEST_CASE(parse_chars)
 {
     nano::cmdline_t cmdline("unit testing");
     cmdline.add("v", "version", "version", "0.3");
+    cmdline.add("", "trials", "number of trials");
     cmdline.add("", "iterations", "number of iterations");
 
     const int argc = 3;
@@ -47,11 +48,13 @@ UTEST_CASE(parse_chars)
 
     UTEST_CHECK(cmdline.has("v"));
     UTEST_CHECK(cmdline.has("version"));
+    UTEST_CHECK(!cmdline.has("trials"));
     UTEST_CHECK(!cmdline.has("iterations"));
     UTEST_CHECK(!cmdline.has("h"));
     UTEST_CHECK(!cmdline.has("help"));
 
     UTEST_CHECK_EQUAL(cmdline.get<std::string>("v"), "0.3.0");
+    UTEST_CHECK_THROW(cmdline.get<int>("trials"), std::runtime_error);
     UTEST_CHECK_THROW(cmdline.get<int>("iterations"), std::runtime_error);
 }
 

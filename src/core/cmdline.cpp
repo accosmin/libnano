@@ -33,20 +33,21 @@ void cmdline_t::add(const string_t& short_name, const string_t& name, const stri
     {
         throw std::runtime_error("cmdline: invalid option name [" + name + "]");
     }
-
-    if (!short_name.empty() && (short_name.size() != 1 || short_name[0] == '-'))
-    {
-        throw std::runtime_error("cmdline: invalid short option name [" + short_name + "]");
-    }
-
     if (find(name) != m_options.end())
     {
         throw std::runtime_error("cmdline: duplicated option [" + name + "]");
     }
 
-    if (find(short_name) != m_options.end())
+    if (!short_name.empty())
     {
-        throw std::runtime_error("cmdline: duplicated short option [" + short_name + "]");
+        if (short_name.size() != 1 || short_name[0] == '-')
+        {
+            throw std::runtime_error("cmdline: invalid short option name [" + short_name + "]");
+        }
+        if (find(short_name) != m_options.end())
+        {
+            throw std::runtime_error("cmdline: duplicated short option [" + short_name + "]");
+        }
     }
 
     m_options.emplace_back(short_name, name, description, default_value);

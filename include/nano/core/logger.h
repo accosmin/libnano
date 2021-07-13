@@ -92,7 +92,7 @@ namespace nano
     template <typename... tmessage>
     [[noreturn]] void critical0(const tmessage&... message)
     {
-        log_error() << scat(message...);
+        (log_error() << ... << message);
         throw std::runtime_error("critical check failed!");
     }
 

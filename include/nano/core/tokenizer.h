@@ -14,7 +14,7 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        tokenizer_t(const std::string& str, const char* delims, const size_t pos = 0) :
+        tokenizer_t(const std::string& str, const char* delims, size_t pos = 0) :
             m_str(str), m_delims(delims),
             m_pos(pos), m_end(pos)
         {
@@ -43,7 +43,7 @@ namespace nano
         ///
         operator bool() const // NOLINT(hicpp-explicit-conversions)
         {
-            return (m_pos != std::string::npos) && (m_pos < m_end);
+            return m_pos != std::string::npos;
         }
 
         ///

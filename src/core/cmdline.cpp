@@ -5,6 +5,9 @@
 
 using namespace nano;
 
+static const auto str_dash = string_t{"-"}; // NOLINT(cert-err58-cpp)
+static const auto str_dash_dash = string_t{"--"}; // NOLINT(cert-err58-cpp)
+
 string_t cmdline_t::option_t::describe() const
 {
     string_t str;
@@ -24,33 +27,43 @@ string_t cmdline_t::option_t::describe() const
     }
 
     return str;
+} // LCOV_EXCL_LINE
+
+cmdline_t::cmdline_t(string_t title) :
+    m_title(std::move(title))
+{
+    add("h", "help", "usage");
 }
 
-void cmdline_t::add(const string_t& short_name, const string_t& name, const string_t& description,
-    const string_t& default_value)
+void cmdline_t::add(string_t short_name, string_t name, string_t description)
 {
-    if (name.empty() || nano::starts_with(name, "-") || nano::starts_with(name, "--"))
+    add(std::move(short_name), std::move(name), std::move(description), string_t());
+}
+
+void cmdline_t::add(string_t short_name, string_t name, string_t description, string_t default_value)
+{
+    if (name.empty() || nano::starts_with(name, str_dash_dash) || nano::starts_with(name, str_dash))
     {
-        throw std::runtime_error("cmdline: invalid option name [" + name + "]");
+        throw std::runtime_error(scat("cmdline: invalid option name [", name, "]"));
     }
     if (find(name) != m_options.end())
     {
-        throw std::runtime_error("cmdline: duplicated option [" + name + "]");
+        throw std::runtime_error(scat("cmdline: duplicated option [", name, "]"));
     }
 
     if (!short_name.empty())
     {
         if (short_name.size() != 1 || short_name[0] == '-')
         {
-            throw std::runtime_error("cmdline: invalid short option name [" + short_name + "]");
+            throw std::runtime_error(scat("cmdline: invalid short option name [", short_name, "]"));
         }
         if (find(short_name) != m_options.end())
         {
-            throw std::runtime_error("cmdline: duplicated short option [" + short_name + "]");
+            throw std::runtime_error(scat("cmdline: duplicated short option [", short_name, "]"));
         }
     }
 
-    m_options.emplace_back(short_name, name, description, default_value);
+    m_options.emplace_back(std::move(short_name), std::move(name), std::move(description), std::move(default_value));
 }
 
 void cmdline_t::store(const string_t& name_or_short_name, const string_t& value)
@@ -58,7 +71,7 @@ void cmdline_t::store(const string_t& name_or_short_name, const string_t& value)
     auto it = find(name_or_short_name);
     if (it == m_options.end())
     {
-        throw std::runtime_error("cmdline: unrecognized option [" + name_or_short_name + "]");
+        throw std::runtime_error(scat("cmdline: unrecognized option [", name_or_short_name, "]"));
     }
     else
     {
@@ -79,31 +92,31 @@ void cmdline_t::process(const int argc, const char* argv[])
         const string_t token = argv[i];
         assert(!token.empty());
 
-        if (nano::starts_with(token, "--"))
+        if (nano::starts_with(token, str_dash_dash))
         {
-            const string_t name = token.substr(2);
-            if (name.empty())
+            if (token.size() == 2U)
             {
-                throw std::runtime_error(scat("cmdline: invalid option name [", name, "/", token, "]"));
+                throw std::runtime_error(scat("cmdline: invalid option name [", token, "]"));
             }
 
+            auto name = token.substr(2);
             store(name);
-            current_name_or_short_name = name;
+            current_name_or_short_name = std::move(name);
         }
-        else if (nano::starts_with(token, "-"))
+        else if (nano::starts_with(token, str_dash))
         {
-            const string_t short_name = token.substr(1);
-            if (short_name.size() != 1)
+            if (token.size() != 2U)
             {
-                throw std::runtime_error(scat("cmdline: invalid short option name [", short_name, "/", token, "]"));
+                throw std::runtime_error(scat("cmdline: invalid short option name [", token, "]"));
             }
 
+            auto short_name = token.substr(1);
             store(short_name);
-            current_name_or_short_name = short_name;
+            current_name_or_short_name = std::move(short_name);
         }
         else
         {
-            const string_t& value = token;
+            const auto& value = token;
             if (current_name_or_short_name.empty())
             {
                 throw std::runtime_error(scat("cmdline: missing option before value [", value, "]"));
@@ -142,7 +155,7 @@ bool cmdline_t::has(const string_t& name_or_short_name) const
     const auto it = find(name_or_short_name);
     if (it == m_options.end())
     {
-        throw std::runtime_error("cmdline: unrecognized option [" + name_or_short_name + "]");
+        throw std::runtime_error(scat("cmdline: unrecognized option [", name_or_short_name, "]"));
     }
     return it->m_given;
 }
@@ -152,11 +165,11 @@ string_t cmdline_t::get(const string_t& name_or_short_name) const
     const auto it = find(name_or_short_name);
     if (it == m_options.end())
     {
-        throw std::runtime_error("cmdline: unrecognized option [" + name_or_short_name + "]");
+        throw std::runtime_error(scat("cmdline: unrecognized option [", name_or_short_name, "]"));
     }
     else if (!it->m_given && it->m_value.empty())
     {
-        throw std::runtime_error("cmdline: no value provided for option [" + name_or_short_name + "]");
+        throw std::runtime_error(scat("cmdline: no value provided for option [", name_or_short_name, "]"));
     }
     return it->get();
 }

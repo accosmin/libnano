@@ -52,27 +52,20 @@ namespace nano
         ///
         /// \brief constructor
         ///
-        explicit cmdline_t(string_t title) :
-            m_title(std::move(title))
-        {
-            add("h", "help", "usage");
-        }
+        explicit cmdline_t(string_t title);
 
         ///
-        /// \brief add new option by name and short name (without dash)
+        /// \brief add new option by name and short name (without dash).
         ///
-        void add(const string_t& short_name, const string_t& name, const string_t& description)
-        {
-            add(short_name, name, description, string_t());
-        }
+        void add(string_t short_name, string_t name, string_t description);
 
         ///
         /// \brief add new option with default value by name and short name (without dash)
         ///
         template <typename tvalue>
-        void add(const string_t& short_name, const string_t& name, const string_t& description, tvalue default_value)
+        void add(string_t short_name, string_t name, string_t description, tvalue default_value)
         {
-            add(short_name, name, description, scat(default_value));
+            add(std::move(short_name), std::move(name), std::move(description), scat(default_value));
         }
 
         ///
@@ -126,7 +119,7 @@ namespace nano
             return std::find(m_options.begin(), m_options.end(), name_or_short_name);
         }
 
-        void add(const string_t& short_name, const string_t& name, const string_t& description, const string_t& default_value);
+        void add(string_t short_name, string_t name, string_t description, string_t default_value);
         void store(const string_t& name_or_short_name, const string_t& value = string_t());
 
         // attributes

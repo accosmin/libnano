@@ -41,4 +41,4 @@ std::string nano::elapsed(int milliseconds)
     append(str, "%.3ims", milliseconds);
 
     return str;
-}
+} // LCOV_EXCL_LINE
